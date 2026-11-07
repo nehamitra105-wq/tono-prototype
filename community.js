@@ -87,20 +87,31 @@ function qaGrid(){
   return QS[st.tab].map(qCard).join('');
 }
 
-// one per red dot: before a Pit Stop the pin asks to drop a song; after, it shows the song left there
+// the song already at each red dot (popular in that area) until you drop your own there
+const S = (t, a, img) => ({t, a, img:C + img});
+const AREA = [
+  S('Brooklyn’s Finest', 'Jay-Z, Notorious B.I.G.', 'brooklyns-finest.png'),
+  S('Midnight City', 'M83', 'midnight-city.png'),
+  S('Empire State of Mind', 'Jay-Z, Alicia Keys', 't2.png'),
+  S('Late Night Lover', '三稜鏡', 'late-night-lover.png'),
+  S('What’s Next', 'Drake', 't3.png'),
+  S('Coney Island Baby', 'Lou Reed', 't1.png'),
+  S('Sweetest Pie', 'Megan Thee Stallion, Dua Lipa', 'sweetest-pie.png'),
+  S('telepatia', 'Kali Uchis', 'telepatia.png'),
+];
+// one per red dot: tapping it shows the song there (yours, after a Pit Stop)
 function locCard(i){
-  const d = st.drops[i], where = SPOTS[i].name;
+  const d = st.drops[i] || AREA[i], where = SPOTS[i].name;
   const pos = HAS_MAP ? 'left:0;top:0' : 'left:45px;top:235px';
-  const top = d ? `<div class="card">
+  return `<div class="cm-loc ${st.open === i ? 'open' : ''}" style="${pos}" data-loc data-spot="${i}">
+    <div class="card">
       <div class="row">
         <div class="cv"><img src="${d.img}" alt=""><span class="dim"></span>${ic('play-circle')}</div>
         <div class="tx"><div><p class="t-body">${esc(d.t)}</p><p class="t-caption">${esc(d.a)}</p></div><p class="t-caption">${esc(where)}</p></div>
       </div>
       <span class="cm-dots">${ic('dots-three')}</span>
-    </div>` : `<button class="ask-drop t-body" data-pit>${ic('music-notes-plus')}Drop a song?</button>`;
-  return `<div class="cm-loc ${st.open === i ? 'open' : ''}" style="${pos}" data-loc data-spot="${i}">
-    ${top}
-    <button class="pin" data-pin aria-label="${d ? `Song at ${esc(where)}` : `Drop a song at ${esc(where)}`}"><img src="${C}marker-on.png" alt=""></button>
+    </div>
+    <button class="pin" data-pin aria-label="Song at ${esc(where)}"><img src="${C}marker-on.png" alt=""></button>
   </div>`;
 }
 
@@ -163,6 +174,18 @@ function setOpen(i){
   clearTimeout(st._pinT); st.open = i;
   vC.querySelectorAll('[data-loc]').forEach(el => el.classList.toggle('open', +el.dataset.spot === i));
   markers.forEach((m, k) => m.setZIndexOffset(k === i ? 2000 : 0));
+  if (i !== null && map) requestAnimationFrame(() => fitCard(i));
+}
+// nudge the map so the open song list isn't cut off by the map's edges or the search bar
+function fitCard(i){
+  const card = vC.querySelector(`[data-spot="${i}"] .card`); if (!card) return;
+  const c = card.getBoundingClientRect(), m = map.getContainer().getBoundingClientRect();
+  const top = m.top + 64, pad = 12;
+  let dx = 0, dy = 0;
+  if (c.top < top) dy = c.top - top;
+  if (c.left < m.left + pad) dx = c.left - m.left - pad;
+  else if (c.right > m.right - 56) dx = c.right - m.right + 56;
+  if (dx || dy) map.panBy([dx, dy], {duration:.4});
 }
 function recenter(z){ if (map) map.flyTo(JH, z ?? (st.drops[0] ? 13 : HOME_VIEW.z), {duration:.8}); }
 
@@ -262,18 +285,45 @@ const oPit = overlay('cm-pop', `
   <div class="cm-fields">
     <div class="cm-picked"></div>
     <input class="cm-field" data-song type="text" placeholder="Add a song" aria-label="Add a song">
-    <div class="cm-loc-field">${ic('map-pin')}<p class="t-body" data-where>${LOCATION}</p></div>
     <div class="cm-res"></div>
+    <label class="cm-loc-field">${ic('map-pin')}<input class="t-body" data-where type="text" placeholder="Add a location" aria-label="Location" autocomplete="off"></label>
+    <div class="cm-res cm-spots" role="listbox"></div>
   </div>
   <button class="cm-btn t-body" data-drop disabled>Drop Off</button>`);
 const pitPicked = [];
-const pit = songSearch(oPit, PIT_SONGS, pitPicked, 1, () => { oPit.querySelector('[data-drop]').disabled = !pitPicked.length; });
+const pit = songSearch(oPit, PIT_SONGS, pitPicked, 1, () => dropOk());
+// location: type to search, suggestions are the red dots nearest to you first
+const spotList = oPit.querySelector('.cm-spots'), whereIn = oPit.querySelector('[data-where]');
+const miles = (a, b) => {
+  const r = x => x * Math.PI / 180, dLa = r(b[0] - a[0]), dLo = r(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLo / 2) ** 2;
+  return 3959 * 2 * Math.asin(Math.sqrt(h));
+};
+const dropOk = () => { oPit.querySelector('[data-drop]').disabled = !(pitPicked.length && st.spot !== null); };
+function setWhere(i){ st.spot = i; whereIn.value = i === null ? '' : SPOTS[i].name; dropOk(); }
+function showSpots(on){
+  spotList.classList.toggle('on', on); if (!on) return;
+  const q = whereIn.value.trim().toLowerCase(), typed = q && !(st.spot !== null && SPOTS[st.spot].name.toLowerCase() === q);
+  const hits = SPOTS.map((p, i) => ({p, i, d:miles(JH, p.ll)}))
+    .filter(o => !typed || o.p.name.toLowerCase().includes(q)).sort((x, y) => x.d - y.d);
+  spotList.style.top = `${whereIn.closest('.cm-loc-field').offsetTop + whereIn.closest('.cm-loc-field').offsetHeight + 1}px`;
+  spotList.innerHTML = hits.length ? hits.map(({p, i, d}) => `<button role="option" data-spot-pick="${i}">${ic('map-pin')}<span class="tx"><span class="t-body">${esc(p.name)}</span><span class="t-caption cm-mut">${i === 0 ? 'Current location' : `${d.toFixed(1)} mi away`}</span></span></button>`).join('')
+    : `<p class="t-body cm-mut">No nearby spots</p>`;
+}
+whereIn.addEventListener('focus', () => { whereIn.select(); showSpots(true); });
+whereIn.addEventListener('input', () => {
+  const q = whereIn.value.trim().toLowerCase(), hit = SPOTS.findIndex(p => p.name.toLowerCase() === q);
+  st.spot = hit < 0 ? null : hit; dropOk(); showSpots(true);
+});
+whereIn.addEventListener('keydown', e => { if (e.key === 'Enter'){ spotList.querySelector('[data-spot-pick]')?.click(); whereIn.blur(); } });
 oPit.addEventListener('click', e => {
+  const sp = e.target.closest('[data-spot-pick]'); if (sp){ setWhere(+sp.dataset.spotPick); whereIn.blur(); return showSpots(false); }
+  if (!e.target.closest('.cm-loc-field')) showSpots(false);
   if (e.target.closest('[data-close]')) return close(oPit);
   if (e.target.closest('[data-drop]')){
     const i = st.spot;
     st.drops[i] = pitPicked[0]; st.open = i; close(oPit); refreshPin();
-    vC.scrollTo({top:0, behavior:'smooth'}); if (map) map.flyTo(SPOTS[i].ll, Math.max(13, map.getZoom()), {duration:.8});
+    vC.scrollTo({top:0, behavior:'smooth'}); if (map){ map.flyTo(SPOTS[i].ll, Math.max(13, map.getZoom()), {duration:.8}); map.once('moveend', () => { if (st.open === i) fitCard(i); }); }
     clearTimeout(st._pinT); st._pinT = setTimeout(() => setOpen(null), 3000);
   }
 });
@@ -344,9 +394,8 @@ vC.addEventListener('click', e => {
 vC.addEventListener('click', e => {
   const pitBtn = e.target.closest('[data-pit]');
   if (pitBtn){
-    // the prompt on a dot drops there; the Pit Stop button drops where the listener is
-    st.spot = +(pitBtn.closest('[data-spot]')?.dataset.spot ?? 0);
-    oPit.querySelector('[data-where]').textContent = SPOTS[st.spot].name;
+    // starts where the listener is; the location field can move it to any red dot
+    setWhere(0); showSpots(false);
     setOpen(null); pit.reset(); open(oPit); return;
   }
   const pin = e.target.closest('[data-pin]');

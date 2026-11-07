@@ -44,6 +44,7 @@
 .cm-loc .cv .cm-ic{position:absolute;left:9px;top:9px;width:32px;height:32px;color:var(--off-white)}
 .cm-loc .row{display:flex;gap:8px;align-items:center;min-width:0}
 .cm-loc .tx{display:flex;flex-direction:column;gap:8px;min-width:0;white-space:nowrap}
+.cm-loc .tx p{overflow:hidden;text-overflow:ellipsis}
 .cm-loc .tx .t-caption{color:#8d8d8d}
 .cm-loc .tx div{display:flex;flex-direction:column;gap:4px}
 .cm-loc .cm-dots{display:flex;color:var(--off-white)}
@@ -117,7 +118,7 @@
 .cm-ov .bd{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s}
 .cm-ov.open{pointer-events:auto}
 .cm-ov.open .bd{opacity:1}
-.cm-pop{position:absolute;left:41px;top:50%;width:320px;transform:translateY(-50%);background:var(--off-black);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:24px;opacity:0;transition:opacity .25s ease}
+.cm-pop{position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);background:var(--off-black);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:24px;opacity:0;transition:opacity .25s ease}
 .cm-ov.open .cm-pop{opacity:1}
 .cm-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--off-black);border-radius:24px 24px 0 0;padding:44px 20px 0;display:flex;flex-direction:column;gap:24px;
   transform:translateY(100%);transition:transform .38s var(--ease)}
@@ -149,7 +150,9 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-anon{display:flex;justify-content:space-between;align-items:center}
 .cm-act{display:flex;gap:8px;align-items:center;width:100%;color:var(--off-white);text-align:left}
 #cm-qa{scroll-margin-bottom:90px}
-/* pin before a Pit Stop: prompt sits where the song card would be */
-.cm-loc .ask-drop{position:absolute;left:50%;bottom:26px;transform:translate(-50%,6px);display:flex;gap:8px;align-items:center;white-space:nowrap;
-  padding:12px 16px;border-radius:10px;background:var(--off-white);color:var(--off-black);opacity:0;transition:opacity .25s, transform .25s var(--ease)}
-.cm-loc.open .ask-drop{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+/* Pit Stop location: type to search nearby red dots */
+.cm-loc-field input{flex:1;min-width:0;background:none;border:0;padding:0;color:var(--off-white);font-weight:300;font-size:16px;line-height:1.2;outline:0}
+.cm-loc-field input::placeholder{color:rgba(248,248,248,.6)}
+.cm-loc-field:focus-within{border-color:var(--lilac)}
+.cm-spots button .cm-ic{flex:none;color:rgba(248,248,248,.6)}
+.cm-spots .tx .t-body{color:var(--off-white)}
