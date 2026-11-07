@@ -1,0 +1,105 @@
+/* =========================================================
+   PLAYER — a remote for whatever the listener is playing
+   views: turntable · album cover · music video  (dots toggle)
+   remote: expanded ⇄ collapsed (drag the panel)
+   ========================================================= */
+.player-view{padding-top:0;overflow:hidden;overflow:clip;background:var(--off-black)}
+
+/* header */
+.pl-head{position:absolute;left:20.5px;top:76px;width:362px;height:44px;display:flex;gap:8px;align-items:center;z-index:6}
+.pl-head .back{width:78px;height:24px;display:flex}
+.pl-head .back img{width:24px;height:24px}
+.pl-head p{flex:1;text-align:center}
+.view-changer{width:78px;height:26px;border-radius:100px;background:var(--navy);position:relative;flex:none}
+.view-changer img{position:absolute;left:5px;top:3px;height:20px}
+
+/* stage: everything above the remote */
+.pl-stage{position:absolute;inset:0}
+.pl-layer{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .3s ease}
+.pl-layer.on{opacity:1}
+.pl-title{position:absolute;left:72px;width:258px;text-align:center;color:var(--off-white);display:flex;flex-direction:column;gap:8px;transition:top .3s ease}
+.pl-title .t-body{color:var(--off-white)}
+
+/* turntable */
+.tt-angle{position:absolute;left:.5px;top:152px;width:401px;height:238px;overflow:hidden;transition:opacity .3s ease}
+.tt-angle img{position:absolute;width:84.87%;height:143%;left:7.56%;top:-21.5%;max-width:none}
+.tt-top{position:absolute;left:.5px;top:204px;width:401px;height:359px;object-fit:cover;transition:opacity .3s ease}
+.player-view .tt-top{opacity:0}
+.player-view.collapsed .tt-angle{opacity:0}
+.player-view.collapsed .tt-top{opacity:1}
+.pl-layer.tt .pl-title{top:406px}
+.player-view.collapsed .pl-layer.tt .pl-title{top:579px}
+.player-view.playing .tt-top{animation:pl-spin-hint 6s linear infinite}
+@keyframes pl-spin-hint{0%,100%{filter:brightness(1)}50%{filter:brightness(1.08)}}
+
+/* album cover — smart-animates between the two sizes */
+.cv-art{position:absolute;left:39px;top:118px;width:323.693px;height:323.693px;border:.902px solid #000;object-fit:cover;transition:all .3s ease}
+.player-view.collapsed .cv-art{left:21.5px;top:218px;width:359px;height:359px;border-width:1px}
+.pl-layer.cv .pl-title{top:456px;width:232.626px;left:84.7px;gap:7.213px}
+.pl-layer.cv .pl-title .t-header{font-size:18.033px}
+.pl-layer.cv .pl-title .t-body{font-size:14.426px}
+.player-view.collapsed .pl-layer.cv .pl-title{top:593px;width:258px;left:72px;gap:8px}
+.player-view.collapsed .pl-layer.cv .pl-title .t-header{font-size:20px}
+.player-view.collapsed .pl-layer.cv .pl-title .t-body{font-size:16px}
+
+/* music video (the hi-fi shows the clip rotated a quarter turn) */
+.vd-wrap{position:absolute;left:0;top:0;width:545px;height:877px;overflow:hidden}
+.vd-wrap .vd{position:absolute;left:-166px;top:166px;width:877px;height:545px;transform:rotate(-90deg);transform-origin:center}
+.vd-wrap .vd img{width:100%;height:100%;object-fit:cover}
+.vd-wrap .vd::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.25)}
+.pl-layer.vd-l .pl-title{top:120px}
+
+/* remote */
+.remote{position:absolute;left:-2.9px;width:407.784px;height:315.237px;border-radius:9.926px 9.926px 0 0;background:var(--off-black);overflow:hidden;z-index:8;
+  box-shadow:12px 12px 4px rgba(164,164,164,.25), inset 0 1px 0 rgba(248,248,248,.28);transition:top .32s cubic-bezier(.32,.72,0,1), border-radius .3s, box-shadow .3s;touch-action:none}
+.remote.bordered{}
+/* gradient edge along the top of the sheet (Tag Gradient: lilac → pinky pie) */
+.remote::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.446px 1.446px 0;pointer-events:none;z-index:2;
+  background:linear-gradient(90deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+          mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);transition:opacity .3s}
+.remote .handle{position:absolute;left:177.86px;top:10.85px;width:49.89px;height:4.34px;cursor:grab}
+.remote .grab{position:absolute;left:0;right:0;top:0;height:34px;cursor:grab}
+.remote .inner{position:absolute;left:calc(50% + .83px);top:calc(50% + .38px);transform:translate(-50%,-50%);width:342.712px;display:flex;flex-direction:column;gap:34.705px;transition:opacity .25s}
+.player-view.collapsed .remote{border-radius:14.46px 14.46px 0 0;background:transparent;box-shadow:none;filter:drop-shadow(-2px -2px 5px rgba(248,248,248,.2));border-color:transparent}
+.player-view.collapsed .remote::before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--off-black)}
+.player-view.collapsed .remote .inner{opacity:0;pointer-events:none}
+.skip{position:relative;width:342.712px;height:70.856px}
+.skip img{position:absolute;left:-11.58px;top:-11.57px;width:371.633px;height:99.777px;max-width:none}
+.skip .knob-hit{position:absolute;left:62px;right:62px;top:20px;height:30px;cursor:ew-resize}
+.skip .knob{position:absolute;top:31px;width:12px;height:12px;margin-left:-6px;border-radius:6px;background:var(--off-white);pointer-events:none}
+.skip .bar-cover{position:absolute;top:30px;height:14px;background:transparent;pointer-events:none}
+.ctrl-row{display:flex;gap:13.014px;align-items:center;width:359.342px}
+.pbtn{position:relative;flex:none;padding:0}
+.pbtn img{position:absolute;max-width:none;pointer-events:none}
+.pbtn.big{width:105.561px;height:105.561px}
+.pbtn.big img{left:-11.57px;top:-11.57px;width:134.47px;height:134.47px}
+.pbtn.sm{width:47.719px;height:47.719px}
+.pbtn.sm img{left:-11.57px;top:-11.57px;width:76.64px;height:76.64px}
+.pbtn:active{transform:scale(.95)}
+.ctrl-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:17.353px;align-items:center}
+.btn-row{display:flex;gap:5.784px;align-items:center;padding:0 16.268px;width:100%}
+.tag-row{display:flex;justify-content:flex-end;padding:0 17.353px;width:100%}
+.tag-row .chips{display:flex;gap:5.784px;align-items:center;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tag-row .chips::-webkit-scrollbar{display:none}
+.pchip{border:1.446px solid var(--lilac);border-radius:144.604px;padding:4.338px 11.388px;color:var(--lilac);font-weight:300;font-size:14.46px;line-height:normal;white-space:nowrap;display:flex;align-items:center;gap:6px;flex:none}
+
+/* song tag pop-up */
+.tag-ov{position:absolute;inset:0;z-index:20;display:none}
+.tag-ov.on{display:block}
+.tag-pop{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:322px;background:var(--off-black);border:1px solid var(--lilac);border-radius:10px;padding:32px 20px;animation:nb-rise .25s var(--ease)}
+.tag-pop .stack{display:flex;flex-direction:column;gap:24px}
+.tag-pop .hd{display:flex;justify-content:space-between;align-items:flex-start;height:24px}
+.tag-pop .hd button{width:24px;height:24px}
+.tag-pop .hd img{width:24px;height:24px}
+.tag-pop .grp{display:flex;flex-direction:column;gap:12px}
+.tag-pop textarea{height:100px;border:1px solid var(--secondary);border-radius:10px;padding:12px;resize:none;color:var(--off-white);font-weight:300;font-size:16px;line-height:1.2}
+.tag-pop textarea::placeholder{color:#8d8d8d}
+.tag-pop textarea:focus{border-color:var(--lilac)}
+.tag-pop .lbl{height:38px;display:flex;align-items:center;color:#8d8d8d}
+.tag-pop .chips{display:flex;flex-wrap:wrap;gap:5.784px;min-height:28px}
+.tag-pop .pchip{border-width:1px}
+.tag-pop .pchip img{width:10px;height:11px}
+.tag-pop .none{color:#8d8d8d}
+.tag-pop .confirm{width:100%;padding:12px;border-radius:10px;background:var(--navy);color:#8d8d8d;transition:background .2s, color .2s}
+.tag-pop .confirm:enabled{background:var(--off-white);color:var(--off-black)}

@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>tono — Home prototype</title>
+<style>
+/* ---------- Font: Mundial only ---------- */
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialThin.otf") format("opentype");font-weight:200;font-style:normal}
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialLight.otf") format("opentype");font-weight:300;font-style:normal}
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialRegular.otf") format("opentype");font-weight:400;font-style:normal}
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialDemibold.otf") format("opentype");font-weight:600;font-style:normal}
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialBold.otf") format("opentype");font-weight:700;font-style:normal}
+@font-face{font-family:"Mundial";src:url("font/mundial/MundialBlack.otf") format("opentype");font-weight:900;font-style:normal}
+
+/* ---------- Color styles (Figma) ---------- */
+:root{
+  --off-black:#0D1218;
+  --off-white:#F8F8F8;
+  --navy:#162131;
+  --secondary:#2E3F55;
+  --lilac:#D5A1FA;
+  --pinky-pie:#F75472;
+  --grey:#BCBCBC;
+  --line:#4C4C4C;
+  --nav-line:#464646;
+  --placeholder:#686B65;
+  --tag-gradient:linear-gradient(145.73deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);
+  --ease:cubic-bezier(.32,.72,0,1);
+  --scale:1;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#1C1F24;font-family:"Mundial",sans-serif;color:var(--off-white);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,textarea{font:inherit;color:inherit;background:none;border:0;outline:0}
+img{display:block}
+
+/* ---------- Text styles (Figma) ---------- */
+.t-ginormous{font-weight:700;font-size:36px;line-height:normal}
+.t-header{font-weight:400;font-size:20px;line-height:normal}
+.t-header-db{font-weight:600;font-size:20px;line-height:normal}
+.t-body{font-weight:300;font-size:16px;line-height:1.2}
+.t-body-db{font-weight:600;font-size:16px;line-height:1.2}
+.t-caption{font-weight:300;font-size:12px;line-height:1}
+.t-caption2{font-weight:400;font-size:10px;line-height:normal}
+.t-link{font-weight:600;font-size:11px;line-height:16.5px}
+.t-num{font-weight:600;font-size:10px;line-height:15px}
+.t-weekday{font-weight:400;font-size:10px;line-height:15px}
+.t-nav{font-weight:400;font-size:11px;line-height:normal}
+.t-avatar{font-weight:700;font-size:9px;line-height:13.5px}
+.grey{color:var(--grey)}
+.gradient-text{background:var(--tag-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- Stage + iPhone 18 Pro frame ---------- */
+.stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.device-wrap{width:calc(430px * var(--scale));height:calc(902px * var(--scale));position:relative}
+.device{position:absolute;left:0;top:0;width:430px;height:902px;transform:scale(var(--scale));transform-origin:0 0;
+  border-radius:76px;background:#0b0b0c;padding:14px;
+  box-shadow:0 0 0 2px #3a3b3f, 0 0 0 4px #1a1b1e, 0 30px 80px rgba(0,0,0,.55)}
+.device::before,.device::after{content:"";position:absolute;width:4px;border-radius:2px;background:#2a2b2f}
+.device::before{left:-6px;top:180px;height:64px;box-shadow:0 84px 0 #2a2b2f}
+.device::after{right:-6px;top:230px;height:100px}
+.screen{position:relative;width:402px;height:874px;border-radius:62px;overflow:hidden;overflow:clip;background:var(--off-black);isolation:isolate}
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:125px;height:37px;border-radius:100px;background:#000;z-index:100;pointer-events:none}
+.home-indicator{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:139px;height:5px;border-radius:100px;background:var(--off-white);z-index:100;pointer-events:none;transition:opacity .3s}
+.lock.unlocked ~ .home-indicator{opacity:0}
+.restart{color:#8a8f98}
+
+/* ---------- Status bar ---------- */
+.statusbar{position:absolute;top:0;left:0;right:0;height:62px;display:flex;align-items:center;justify-content:center;padding:3px 8px 0;z-index:40}
+.statusbar.solid{background:var(--off-black)}
+.statusbar .time{flex:1;text-align:center;font-weight:600;font-size:17.67px;line-height:22px;color:#fff}
+.statusbar .island-space{width:95px;height:37px;flex:none}
+.statusbar .levels{flex:1;display:flex;gap:8px;align-items:center;justify-content:center}
+.cell{display:flex;gap:2.333px;align-items:flex-end;padding-top:1.333px}
+.cell i{display:block;width:3.333px;border-radius:4px;background:#fff}
+
+/* ---------- Lock screen ---------- */
+.lock{position:absolute;inset:0;z-index:60;background:
+  radial-gradient(70% 45% at 8% 92%, rgba(213,161,250,.55), transparent 70%),
+  radial-gradient(60% 40% at 100% 4%, rgba(247,84,114,.35), transparent 70%),
+  radial-gradient(60% 40% at 85% 70%, rgba(46,63,85,.9), transparent 70%),
+  var(--off-black);
+  transition:transform .6s var(--ease);touch-action:none}
+.lock.unlocked{transform:translateY(-100%)}
+.lock .swipe-ind{position:absolute;right:53.8px;top:45.8px;width:48px;height:2.333px;border-radius:1.167px;background:#fff;opacity:.35;z-index:41}
+.sym{display:inline-block;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat;flex:none}
+.lock .inline-w{position:absolute;top:82px;left:0;width:402px;height:26px;text-align:center;font-weight:600;font-size:22px;line-height:normal;letter-spacing:-.2px;color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.lock .inline-w .sym{width:20px;height:20px}
+.lock .big-clock{position:absolute;top:115px;left:calc(50% - .47px);transform:translateX(-50%);width:205.06px;height:87.4px;
+  -webkit-mask:url(assets/lock-clock-fill.svg) center/100% 100% no-repeat;mask:url(assets/lock-clock-fill.svg) center/100% 100% no-repeat;
+  background:linear-gradient(170deg, rgba(255,255,255,.95) 0%, rgba(255,255,255,.72) 45%, rgba(213,161,250,.55) 100%)}
+.lock .widgets{position:absolute;top:214px;left:0;right:0;padding:0 32px;display:flex;align-items:center}
+.lock .w-table{flex:1;min-width:0;height:72px;padding:0 6px;display:flex;flex-direction:column;justify-content:center;font-weight:400;font-size:15px;line-height:18px;color:#fff}
+.lock .w-table .hd{display:flex;gap:3px;align-items:center;line-height:20px;color:rgba(255,255,255,.6);mix-blend-mode:plus-lighter}
+.lock .w-table .hd .sym{width:18px;height:18px}
+.lock .w-right{flex:1;display:flex;gap:16px;align-items:center;justify-content:flex-end}
+.lock .gauge-w{width:72px;height:72px;padding:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;backdrop-filter:blur(20px)}
+.lock .gauge{position:relative;width:58px;height:55.387px;color:rgba(255,255,255,.6);font-weight:400}
+.lock .gauge .arc{position:absolute;left:0;top:0;width:58px;height:45.4686px}
+.lock .gauge .ind{position:absolute;left:38.22px;top:2.46px;width:7.74px;height:7.75px;display:grid;place-items:center}
+.lock .gauge .ind img{width:5.67px;height:5.67px}
+.lock .gauge .lo,.lock .gauge .hi{position:absolute;top:80.14%;font-size:11px;line-height:normal}
+.lock .gauge .lo{left:18.1%}
+.lock .gauge .hi{left:56.03%}
+.lock .gauge .val{position:absolute;left:calc(50% - 15px);top:calc(50% - 15.03px);width:29px;font-size:24px;line-height:normal}
+.lock .stack-w{width:72px;height:72px;padding:7px;display:flex;align-items:center;justify-content:flex-end;backdrop-filter:blur(20px)}
+.lock .stack-w .circ{position:relative;width:58px;height:58px;border-radius:100px;padding:7px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.6);text-align:center;font-weight:400}
+.lock .stack-w .circ::before{content:"";position:absolute;inset:0;border-radius:100px;background:rgba(255,255,255,.2);mix-blend-mode:plus-lighter;backdrop-filter:blur(20px)}
+.lock .stack-w .circ > *{position:relative}
+.lock .stack-w .sym{width:16px;height:16px}
+.lock .stack-w .t{font-size:15px;line-height:normal;height:18px}
+.lock .stack-w .pm{font-size:9px;line-height:13px;height:11px}
+.glass{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:1.25px 0 0 -.75px #d0d0d0,-1.25px 0 0 -.75px #d0d0d0,0 0 0 .5px #ccc,0 8px 15px rgba(0,0,0,.02);
+  background:rgba(255,255,255,.07);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%)}
+.notif-list{position:absolute;left:0;right:0;bottom:122px;padding:16px 14px;animation:notif-in .7s .4s var(--ease) both}
+.notif{position:relative;width:100%;min-height:64px;padding:14px;border-radius:24px;display:flex;gap:10px;align-items:center;text-align:left;color:#fff;transition:transform .15s}
+.notif .glass{border-radius:23px;bottom:-.5px}
+.notif:active{transform:scale(.98)}
+@keyframes notif-in{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.notif .app-icon{position:relative;width:38.333px;height:38.333px;border-radius:9px;background:var(--off-black);overflow:hidden;flex:none}
+.notif .app-icon img{position:absolute;left:4.03px;top:15.97px;width:30.027px;height:6.728px}
+.notif .n-body{position:relative;flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start}
+.notif .n-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:15px;letter-spacing:-.23px}
+.notif .n-title{font-weight:600;line-height:17px}
+.notif .n-desc{font-weight:400;line-height:18px;white-space:nowrap}
+.notif .n-time{font-weight:400;font-size:15px;line-height:17px;color:#4d4d4d;mix-blend-mode:plus-lighter;white-space:nowrap}
+.lock .controls{position:absolute;left:46px;top:766px;width:310px;display:flex;justify-content:space-between}
+.lock .ctrl{position:relative;width:58px;height:58px;border-radius:100px;display:grid;place-items:center;color:#d9d9d9}
+.lock .ctrl .sym{position:relative;width:24px;height:24px;opacity:.9;mix-blend-mode:plus-lighter}
+
+/* ---------- App + views ---------- */
+.app{position:absolute;inset:0;z-index:10}
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--off-black);padding-top:62px;
+  transition:transform .45s var(--ease);scrollbar-width:none;overscroll-behavior:contain}
+.view::-webkit-scrollbar{display:none}
+.view.offright{transform:translateX(100%)}
+.view.offleft{transform:translateX(-28%)}
+.view.on-top{z-index:2}
+/* global-nav tab switches are instant (no slide) */
+.app.instant .view{transition:none !important}
+
+/* ---------- Global navigation ---------- */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:72px;z-index:30;background:var(--off-black);border:1px solid var(--nav-line);border-bottom:0;
+  border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;overflow:hidden}
+.tab{width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--off-white)}
+.tab .sym{width:24px;height:24px;background:currentColor}
+.tab.active{color:var(--lilac)}
+
+/* ---------- Home ---------- */
+.home-header{padding:24px 22px;background:var(--off-black);backdrop-filter:blur(22px)}
+.home-header .row{display:flex;justify-content:space-between;align-items:flex-start;height:48px;width:358px}
+.logo-box{width:129px;padding:7px 0;overflow:hidden}
+.logo-box img{width:128.458px;height:28.781px}
+.head-actions{display:flex;gap:8px;align-items:center}
+.btn-search{width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:var(--off-black);display:grid;place-items:center;backdrop-filter:blur(12px)}
+.btn-search img{width:18px;height:18px}
+.avatar{width:42px;height:42px;border-radius:21px;background:var(--secondary);border:1px solid var(--line);display:grid;place-items:center}
+
+.home-body{display:flex;flex-direction:column;gap:20px;padding:0 22px 108px}
+.home-body.history-open{gap:36px}
+.prompt-stack{display:flex;flex-direction:column;gap:12px}
+
+/* Daily prompt card */
+.card{background:var(--navy);border-radius:10px}
+.daily{width:356px;padding:22px;display:flex;flex-direction:column;align-items:flex-start}
+.daily .top{width:312px;display:flex;justify-content:space-between;align-items:center}
+.daily .history-link{text-decoration:underline;text-underline-position:from-font;color:var(--off-white)}
+.daily h2{width:312px;padding-top:13px}
+.tags{display:flex;gap:6px;padding-top:20px;height:46px}
+.tag{border:1px solid var(--lilac);background:var(--navy);color:var(--lilac);padding:7px 10px;border-radius:999px;white-space:nowrap}
+.joined-wrap{padding-top:22px}
+.joined{width:312px;border-top:1px solid var(--secondary);padding-top:15px;display:flex;gap:10px;align-items:center}
+.avatars{display:flex;padding-left:6px}
+.avatars span{width:21px;height:27px;position:relative}
+.avatars b{position:absolute;left:-6px;top:0;width:27px;height:27px;border-radius:13.5px;background:var(--secondary);border:1px solid var(--off-black);display:grid;place-items:center;font-weight:700}
+.streak{width:76px;display:flex;justify-content:flex-end}
+.streak div{border-left:1px solid var(--secondary);padding-left:24px;display:flex;gap:5px;align-items:center;color:#fff}
+.streak img{width:20px;height:20px}
+.cta-wrap{padding-top:16px}
+.cta{width:312px;display:grid;grid-template-columns:162.6px 141.39px;gap:8px}
+.btn{height:48px;min-height:48px;padding:0 16px;border-radius:10px;display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:filter .15s, transform .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--off-white);border:1px solid var(--off-black);color:var(--off-black)}
+.btn-secondary{background:var(--secondary);border:1px solid var(--secondary);color:var(--off-white)}
+
+/* Prompt history */
+.history{width:356px;padding:17px;display:flex;flex-direction:column;position:relative;animation:hist-in .35s var(--ease)}
+@keyframes hist-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.history .h-top{display:flex;justify-content:space-between;align-items:center}
+.range{background:var(--off-black);border-radius:10px;padding:3px;display:flex;gap:3px}
+.range button{padding:6px 9px;border-radius:7px;color:var(--grey)}
+.range button.on{background:var(--navy);color:var(--off-white)}
+.h-nav{padding-top:16px;height:54px;width:322px}
+.h-nav .grid{display:grid;grid-template-columns:36px 230px 36px;gap:10px;height:38px;align-items:center}
+.circle-btn{width:36px;height:36px;border-radius:18px;display:grid;place-items:center}
+.circle-btn img{width:18px;height:18px}
+.circle-btn:disabled{opacity:.3;cursor:default}
+.h-label{display:flex;align-items:center;justify-content:center}
+.h-label .lbl{padding-left:14px;white-space:pre;text-align:center}
+.h-label .chev{width:38px;height:38px;display:grid;place-items:center}
+.h-label .chev img{width:20px;height:20px;transition:transform .2s}
+.h-label .chev[aria-expanded="true"] img{transform:rotate(180deg)}
+.cal-area{overflow:hidden;touch-action:pan-y}
+.cal-slide{transition:transform .28s var(--ease), opacity .28s}
+.cal-slide.out-left{transform:translateX(-40px);opacity:0}
+.cal-slide.out-right{transform:translateX(40px);opacity:0}
+.cal-slide.no-anim{transition:none}
+
+.week{padding-top:17px;display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{display:flex;flex-direction:column;align-items:center;gap:7px}
+.wd .dot{width:32px;height:32px;border-radius:16px;background:var(--secondary);display:grid;place-items:center;color:var(--off-white)}
+.wd .dot.sel{background:var(--lilac);color:var(--secondary)}
+
+.month{padding-top:17px}
+.month .letters,.month .days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.month .letters{margin-bottom:8px;text-align:center}
+.month .days{grid-auto-rows:41.72px}
+.day{border-radius:10px;background:var(--secondary);display:grid;place-items:center;color:var(--off-white)}
+.day.dim{opacity:.38}
+.day.sel{background:var(--lilac);color:var(--off-black);opacity:1}
+.day:disabled,.wd button:disabled{cursor:default}
+.day.empty{background:none}
+
+.pick-card-wrap{padding-top:16px}
+.pick-card{width:322px;background:var(--secondary);border:1px solid var(--secondary);border-radius:10px;padding:14px 50px 19px 14px;position:relative;text-align:left;display:block}
+.pick-card .p{margin-top:7px;width:265px}
+.pick-card .meta{margin-top:2px}
+.pick-card .arrow{position:absolute;left:291px;top:50%;margin-top:-7.5px;width:15px;height:15px;display:grid;place-items:center}
+.pick-card .arrow img{width:15px;height:15px}
+
+.month-menu{position:absolute;top:104px;left:50%;transform:translateX(-50%);z-index:5;width:220px;max-height:260px;overflow-y:auto;
+  background:var(--off-black);border:1px solid var(--line);border-radius:10px;padding:4px;display:none;scrollbar-width:none;
+  box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.month-menu.open{display:block;animation:hist-in .2s var(--ease)}
+.month-menu button{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:7px}
+.month-menu button.on{background:var(--navy);color:var(--lilac)}
+
+/* Music catalogue (home) */
+.mc{display:flex;flex-direction:column;gap:14px}
+.mc-head{width:360px;display:flex;justify-content:space-between;align-items:center;padding:4px 0;overflow:hidden}
+.mc-open{display:flex;gap:6px;align-items:center}
+.mc-open img{width:18px;height:18px}
+.albums{display:flex;gap:12px;margin-right:-22px;padding-right:22px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity}
+.albums::-webkit-scrollbar{display:none}
+.album{width:126px;min-width:116px;flex:none;scroll-snap-align:start}
+.album .art{width:126px;height:126px;border-radius:10px;position:relative;display:grid;place-items:center;padding:9px;overflow:visible}
+.album .art img.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;pointer-events:none}
+.album .art.selected{border:3px solid var(--lilac)}
+.album .art.selected img.cover{border-radius:7px}
+.play-sm{position:relative;width:33px;height:33px}
+.play-sm img{position:absolute;left:-8px;top:-8px;width:53px;height:53px;max-width:none}
+.album .txt{height:57px;position:relative}
+.album .txt .title{position:absolute;left:4px;top:9px;width:110px;white-space:nowrap}
+.album .txt .artist{position:absolute;left:4px;top:27px;white-space:nowrap}
+.album .dots{position:absolute;left:0;top:39px;width:26px;height:26px}
+.album .dots img{position:absolute;left:1px;top:1px;width:24px;height:24px}
+
+/* More ways to discover */
+.more{display:grid;grid-template-columns:174px 174px;gap:10px}
+.more .tile{min-height:156px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;text-align:left}
+.more .num{letter-spacing:.8px;color:var(--grey);position:relative}
+.more .num i{position:absolute;left:130px;top:2px;width:11px;height:11px;border-radius:5.5px;background:var(--pinky-pie);border:2px solid var(--navy)}
+.more .grow{flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+.more .go{display:flex;gap:4px;align-items:center;height:26px;padding-top:9px}
+.more .go img{width:15px;height:15px}
+
+/* ---------- Sub-page header ---------- */
+.subhead{padding:0 20px 20px;width:402px}
+.subhead .row{display:flex;gap:8px;height:44px;align-items:center}
+.subhead .row .back{width:24px;height:24px}
+.subhead .row .back img{width:24px;height:24px}
+.subhead .row p{flex:1;text-align:center}
+.subhead .row .spacer{width:24px;height:24px}
+
+/* ---------- Daily prompt playlist ---------- */
+.pl-body{display:flex;flex-direction:column;gap:36px;padding:0 22px 128px}
+.your-song{display:flex;flex-direction:column;gap:8px}
+.song-input{display:flex}
+.song-input label{width:315.891px;height:49.5px;padding:14px;border:1px solid var(--line);border-right:0;border-radius:10px 0 0 10px;background:var(--off-black);display:flex;align-items:center}
+.song-input input{width:100%;font-weight:300;font-size:12px;line-height:1}
+.song-input input::placeholder{color:var(--placeholder);opacity:1}
+.song-input .add{width:42.109px;background:var(--secondary);border:1px solid var(--secondary);border-radius:0 10px 10px 0;display:grid;place-items:center}
+.song-input .add img{width:18px;height:18px}
+.song-input.sent label{border-color:var(--lilac)}
+.song-input.sent .add{background:var(--lilac);border-color:var(--lilac)}
+.song-input.sent .add img{filter:brightness(0)}
+.sec-title{height:20px;position:relative;white-space:nowrap}
+.sec-title .r{position:absolute;right:0;top:4.5px}
+.ranked{padding-top:13px}
+.ranked ul{list-style:none;border-top:1px solid var(--line)}
+.ranked li{display:grid;grid-template-columns:24px 48px 1fr auto;gap:10px;align-items:center;min-height:74px;border-bottom:1px solid var(--line)}
+.ranked .thumb{width:48px;height:48px;border-radius:10px;border:1px solid var(--line);overflow:hidden;position:relative;background:var(--line)}
+.ranked .thumb img{position:absolute;left:0;top:0;width:46px;height:46px;object-fit:cover}
+.ranked .thumb img.bg{width:100%;height:100%}
+.ranked .names{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ranked .names p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ranked .plus{width:34px;height:34px;border-radius:17px;border:1px solid var(--line);display:grid;place-items:center}
+.ranked .plus img{width:18px;height:18px}
+
+/* ---------- Music catalogue (reels) ---------- */
+.cat-view{scroll-snap-type:y proximity}
+.cat-body{display:flex;flex-direction:column;align-items:center;padding:0 22px 92px}
+.cat-tools{display:grid;grid-template-columns:92.15px 257.85px;grid-template-rows:42px 44px;gap:8px;width:100%}
+.tool-btn{border:1px solid var(--line);background:var(--off-black);border-radius:10px;display:flex;gap:7px;align-items:center;justify-content:center;padding:0 12px}
+.tool-btn img{width:20px;height:20px}
+.tool-select{border:1px solid var(--line);background:var(--off-black);border-radius:10px;padding:0 10px;display:flex;align-items:center;justify-content:space-between}
+.tool-select span{padding-left:4px}
+.tool-select img{width:16px;height:16px;margin-right:2px}
+.search-bar{grid-column:1 / span 2;border:1px solid var(--line);background:var(--off-black);border-radius:20px;height:44px;display:flex;gap:10px;align-items:center;padding:0 16px}
+.search-bar img{width:20px;height:20px}
+.search-bar input{flex:1;font-weight:300;font-size:16px;line-height:1.2}
+.search-bar input::placeholder{color:var(--off-white);opacity:.5}
+.reel{padding-top:12px;display:flex;flex-direction:column;align-items:center;scroll-snap-align:start;scroll-margin-top:62px}
+.reel .media{width:350px;height:462px;border-radius:10px;border:1px solid var(--line);overflow:hidden;position:relative;display:grid;place-items:center}
+.reel .media img.cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;transition:transform 12s linear}
+.reel.playing .media img.cover{transform:scale(1.12)}
+.play-lg{position:relative;width:66px;height:66px;border-radius:33px;background:#0E1319;display:grid;place-items:center;transition:opacity .25s, transform .25s;z-index:1}
+.play-lg .inner{position:relative;width:73px;height:73px}
+.play-lg .inner img{position:absolute;left:-8px;top:-8px;width:93px;height:93px;max-width:none}
+.reel.playing .play-lg{opacity:0;transform:scale(.85)}
+.reel .media .tap{position:absolute;inset:0;z-index:2}
+.wave{position:absolute;left:50%;transform:translateX(-50%);top:406px;width:298px;height:38px;display:flex;gap:4px;align-items:center;z-index:1}
+.wave i{flex:1;background:linear-gradient(100deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);transform-origin:center}
+.reel.playing .wave i{animation:wave 0.9s ease-in-out infinite alternate}
+@keyframes wave{0%{transform:scaleY(1)}50%{transform:scaleY(.45)}100%{transform:scaleY(1.25)}}
+.reel .info{width:100%;min-height:112px;padding:15px 4px 2px;display:flex;justify-content:space-between;align-items:center}
+.reel .info .l{width:190.797px}
+.reel .info .ttl{padding-top:8px;height:31px}
+.reel .info .art-name{padding-top:3px;height:21px}
+.reel .info .more-btn{width:24px;height:24px;align-self:center}
+.reel .info .more-btn img{width:24px;height:24px}
+
+/* ---------- More actions sheet ---------- */
+.sheet-wrap{position:absolute;inset:0;z-index:50;pointer-events:none}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#000;border-radius:10px 10px 0 0;padding:44px 20px 52px;display:flex;flex-direction:column;gap:24px;
+  transform:translateY(100%);transition:transform .38s var(--ease);touch-action:none}
+.sheet .handle{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:44px;height:4px}
+.sheet .item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;color:#fff}
+.sheet .item .ic{width:24px;height:24px;display:grid;place-items:center}
+.sheet .item .ic img{width:24px;height:24px}
+.sheet .item .ic img.s20{width:20px;height:20px}
+.sheet-wrap.open{pointer-events:auto}
+.sheet-wrap.open .sheet-backdrop{opacity:1}
+.sheet-wrap.open .sheet{transform:none}
+</style>
+<link rel="stylesheet" href="node.css">
+<link rel="stylesheet" href="drop.css">
+<link rel="stylesheet" href="player.css">
+<link rel="stylesheet" href="profile.css">
+</head>
+<body>
+<div class="stage">
+  <div class="device-wrap">
+    <div class="device">
+      <div class="screen" id="screen">
+
+        <!-- ============ LOCK SCREEN + NOTIFICATION ============ -->
+        <section class="lock" id="lock" aria-label="Lock screen">
+          <div class="statusbar">
+            <p class="time">9:41</p><div class="island-space"></div>
+            <div class="levels">
+              <div class="cell"><i style="height:6.333px"></i><i style="height:8.67px"></i><i style="height:11px"></i><i style="height:13.667px"></i></div>
+              <img src="assets/wifi.svg" width="19.333" height="14.333" alt="">
+              <img src="assets/battery.svg" width="29.333" height="13.667" alt="">
+            </div>
+          </div>
+          <div class="swipe-ind"></div>
+          <p class="inline-w">Oct 18 <i class="sym" style="--i:url(assets/ph-globe.svg)"></i> SFO 9:41 AM</p>
+          <div class="big-clock" role="img" aria-label="9:41"></div>
+          <div class="widgets">
+            <div class="w-table">
+              <div class="hd"><i class="sym" style="--i:url(assets/ph-cloud-sun.svg)"></i><span>72º</span></div>
+              <p>Partly Cloudy</p>
+              <p>H:88º L:64º</p>
+            </div>
+            <div class="w-right">
+              <div class="gauge-w"><div class="gauge">
+                <img class="arc" src="assets/lock-gauge.svg" alt="">
+                <span class="ind"><img src="assets/lock-gauge-indicator.svg" alt=""></span>
+                <span class="val">67</span><span class="lo">50</span><span class="hi">78</span>
+              </div></div>
+              <div class="stack-w"><div class="circ">
+                <i class="sym" style="--i:url(assets/ph-sun-horizon.svg)"></i>
+                <p class="t">8:29</p><p class="pm">PM</p>
+              </div></div>
+            </div>
+          </div>
+          <div class="notif-list" id="notif-list">
+            <button class="notif" id="notif" aria-label="Open tono daily prompt">
+              <span class="glass"></span>
+              <span class="app-icon"><img src="assets/tono-light.svg" alt="tono"></span>
+              <span class="n-body">
+                <span class="n-text">
+                  <span class="n-title">Today’s daily prompt is live</span>
+                  <span class="n-desc">A song that feels like winter</span>
+                </span>
+                <span class="n-time">9:41 AM</span>
+              </span>
+            </button>
+          </div>
+          <div class="controls">
+            <span class="ctrl"><span class="glass"></span><i class="sym" style="--i:url(assets/ph-flashlight.svg)"></i></span>
+            <span class="ctrl"><span class="glass"></span><i class="sym" style="--i:url(assets/ph-camera.svg)"></i></span>
+          </div>
+        </section>
+
+        <!-- ============ APP ============ -->
+        <div class="app" id="app">
+          <div class="statusbar solid">
+            <p class="time">9:41</p><div class="island-space"></div>
+            <div class="levels">
+              <div class="cell"><i style="height:6.333px"></i><i style="height:8.67px"></i><i style="height:11px"></i><i style="height:13.667px"></i></div>
+              <img src="assets/wifi.svg" width="19.333" height="14.333" alt="">
+              <img src="assets/battery.svg" width="29.333" height="13.667" alt="">
+            </div>
+          </div>
+
+          <!-- HOME -->
+          <main class="view" id="view-home">
+            <header class="home-header">
+              <div class="row">
+                <div class="logo-box"><img src="assets/tono.svg" alt="tono"></div>
+                <div class="head-actions">
+                  <button class="btn-search" aria-label="Search"><img src="assets/search.svg" alt=""></button>
+                  <button class="avatar t-body" aria-label="Profile">AM</button>
+                </div>
+              </div>
+            </header>
+
+            <div class="home-body" id="home-body">
+              <div class="prompt-stack">
+                <article class="card daily">
+                  <div class="top">
+                    <p class="t-caption grey">Daily prompt</p>
+                    <button class="history-link t-link" id="history-link" aria-expanded="false">History</button>
+                  </div>
+                  <h2 class="t-ginormous gradient-text">A song that feels like winter.</h2>
+                  <div class="tags"><span class="tag t-caption">Late Night Listeners</span><span class="tag t-caption">Soft Pop Fans</span></div>
+                  <div class="joined-wrap">
+                    <div class="joined">
+                      <div class="avatars"><span><b class="t-avatar">MK</b></span><span><b class="t-avatar">JL</b></span><span><b class="t-avatar">NS</b></span></div>
+                      <p class="t-caption">247 people joined today</p>
+                      <div class="streak"><div><img src="assets/fire.svg" alt=""><span class="t-caption">7</span></div></div>
+                    </div>
+                  </div>
+                  <div class="cta-wrap">
+                    <div class="cta">
+                      <button class="btn btn-primary t-body" id="add-song">Add a Song</button>
+                      <button class="btn btn-secondary t-body" id="view-playlist-btn">View Playlist</button>
+                    </div>
+                  </div>
+                </article>
+                <div id="history-slot"></div>
+              </div>
+
+              <section class="mc">
+                <div class="mc-head">
+                  <p class="t-header-db">Music Catalogue</p>
+                  <button class="mc-open" id="open-catalogue"><span class="t-caption grey">Open the full catalogue</span><img src="assets/arrow-right-18.svg" alt=""></button>
+                </div>
+                <div class="albums" id="albums"></div>
+              </section>
+
+              <section class="more" aria-label="More ways to discover">
+                <button class="card tile">
+                  <p class="num t-num">01</p>
+                  <div class="grow"><p class="t-body-db">Node Discovery</p></div>
+                  <div class="go"><span class="t-caption">Start a Node</span><img src="assets/arrow-right-15.svg" alt=""></div>
+                </button>
+                <button class="card tile">
+                  <p class="num t-num">02<i></i></p>
+                  <div class="grow"><p class="t-body-db">Record Drop-off</p></div>
+                  <div class="go"><span class="t-caption">Open mailbox</span><img src="assets/arrow-right-15.svg" alt=""></div>
+                </button>
+              </section>
+            </div>
+          </main>
+
+          <!-- DAILY PROMPT PLAYLIST -->
+          <section class="view offright" id="view-playlist"></section>
+
+          <!-- MUSIC CATALOGUE (reels) -->
+          <section class="view cat-view offright" id="view-catalogue"></section>
+
+          <nav class="tabbar" aria-label="Global navigation">
+            <button class="tab active" data-tab="discovery"><i class="sym" style="--i:url(assets/nav-compass.svg)"></i><span class="t-nav">Discovery</span></button>
+            <button class="tab" data-tab="community"><i class="sym" style="--i:url(assets/nav-users.svg)"></i><span class="t-nav">Community</span></button>
+            <button class="tab" data-tab="player"><i class="sym" style="--i:url(assets/nav-play.svg)"></i><span class="t-nav">Player</span></button>
+            <button class="tab" data-tab="profile"><i class="sym" style="--i:url(assets/nav-user.svg)"></i><span class="t-nav">Profile</span></button>
+          </nav>
+
+          <!-- MORE ACTIONS SHEET -->
+          <div class="sheet-wrap" id="sheet-wrap" aria-hidden="true">
+            <div class="sheet-backdrop" id="sheet-backdrop"></div>
+            <div class="sheet" id="sheet" role="dialog" aria-label="Song actions">
+              <img class="handle" src="assets/sheet-handle.svg" alt="">
+              <button class="item" data-act="playlist"><span class="ic"><img src="assets/plus.svg" alt=""></span><span class="t-body">Add to playlist</span></button>
+              <button class="item" data-act="save"><span class="ic"><img src="assets/heart.svg" alt=""></span><span class="t-body">Save</span></button>
+              <button class="item" data-act="node"><span class="ic"><img class="s20" src="assets/flow-arrow.svg" alt=""></span><span class="t-body">Take to the node</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="island"></div>
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+  </div>
+  <button class="restart t-caption" id="restart">Restart flow</button>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const TODAY = new Date(2026, 9, 18);            // prototype "today": Sun Oct 18 2026
+const EARLIEST = new Date(2025, 10, 1);         // history goes back to Nov 2025
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON3 = MONTHS.map(m => m.slice(0,3));
+
+const SONGS = [
+  {title:"Wonderwall", artist:"Oasis", art:"assets/art-wonderwall.png", media:"assets/video-1.png", len:"4:19"},
+  {title:"Riptide", artist:"Vance Joy", art:"assets/art-riptide.png", media:"assets/video-2.png", len:"3:24"},
+  {title:"Babydoll", artist:"Dominic Fike", art:"assets/art-babydoll.png", media:"assets/art-babydoll.png", len:"1:38"},
+];
+
+const TOP10 = [
+  {t:"Remember", a:"Sam Ock", img:"assets/art-row1.png", bg:"assets/art-row1-bg.png"},
+  {t:"Winter Waltz", a:"FRANKIE", img:"assets/art-row2.png"},
+  {t:"Christmas Song", a:"back number", img:"assets/art-row3.png"},
+  {t:"Love you on Christmas", a:"Yerin Baek", img:"assets/art-row4.png"},
+  {t:"Come Softly", a:"Grouper"},
+  {t:"Avril 14th", a:"Aphex Twin"},
+  {t:"Everything In Its Right Place", a:"Radiohead"},
+  {t:"Untrue", a:"Burial"},
+  {t:"Anemone", a:"The Brian Jonestown Massacre"},
+  {t:"Limerence", a:"Yves Tumor"},
+];
+
+const POOL = [
+  "A song that feels like an open window.",
+  "A song for walking without a destination.",
+  "A song you would send without explanation.",
+  "A song for the first train out.",
+  "A song that belongs after midnight.",
+  "A song that sounds better through a wall.",
+  "A song for a room with no furniture.",
+  "A song that makes waiting feel useful.",
+  "A song you found through someone else.",
+  "A song that makes the city feel slower.",
+  "A song that feels like winter.",
+];
+// prompts named in the hi-fi for October 2026
+const OCT = {3:0, 6:1, 9:2, 12:3, 13:4, 14:5, 15:6, 16:7, 17:8, 18:10};
+const OCT_ANSWERED = new Set(Object.keys(OCT).map(Number));
+
+const key = d => d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+const hash = n => { n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n = n ^ (n >>> 4); n = Math.imul(n, 0x27d4eb2d); return (n ^ (n >>> 15)) >>> 0; };
+const isOct26 = d => d.getFullYear() === 2026 && d.getMonth() === 9;
+
+function promptFor(d){
+  if (isOct26(d) && OCT[d.getDate()] !== undefined) return POOL[OCT[d.getDate()]];
+  return POOL[hash(key(d)) % POOL.length];
+}
+function songsFor(d){
+  if (sameDay(d, TODAY)) return 247;
+  if (isOct26(d) && d.getDate() === 9) return 176;
+  return 80 + hash(key(d) * 7) % 220;
+}
+// dimmed = days the listener didn't answer (October pattern from the hi-fi)
+function answered(d){
+  if (isOct26(d)) return OCT_ANSWERED.has(d.getDate());
+  return hash(key(d) * 3) % 5 < 2;
+}
+const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+const addDays = (d,n) => new Date(d.getFullYear(), d.getMonth(), d.getDate()+n);
+const mondayOf = d => addDays(d, -((d.getDay()+6)%7));
+const isFuture = d => d > TODAY;
+
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+/* ================= DEVICE SCALE ================= */
+function fit(){
+  const s = Math.min(1, (innerHeight - 70) / 902, (innerWidth - 32) / 430);
+  document.documentElement.style.setProperty('--scale', s.toFixed(4));
+}
+addEventListener('resize', fit); fit();
+
+/* ================= LOCK → HOME ================= */
+const lock = $('#lock');
+function unlock(){ lock.classList.add('unlocked'); }
+$('#notif').addEventListener('click', unlock);
+(() => { // swipe up on the lock screen
+  let y0 = null;
+  lock.addEventListener('pointerdown', e => { y0 = e.clientY; });
+  lock.addEventListener('pointermove', e => {
+    if (y0 === null) return;
+    const dy = Math.min(0, e.clientY - y0);
+    lock.style.transition = 'none';
+    lock.style.transform = `translateY(${dy / parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--scale'))}px)`;
+  });
+  const end = e => {
+    if (y0 === null) return;
+    const dy = e.clientY - y0; y0 = null;
+    lock.style.transition = ''; lock.style.transform = '';
+    if (dy < -80) unlock();
+  };
+  lock.addEventListener('pointerup', end); lock.addEventListener('pointercancel', end);
+})();
+
+$('#restart').addEventListener('click', () => {
+  closeSheet(); goHome(true);
+  state.open = false; renderHistory();
+  $('#view-home').scrollTop = 0;
+  lock.classList.remove('unlocked');
+  const n = $('#notif-list'); n.style.animation = 'none'; n.offsetHeight; n.style.animation = '';
+});
+
+/* ================= VIEW STACK ================= */
+const home = $('#view-home'), vPlaylist = $('#view-playlist'), vCat = $('#view-catalogue');
+let current = home;
+function push(view){
+  if (current === view) return;
+  view.scrollTop = 0;
+  view.classList.add('on-top');
+  requestAnimationFrame(() => {
+    view.classList.remove('offright');
+    current.classList.add('offleft');
+    current = view;
+  });
+}
+function goHome(instant){
+  if (current === home) return;
+  const leaving = current;
+  if (instant){ leaving.style.transition = home.style.transition = 'none'; }
+  leaving.classList.add('offright');
+  home.classList.remove('offleft');
+  current = home;
+  setTimeout(() => { leaving.classList.remove('on-top'); stopAll(); }, instant ? 0 : 450);
+  if (instant) requestAnimationFrame(() => { leaving.style.transition = home.style.transition = ''; });
+}
+
+/* ================= HOME: CATALOGUE ROW ================= */
+$('#albums').append(...SONGS.map((s, i) => el(`
+  <div class="album">
+    <button class="art ${i===0 ? 'selected' : ''}" data-open="${i}" aria-label="Play ${s.title}">
+      <img class="cover" src="${s.art}" alt="">
+      ${i===0 ? '<span class="play-sm"><img src="assets/play-small.svg" alt=""></span>' : ''}
+    </button>
+    <div class="txt">
+      <p class="title t-body">${s.title}</p>
+      <p class="artist t-caption grey">${s.artist}</p>
+      <button class="dots" data-more="${i}" aria-label="More actions"><img src="assets/dots-three.svg" alt=""></button>
+    </div>
+  </div>`)));
+$('#albums').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'), m = e.target.closest('[data-more]');
+  if (m) openSheet(+m.dataset.more);
+  else if (o) openCatalogue(+o.dataset.open);
+});
+$('#open-catalogue').addEventListener('click', () => openCatalogue(0));
+
+/* ================= HOME: PROMPT HISTORY ================= */
+const state = { open:false, mode:'week', sel:new Date(TODAY), weekStart:mondayOf(TODAY), month:new Date(TODAY.getFullYear(), TODAY.getMonth(), 1), menu:false };
+
+$('#history-link').addEventListener('click', () => {
+  state.open = !state.open;
+  if (state.open){ state.mode = 'week'; state.sel = new Date(TODAY); state.weekStart = mondayOf(TODAY); state.month = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); }
+  renderHistory();
+});
+
+function weekLabel(start){
+  const first = new Date(start.getFullYear(), start.getMonth(), 1);
+  const offset = (first.getDay()+6)%7;
+  const n = Math.ceil((start.getDate() + offset) / 7);
+  return `${MON3[start.getMonth()]} ${start.getFullYear()}  · Week ${n}`;
+}
+function canNext(){
+  if (state.mode === 'week') return addDays(state.weekStart, 7) <= TODAY;
+  return new Date(state.month.getFullYear(), state.month.getMonth()+1, 1) <= TODAY;
+}
+function canPrev(){
+  if (state.mode === 'week') return addDays(state.weekStart, -1) >= EARLIEST;
+  return new Date(state.month.getFullYear(), state.month.getMonth()-1, 1) >= EARLIEST;
+}
+
+function calendarHTML(){
+  if (state.mode === 'week'){
+    const L = ['M','T','W','T','F','S','S'];
+    return `<div class="week">${L.map((l, i) => {
+      const d = addDays(state.weekStart, i);
+      const fut = isFuture(d), sel = sameDay(d, state.sel);
+      return `<div class="wd"><p class="t-weekday grey">${l}</p>
+        <button class="dot t-link ${sel ? 'sel' : ''}" data-day="${key(d)}" ${fut ? 'disabled style="opacity:.38"' : (!answered(d) && !sel ? 'style="opacity:.38"' : '')}>${d.getDate()}</button></div>`;
+    }).join('')}</div>`;
+  }
+  const y = state.month.getFullYear(), m = state.month.getMonth();
+  const lead = (new Date(y, m, 1).getDay()+6)%7, n = new Date(y, m+1, 0).getDate();
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += `<span class="day empty"></span>`;
+  for (let dd = 1; dd <= n; dd++){
+    const d = new Date(y, m, dd), fut = isFuture(d), sel = sameDay(d, state.sel);
+    cells += `<button class="day t-num ${sel ? 'sel' : ''} ${(fut || !answered(d)) ? 'dim' : ''}" data-day="${key(d)}" ${fut ? 'disabled' : ''}>${dd}</button>`;
+  }
+  return `<div class="month">
+    <div class="letters">${['M','T','W','T','F','S','S'].map(l => `<p class="t-caption2 grey">${l}</p>`).join('')}</div>
+    <div class="days">${cells}</div></div>`;
+}
+
+function renderHistory(dir){
+  const slot = $('#history-slot');
+  $('#history-link').setAttribute('aria-expanded', state.open);
+  $('#home-body').classList.toggle('history-open', state.open);
+  if (!state.open){ slot.innerHTML = ''; return; }
+
+  const label = state.mode === 'week' ? weekLabel(state.weekStart) : `${MONTHS[state.month.getMonth()]} ${state.month.getFullYear()}`;
+  const s = state.sel;
+  const existing = slot.querySelector('.history');
+  const panel = el(`
+    <section class="card history" aria-label="Prompt history">
+      <div class="h-top">
+        <p class="t-header">Prompt History</p>
+        <div class="range" role="tablist">
+          <button class="t-caption ${state.mode==='week' ? 'on' : ''}" data-mode="week">week</button>
+          <button class="t-caption ${state.mode==='month' ? 'on' : ''}" data-mode="month">month</button>
+        </div>
+      </div>
+      <div class="h-nav"><div class="grid">
+        <button class="circle-btn" data-step="-1" aria-label="Previous" ${canPrev() ? '' : 'disabled'}><img src="assets/arrow-left-cal.svg" alt=""></button>
+        <div class="h-label">
+          <p class="lbl t-body">${label}</p>
+          <button class="chev" data-menu aria-label="Choose a month" aria-expanded="${state.menu}"><img src="assets/calendar-dots.svg" alt=""></button>
+        </div>
+        <button class="circle-btn" data-step="1" aria-label="Next" ${canNext() ? '' : 'disabled'}><img src="assets/arrow-right-cal.svg" alt=""></button>
+      </div></div>
+      <div class="month-menu ${state.menu ? 'open' : ''}">${monthMenuHTML()}</div>
+      <div class="cal-area"><div class="cal-slide ${dir ? 'no-anim ' + (dir > 0 ? 'out-right' : 'out-left') : ''}">${calendarHTML()}</div></div>
+      <div class="pick-card-wrap">
+        <button class="pick-card" data-playlist="${key(s)}">
+          <p class="t-caption2 grey">${MON3[s.getMonth()]} ${s.getDate()}</p>
+          <p class="p t-body">${promptFor(s)}</p>
+          <p class="meta t-caption2 grey">${songsFor(s)} songs · View playlist</p>
+          <span class="arrow"><img src="assets/card-arrow.svg" alt=""></span>
+        </button>
+      </div>
+    </section>`);
+  if (existing) panel.style.animation = 'none';
+  slot.replaceChildren(panel);
+  if (dir){
+    const sl = panel.querySelector('.cal-slide');
+    requestAnimationFrame(() => requestAnimationFrame(() => { sl.classList.remove('no-anim','out-left','out-right'); }));
+  }
+  if (state.menu){ const on = panel.querySelector('.month-menu .on'); on && on.scrollIntoView({block:'center'}); }
+}
+
+function monthMenuHTML(){
+  const items = [];
+  for (let d = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); d >= EARLIEST; d = new Date(d.getFullYear(), d.getMonth()-1, 1)){
+    const on = state.mode === 'month' ? (d.getFullYear()===state.month.getFullYear() && d.getMonth()===state.month.getMonth())
+                                      : (d.getFullYear()===state.weekStart.getFullYear() && d.getMonth()===state.weekStart.getMonth());
+    items.push(`<button class="t-body ${on ? 'on' : ''}" data-pick="${d.getFullYear()}-${d.getMonth()}">${MONTHS[d.getMonth()]} ${d.getFullYear()}</button>`);
+  }
+  return items.join('');
+}
+
+// landing rule: today if it's in range, otherwise the first day of that week / month
+function setWeek(start){
+  state.weekStart = start;
+  const end = addDays(start, 6);
+  state.sel = (TODAY >= start && TODAY <= end) ? new Date(TODAY) : new Date(start);
+}
+function setMonth(first){
+  state.month = first;
+  state.sel = (TODAY.getFullYear()===first.getFullYear() && TODAY.getMonth()===first.getMonth()) ? new Date(TODAY) : new Date(first);
+}
+function step(dir){
+  if (dir > 0 && !canNext()) return;
+  if (dir < 0 && !canPrev()) return;
+  state.menu = false;
+  if (state.mode === 'week') setWeek(addDays(state.weekStart, 7*dir));
+  else setMonth(new Date(state.month.getFullYear(), state.month.getMonth()+dir, 1));
+  renderHistory(dir);
+}
+
+$('#history-slot').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) { if (state.menu){ state.menu=false; renderHistory(); } return; }
+  if (t.dataset.mode && t.dataset.mode !== state.mode){
+    state.mode = t.dataset.mode; state.menu = false;
+    if (state.mode === 'month') state.month = new Date(state.sel.getFullYear(), state.sel.getMonth(), 1);
+    else state.weekStart = mondayOf(state.sel);
+    renderHistory();
+  } else if (t.dataset.step){ step(+t.dataset.step); }
+  else if (t.hasAttribute('data-menu')){ state.menu = !state.menu; renderHistory(); }
+  else if (t.dataset.pick){
+    const [y, m] = t.dataset.pick.split('-').map(Number);
+    const first = new Date(y, m, 1);
+    state.menu = false;
+    const dir = first > (state.mode === 'month' ? state.month : state.weekStart) ? 1 : -1;
+    if (state.mode === 'month') setMonth(first);
+    else { const w = mondayOf(first); setWeek(w < EARLIEST ? mondayOf(addDays(first, 7)) : w); if (!(TODAY >= state.weekStart && TODAY <= addDays(state.weekStart,6))) state.sel = first < state.weekStart ? new Date(state.weekStart) : first; }
+    renderHistory(dir);
+  }
+  else if (t.dataset.day){
+    const k = +t.dataset.day; state.sel = new Date(Math.floor(k/10000), Math.floor(k/100)%100 - 1, k%100);
+    state.menu = false; renderHistory();
+  }
+  else if (t.dataset.playlist){ openPlaylist(state.sel); }
+});
+
+// swipe between weeks / months
+(() => {
+  let x0 = null, y0 = null;
+  const slot = $('#history-slot');
+  slot.addEventListener('pointerdown', e => { if (e.target.closest('.cal-area')){ x0 = e.clientX; y0 = e.clientY; } });
+  const end = e => {
+    if (x0 === null) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+      e.preventDefault();
+      swallowClick = true;
+      step(dx < 0 ? 1 : -1);
+    }
+  };
+  let swallowClick = false;
+  slot.addEventListener('click', e => { if (swallowClick){ swallowClick = false; e.stopImmediatePropagation(); } }, true);
+  slot.addEventListener('pointerup', end);
+  slot.addEventListener('pointercancel', () => { x0 = null; });
+})();
+
+/* ================= DAILY PROMPT PLAYLIST ================= */
+const submitted = {};
+function openPlaylist(date, focus){
+  const d = new Date(date), k = key(d);
+  const isToday = sameDay(d, TODAY);
+  const mine = submitted[k];
+  vPlaylist.innerHTML = `
+    <div class="subhead"><div class="row">
+      <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
+      <p class="t-body">Daily Prompt Playlist</p><span class="spacer"></span>
+    </div></div>
+    <div class="pl-body">
+      <article class="card daily">
+        <div class="top"><p class="t-caption grey">${d.getFullYear()} / ${d.getMonth()+1} /${d.getDate()}</p></div>
+        <h2 class="t-ginormous gradient-text">${promptFor(d)}</h2>
+        <div class="tags"><span class="tag t-caption">Late Night Listeners</span><span class="tag t-caption">Soft Pop Fans</span></div>
+        <div class="joined-wrap"><div class="joined">
+          <div class="avatars"><span><b class="t-avatar">MK</b></span><span><b class="t-avatar">JL</b></span><span><b class="t-avatar">NS</b></span></div>
+          <p class="t-caption">${songsFor(d) + (mine ? 1 : 0)} people joined</p>
+        </div></div>
+      </article>
+      ${isToday ? `
+      <div class="your-song">
+        <p class="t-caption">Your song</p>
+        <form class="song-input ${mine ? 'sent' : ''}" id="song-form">
+          <label><input id="song-field" type="text" placeholder="Search title or artist" autocomplete="off" value="${mine ? mine.replace(/"/g,'&quot;') : ''}" ${mine ? 'readonly' : ''}></label>
+          <button class="add" type="submit" aria-label="Add your song"><img src="assets/plus-input.svg" alt=""></button>
+        </form>
+      </div>` : ''}
+      <section>
+        <div class="sec-title"><p class="t-header">Group top 10</p><p class="r t-caption grey">Most Popular Answers</p></div>
+        <div class="ranked"><ul>
+          ${TOP10.map((r, i) => `
+            <li>
+              <p class="t-caption grey">${String(i+1).padStart(2,'0')}</p>
+              <div class="thumb">${r.bg ? `<img class="bg" src="${r.bg}" alt="">` : ''}${r.img ? `<img src="${r.img}" alt="">` : ''}</div>
+              <div class="names"><p class="t-body">${r.t}</p><p class="t-caption grey">${r.a}</p></div>
+              <button class="plus" aria-label="Add ${r.t} to your music"><img src="assets/plus-circle.svg" alt=""></button>
+            </li>`).join('')}
+        </ul></div>
+      </section>
+    </div>`;
+  push(vPlaylist);
+  const form = vPlaylist.querySelector('#song-form');
+  if (form){
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const f = form.querySelector('input'), v = f.value.trim();
+      if (!v || submitted[k]) return;
+      submitted[k] = v; f.readOnly = true; f.blur(); form.classList.add('sent');
+      vPlaylist.querySelector('.joined .t-caption').textContent = `${songsFor(d) + 1} people joined`;
+    });
+    if (focus && !mine) setTimeout(() => form.querySelector('input').focus({preventScroll:true}), 460);
+  }
+}
+vPlaylist.addEventListener('click', e => { if (e.target.closest('[data-back]')) goHome(); });
+$('#add-song').addEventListener('click', () => openPlaylist(TODAY, true));
+document.querySelector('.cta .btn-secondary').addEventListener('click', () => openPlaylist(TODAY));
+
+/* ================= MUSIC CATALOGUE (reels) ================= */
+const BARS = [14,14,30,22,14,30,14,22,30,14,14,22,14,14,30,22,14,30,14,22];
+function buildCatalogue(){
+  vCat.innerHTML = `
+    <div class="subhead"><div class="row">
+      <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
+      <p class="t-body">Music Catalogue</p><span class="spacer"></span>
+    </div></div>
+    <div class="cat-body">
+      <div class="cat-tools">
+        <button class="tool-btn"><img src="assets/refresh.svg" alt=""><span class="t-caption">Refresh</span></button>
+        <button class="tool-select"><span class="t-caption">All</span><img src="assets/chevron-down.svg" alt=""></button>
+        <label class="search-bar"><img src="assets/magnifier.svg" alt=""><input type="text" placeholder="Search title, artist, genre, or moods..."></label>
+      </div>
+      ${SONGS.map((s, i) => `
+        <article class="reel" data-reel="${i}">
+          <div class="media">
+            <img class="cover" src="${s.media}" alt="">
+            <span class="play-lg"><span class="inner"><img src="assets/play-large.svg" alt=""></span></span>
+            <div class="wave">${BARS.map(h => `<i style="height:${h}px"></i>`).join('')}</div>
+            <button class="tap" data-play="${i}" aria-label="Play ${s.title}"></button>
+          </div>
+          <div class="info">
+            <div class="l">
+              <p class="t-caption2 grey">${s.len}</p>
+              <div class="ttl"><p class="t-header">${s.title}</p></div>
+              <div class="art-name"><p class="t-caption grey">${s.artist}</p></div>
+            </div>
+            <button class="more-btn" data-more="${i}" aria-label="More actions"><img src="assets/dots-three.svg" alt=""></button>
+          </div>
+        </article>`).join('')}
+    </div>`;
+}
+buildCatalogue();
+
+function stopAll(){ vCat.querySelectorAll('.reel.playing').forEach(r => r.classList.remove('playing')); }
+function play(i){
+  const r = vCat.querySelector(`[data-reel="${i}"]`);
+  const was = r.classList.contains('playing');
+  stopAll(); if (!was) r.classList.add('playing');
+}
+function openCatalogue(i){
+  push(vCat);
+  stopAll();
+  const r = vCat.querySelector(`[data-reel="${i}"]`);
+  vCat.scrollTop = i === 0 ? 0 : r.offsetTop - 62;
+  setTimeout(() => r.classList.add('playing'), 500);
+}
+vCat.addEventListener('click', e => {
+  if (e.target.closest('[data-back]')) return goHome();
+  const p = e.target.closest('[data-play]'); if (p) return play(+p.dataset.play);
+  const m = e.target.closest('[data-more]'); if (m) return openSheet(+m.dataset.more);
+});
+// reels behaviour: the card that scrolls into view plays, the previous one stops
+const io = new IntersectionObserver(entries => {
+  if (current !== vCat) return;
+  entries.forEach(en => { if (en.isIntersecting && en.intersectionRatio > .7 && !en.target.classList.contains('playing')){ stopAll(); en.target.classList.add('playing'); } });
+}, {root: vCat, threshold: [.7]});
+vCat.querySelectorAll('.reel').forEach(r => io.observe(r));
+
+/* ================= MORE ACTIONS SHEET ================= */
+const sheetWrap = $('#sheet-wrap'), sheet = $('#sheet');
+function openSheet(i){
+  sheetWrap.dataset.song = i;
+  sheetWrap.classList.add('open'); sheetWrap.setAttribute('aria-hidden','false');
+}
+function closeSheet(){ sheetWrap.classList.remove('open'); sheetWrap.setAttribute('aria-hidden','true'); sheet.style.transform = ''; }
+$('#sheet-backdrop').addEventListener('click', closeSheet);
+sheet.addEventListener('click', e => { if (e.target.closest('.item')) closeSheet(); });
+(() => { // drag the sheet down to dismiss
+  let y0 = null;
+  sheet.addEventListener('pointerdown', e => { y0 = e.clientY; sheet.style.transition = 'none'; });
+  sheet.addEventListener('pointermove', e => { if (y0 !== null) sheet.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`; });
+  const end = e => { if (y0 === null) return; const dy = e.clientY - y0; y0 = null; sheet.style.transition = ''; sheet.style.transform = ''; if (dy > 70) closeSheet(); };
+  sheet.addEventListener('pointerup', end); sheet.addEventListener('pointercancel', end);
+})();
+
+renderHistory();
+</script>
+<script src="node.js"></script>
+<script src="drop.js"></script>
+<script src="player.js"></script>
+<script src="profile.js"></script>
+</body>
+</html>
