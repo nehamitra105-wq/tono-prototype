@@ -279,6 +279,7 @@ tabbar.addEventListener('click', e => {
   if (t.dataset.tab === 'profile'){ e.stopImmediatePropagation(); openProfile(); }
   else if (t.dataset.tab === 'discovery' && inProfile){ e.stopImmediatePropagation(); resetToHome(true); setTab('discovery'); }
   else if (t.dataset.tab === 'player' && inProfile){ resetToHome(false); }
+  else if (t.dataset.tab === 'community'){ e.stopImmediatePropagation(); window.tonoCommunity?.open(); }
 }, true);
 
 /* ---------- interactions ---------- */
@@ -328,5 +329,7 @@ vPage.addEventListener('click', e => {
 });
 
 document.getElementById('restart')?.addEventListener('click', () => { resetToHome(false); setTab('discovery'); });
-window.tonoProfile = {open:openProfile, get stack(){ return stack.map(v => v.id); }};
+// shared with community.js: same screen stack, and someone else's profile
+function openPerson(p){ person = p; themHours = 'month'; renderThem(); vThem.scrollTop = 0; go(vThem); }
+window.tonoProfile = {open:openProfile, openPerson, go, back, resetToHome, setTab, get stack(){ return stack.map(v => v.id); }};
 })();
