@@ -84,9 +84,9 @@
 .final-view .flist .rm{width:34px;height:34px;border-radius:17px;border:1px solid var(--line);display:grid;place-items:center}
 .final-view .flist .rm img{width:16px;height:16px}
 
-.drop-toast{position:absolute;top:56px;left:50%;z-index:60;transform:translate(-50%,-90px);display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;
-  background:var(--navy);border:1px solid var(--secondary);box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .4s var(--ease);white-space:nowrap;pointer-events:none}
-.drop-toast.on{transform:translate(-50%,0)}
+.drop-toast{position:absolute;top:56px;left:50%;z-index:60;transform:translate(-50%,-140%);opacity:0;visibility:hidden;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;
+  background:var(--navy);border:1px solid var(--secondary);box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .4s var(--ease), opacity .25s, visibility 0s .4s;white-space:nowrap;pointer-events:none}
+.drop-toast.on{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .4s var(--ease), opacity .2s, visibility 0s}
 .drop-toast .sym{width:18px;height:18px;background:var(--lilac)}
 
 .sent-ov{position:absolute;inset:0;z-index:55;background:rgba(13,18,24,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}

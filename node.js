@@ -1,11 +1,12 @@
 /* =========================================================
-   NODE BOARD — "Night Drive" draft
-   Opened from Home → Node Discovery. Toolbar replaces the nav bar.
+   NODE BOARD — drafts list + boards ("Night Drive", "Draft 2", new boards)
+   Home → Node Discovery → drafts page (Figma 960:4906) → a board. Toolbar replaces the nav bar.
    ========================================================= */
 (() => {
 const A = 'assets/node/';
 const MAX_NODES = 10;
-const STORE = 'tono.node.nightdrive.v1';
+const KEY = id => `tono.node.${id}.v1`;
+const LIST_KEY = 'tono.node.boards.v1';
 const COLORS = {song:'#BD2FA9', text:'#E13F5D', photo:'#5858D0', audio:'#AA43F4', video:'#F75472'};
 const PH_COLORS = {song:'#BD2FA9', text:'#E13F5D', photo:'#AA43F4', audio:'#AA43F4', video:'#F75472'};
 // bar heights from the hi-fi audio widget
@@ -38,14 +39,31 @@ const DEFAULT = () => ({
   ],
 });
 
+const DRAFT2 = () => ({
+  seq: 10,
+  nodes: [
+    {id:'n1', type:'song', x:17,  y:243, title:'song', sub:'artiste', img:A+'cd-art.png', cd:true},
+    {id:'n2', type:'text', x:272, y:330, text:'the city sounds different at 2am', sub:''},
+  ],
+  edges: [{id:'e1', from:'n1', to:'n2', kind:'connector'}],
+});
+const EMPTY = () => ({seq:1, nodes:[], edges:[]});
+const STARTERS = {nightdrive:DEFAULT, draft2:DRAFT2};
 const clone = o => JSON.parse(JSON.stringify(o));
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 const snapshot = b => JSON.stringify({nodes:b.nodes.map(({pos, ...r}) => r), edges:b.edges});
 
-let saved;
-try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (_) {}
-if (!saved || !saved.nodes) saved = DEFAULT();
+// the list of boards; each board's nodes are saved under its own key
+let boards = [{id:'nightdrive', name:'Night Drive'}, {id:'draft2', name:'Draft 2'}];
+try { const l = JSON.parse(localStorage.getItem(LIST_KEY)); if (Array.isArray(l) && l.length) boards = l; } catch (_) {}
+const saveList = () => { try { localStorage.setItem(LIST_KEY, JSON.stringify(boards)); } catch (_) {} };
+function load(id){
+  let b; try { b = JSON.parse(localStorage.getItem(KEY(id))); } catch (_) {}
+  return b && b.nodes ? b : (STARTERS[id] || EMPTY)();
+}
+let cur = boards[0];
+let saved = load(cur.id);
 let board = clone(saved);
 
 const ui = { z:1, sel:null, tool:null, kind:'connector', del:new Set(), pan:{x:0, y:0}, near:null, playing:null };
@@ -87,7 +105,7 @@ view.innerHTML = `
   ${statusbar}
   <div class="nb-title">
     <button class="back" id="nb-back" aria-label="Back"><img src="${A}caret-left.svg" alt=""></button>
-    <h1 class="t-header">Night Drive<span> - draft</span></h1>
+    <h1 class="t-header"><b id="nb-name">Night Drive</b><span> - draft</span></h1>
     <button class="trash" id="nb-trash" aria-label="Delete selected nodes" hidden disabled><i class="sym" style="--i:url(${A}ph-trash.svg)"></i></button>
   </div>
   <div class="nb-banner t-caption" id="nb-banner" role="status"></div>
@@ -124,7 +142,7 @@ view.innerHTML = `
   <div class="nb-overlay" id="nb-save">
     <div class="save-pop" role="dialog" aria-label="Save changes">
       <p class="t-header">Save changes?</p>
-      <p class="t-caption grey">You’ve made changes to Night Drive.</p>
+      <p class="t-caption grey">You’ve made changes to <span id="nb-save-name">Night Drive</span>.</p>
       <div class="row">
         <button class="btn btn-secondary t-body" data-nosave>Don’t save</button>
         <button class="btn btn-primary t-body" data-save>Save</button>
@@ -759,7 +777,10 @@ detail.addEventListener('click', e => {
 /* ================= OPEN / BACK / SAVE ================= */
 const saveOv = $v('#nb-save');
 function dirty(){ return snapshot(board) !== snapshot(saved); }
-function open(){
+function open(id){
+  if (id && id !== cur.id){ cur = boards.find(b => b.id === id) || cur; saved = load(cur.id); board = clone(saved); }
+  $v('#nb-name').textContent = cur.name; $v('#nb-save-name').textContent = cur.name;
+  view.setAttribute('aria-label', `${cur.name} node board`);
   ui.sel = null; ui.tool = null; ui.del.clear(); ui.pan = {x:0, y:0}; ui.z = 1; applyPan();
   view.classList.remove('offright');
   render();
@@ -771,6 +792,7 @@ function close(instant){
   picker.classList.remove('on'); detail.classList.remove('on'); flow = null;
   if (instant){ view.style.transition = 'none'; requestAnimationFrame(() => { view.style.transition = ''; }); }
   view.classList.add('offright');
+  renderDrafts();
 }
 $v('#nb-back').addEventListener('click', () => {
   if (ui.tool){ ui.tool = null; ui.del.clear(); }
@@ -780,7 +802,7 @@ saveOv.addEventListener('click', e => {
   if (e.target === saveOv){ saveOv.classList.remove('on'); return; }
   if (e.target.closest('[data-save]')){
     saved = clone(board);
-    try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch (_) {}
+    try { localStorage.setItem(KEY(cur.id), JSON.stringify(saved)); } catch (_) {}
     close();
   } else if (e.target.closest('[data-nosave]')){
     board = clone(saved);
@@ -788,12 +810,43 @@ saveOv.addEventListener('click', e => {
   }
 });
 
-// entry points on Home: the Node Discovery tile
+/* ================= DRAFTS PAGE (Figma 960:4906) ================= */
+const drafts = document.createElement('section');
+drafts.className = 'view nd-view offright'; drafts.id = 'view-nodes'; drafts.setAttribute('aria-label', 'Node discovery');
+document.querySelector('#app .tabbar').before(drafts);
+// thumbnails echo each board: the hi-fi art for the two drafts, a dotted blank for new boards
+const THUMB = {
+  nightdrive:`<svg class="nd-art" viewBox="0 0 174 156" aria-hidden="true"><path d="M66 46C76.36 46 87.33 82 105 82" stroke="#BD2FA9" stroke-opacity=".9" fill="none"/><path d="M66 45.93C87.31 47.84 81.73 9 100 9" stroke="#8B4BE6" stroke-opacity=".9" fill="none"/>
+    <rect x="12" y="7" width="51" height="67" rx="10" fill="#BD2FA9"/><rect x="103" y="-13" width="51" height="51" rx="10" fill="#8B4BE6"/><rect x="108" y="64" width="79" height="32" rx="10" fill="#E13F5D"/></svg>`,
+  draft2:`<svg class="nd-art" viewBox="0 0 174 156" aria-hidden="true"><path d="M67.5 60.5C90 60.5 100 81.5 127.5 81.5" stroke="#E13F5D" stroke-opacity=".9" fill="none"/>
+    <rect x="12" y="29" width="51" height="67" rx="10" fill="#BD2FA9"/><rect x="130" y="64" width="79" height="32" rx="10" fill="#E13F5D"/></svg>`,
+};
+function renderDrafts(){
+  drafts.innerHTML = `<div class="nd-head"><button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button><p class="t-header">Node discovery</p></div>
+    <div class="nd-grid">
+      ${boards.map(b => `<button class="nd-card" data-board="${b.id}"><span class="nd-dots"></span>${THUMB[b.id] || ''}
+        <span class="nd-txt"><span class="t-body-db">${esc(b.name)}</span><img src="assets/arrow-right-15.svg" alt=""></span></button>`).join('')}
+      <button class="nd-card nd-new" data-new><span class="nd-dots"></span><span class="nd-txt"><i class="sym" style="--i:url(assets/community/ph/plus.svg)"></i><span class="t-body">New board</span></span></button>
+    </div>`;
+}
+renderDrafts();
+drafts.addEventListener('click', e => {
+  if (e.target.closest('[data-back]')) return goHome();
+  const b = e.target.closest('[data-board]'); if (b) return open(b.dataset.board);
+  if (e.target.closest('[data-new]')){
+    let n = boards.length + 1; while (boards.some(x => x.name === `Board ${n}`)) n++;
+    const nb = {id:`b${Date.now().toString(36)}`, name:`Board ${n}`};
+    boards.push(nb); saveList(); renderDrafts(); open(nb.id);
+  }
+});
+function openDrafts(){ renderDrafts(); push(drafts); }
+
+// entry point on Home: the Node Discovery card opens the drafts page
 const tile = document.querySelector('.more .tile');
-if (tile) tile.addEventListener('click', open);
+if (tile) tile.addEventListener('click', openDrafts);
 // restart flow returns to the lock screen
 document.getElementById('restart')?.addEventListener('click', () => close(true));
 document.fonts && document.fonts.ready.then(() => { if (!view.classList.contains('offright')) render(); });
 
-window.tonoNode = {open, close, get board(){ return board; }, get saved(){ return saved; }};
+window.tonoNode = {open, close, openDrafts, get boards(){ return boards.map(b => ({...b})); }, get board(){ return board; }, get saved(){ return saved; }};
 })();

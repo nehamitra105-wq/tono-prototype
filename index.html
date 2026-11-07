@@ -142,6 +142,8 @@ img{display:block}
 .view::-webkit-scrollbar{display:none}
 .view.offright{transform:translateX(100%)}
 .view.offleft{transform:translateX(-28%)}
+/* screens that have slid away are hidden once the slide ends, so their edge pixels can't show through the screen on top */
+.view.offright,.view.offleft{visibility:hidden;transition:transform .45s var(--ease), visibility 0s .45s}
 .view.on-top{z-index:2}
 /* global-nav tab switches are instant (no slide) */
 .app.instant .view{transition:none !important}
@@ -263,13 +265,28 @@ img{display:block}
 .album .dots img{position:absolute;left:1px;top:1px;width:24px;height:24px}
 
 /* More ways to discover */
-.more{display:grid;grid-template-columns:174px 174px;gap:10px}
-.more .tile{min-height:156px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;text-align:left}
-.more .num{letter-spacing:.8px;color:var(--grey);position:relative}
-.more .num i{position:absolute;left:130px;top:2px;width:11px;height:11px;border-radius:5.5px;background:var(--pinky-pie);border:2px solid var(--navy)}
-.more .grow{flex:1;display:flex;flex-direction:column;justify-content:flex-end}
-.more .go{display:flex;gap:4px;align-items:center;height:26px;padding-top:9px}
+.more{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 -2px}   /* 20px from the screen edges (body pads 22) */
+.more .tile{position:relative;width:auto;border:0;height:156px;padding:16px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;overflow:hidden}
+.more .tz-txt{position:relative;z-index:6;display:flex;flex-direction:column;gap:4px;width:126px}
+.more .go{display:flex;gap:4px;align-items:flex-end;color:var(--off-white);white-space:nowrap}
 .more .go img{width:15px;height:15px}
+.more .tz-fade{position:absolute;left:0;right:0;bottom:0;z-index:5;pointer-events:none}
+.more .badge{position:absolute;right:-10px;top:-10px;width:20px;height:20px;border-radius:41px;background:var(--lilac);color:var(--off-white);display:grid;place-items:center;z-index:2}
+/* Node Discovery teaser: nodes bob, a pulse runs down each noodle */
+.tz-node .tz-art{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tz-node .nd{fill:none;stroke-width:1}
+.tz-node .pulse{fill:none;stroke:var(--off-white);stroke-width:2;stroke-linecap:round;stroke-dasharray:8 100;stroke-dashoffset:8;opacity:.9;animation:tz-pulse 2.6s var(--ease) infinite}
+.tz-node .pulse.p2{animation-delay:1.3s}
+@keyframes tz-pulse{0%{stroke-dashoffset:8;opacity:0}12%{opacity:.9}70%{stroke-dashoffset:-100;opacity:.9}71%,100%{stroke-dashoffset:-100;opacity:0}}
+.tz-node .n{animation:tz-bob 5.2s ease-in-out infinite;transform-box:fill-box}
+.tz-node .n2{animation-delay:-1.7s}.tz-node .n3{animation-delay:-3.4s}
+@keyframes tz-bob{50%{transform:translateY(-3px)}}
+.tz-node .tz-fade{height:86px;background:linear-gradient(180deg, rgba(247,84,114,0) 19.48%, #F75472 126.62%)}
+/* Record Dropoff teaser: the cover cascade slowly shuffles */
+.tz-stack{position:absolute;inset:0}
+.tz-stack .cv{position:absolute;width:76px;height:76px;object-fit:cover;border-radius:6px;transform:skewY(15deg);transition:left .9s var(--ease), top .9s var(--ease), opacity .9s var(--ease)}
+.tz-drop .tz-fade{height:69px;background:linear-gradient(180deg, rgba(88,88,208,0), #5858D0)}
+@media (prefers-reduced-motion:reduce){.tz-node .pulse,.tz-node .n{animation:none}.tz-node .pulse{opacity:0}.tz-stack .cv{transition:none}}
 
 /* ---------- Sub-page header ---------- */
 .subhead{padding:0 20px 20px;width:402px}
@@ -472,16 +489,30 @@ img{display:block}
               </section>
 
               <section class="more" aria-label="More ways to discover">
-                <button class="card tile">
-                  <p class="num t-num">01</p>
-                  <div class="grow"><p class="t-body-db">Node Discovery</p></div>
-                  <div class="go"><span class="t-caption">Start a Node</span><img src="assets/arrow-right-15.svg" alt=""></div>
+                <!-- teasers: live mini versions of each feature (Figma 960:4873) -->
+                <button class="card tile tz-node">
+                  <svg class="tz-art" viewBox="0 0 174 156" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="tz-g1" x1="85.5" y1="46" x2="85.5" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#BD2FA9"/><stop offset="1" stop-color="#E13F5D"/></linearGradient>
+                      <linearGradient id="tz-g2" x1="63.5" y1="46" x2="108.5" y2="19" gradientUnits="userSpaceOnUse"><stop stop-color="#BD2FA9"/><stop offset="1" stop-color="#8B4BE6"/></linearGradient>
+                    </defs>
+                    <path class="nd" d="M66 46C76.36 46 87.33 82 105 82" stroke="url(#tz-g1)"/>
+                    <path class="nd" d="M66 45.93C87.31 47.84 81.73 9 100 9" stroke="url(#tz-g2)"/>
+                    <path class="pulse p1" d="M66 46C76.36 46 87.33 82 105 82" pathLength="100"/>
+                    <path class="pulse p2" d="M66 45.93C87.31 47.84 81.73 9 100 9" pathLength="100"/>
+                    <rect class="n n1" x="12" y="7" width="51" height="67" rx="10" fill="#BD2FA9"/>
+                    <rect class="n n2" x="103" y="-13" width="51" height="51" rx="10" fill="#8B4BE6"/>
+                    <rect class="n n3" x="108" y="64" width="79" height="32" rx="10" fill="#E13F5D"/>
+                  </svg>
+                  <span class="tz-fade"></span>
+                  <div class="tz-txt"><p class="t-body-db">Node Discovery</p><div class="go"><span class="t-caption">Continue your draft</span><img src="assets/arrow-right-15.svg" alt=""></div></div>
                 </button>
-                <button class="card tile">
-                  <p class="num t-num">02<i></i></p>
-                  <div class="grow"><p class="t-body-db">Record Drop-off</p></div>
-                  <div class="go"><span class="t-caption">Open mailbox</span><img src="assets/arrow-right-15.svg" alt=""></div>
+                <button class="card tile tz-drop">
+                  <div class="tz-stack" aria-hidden="true"></div>
+                  <span class="tz-fade"></span>
+                  <div class="tz-txt"><p class="t-body-db">Record Dropoff</p><div class="go"><span class="t-caption">You have a question!</span><img src="assets/arrow-right-15.svg" alt=""></div></div>
                 </button>
+                <span class="badge t-caption2" aria-label="1 new question">1</span>
               </section>
             </div>
           </main>
@@ -987,5 +1018,6 @@ renderHistory();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="community.js"></script>
 <script src="hscroll.js"></script>
+<script src="teasers.js"></script>
 </body>
 </html>

@@ -339,7 +339,7 @@ function send(){
     drop.classList.remove('offleft'); current = drop;
     requestAnimationFrame(() => { fin.style.transition = drop.style.transition = ''; goHome(); });
     sent.classList.remove('on');
-    document.querySelector('.more .tile:nth-child(2) .num i')?.remove();
+    document.querySelector('.more .badge')?.remove();
     picks = []; deck = CASCADE.map(s => ({...s})); f = 4; buildCases(); syncCount();
   }, 1700);
 }
