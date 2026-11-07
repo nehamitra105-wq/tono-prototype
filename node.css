@@ -55,7 +55,7 @@
 .nd-song .meta{display:flex;flex-direction:column;gap:6px}
 
 .nd-text{background:var(--node-text);width:260px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.quote{font-weight:900;font-size:32px;line-height:normal;height:21px;width:31px;overflow:visible;margin-top:-4px}
+.quote{font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;font-size:32px;line-height:normal;height:21px;width:31px;overflow:visible;margin-top:-4px}
 
 .nd-photo,.nd-video,.nd-ph{width:149px;height:149px;padding:10px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
 .nd-photo > img,.nd-video > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;border-radius:10px}

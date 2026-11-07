@@ -167,6 +167,7 @@ function setOpen(i){
 function recenter(z){ if (map) map.flyTo(JH, z ?? (st.drops[0] ? 13 : HOME_VIEW.z), {duration:.8}); }
 
 function renderC(){
+  requestAnimationFrame(() => placeInk(false));
   if (!vC.querySelector('.cm-rest')) buildMap();
   vC.querySelector('.cm-rest').innerHTML = `
   <div class="cm-sec">
@@ -182,8 +183,8 @@ function renderC(){
   <div class="cm-sec" style="gap:28px" id="cm-qa">
     <div class="cm-ask"><p class="t-header">Ask the crowd</p><button class="cm-btn t-body" data-ask>${ic('plus')}Ask a question</button></div>
     <div class="cm-qa">
-      <div class="cm-tabs t-body">${[['fy', 'For You'], ['gn', 'General'], ['ma', 'My Activity']].map(([k, l]) => `<button class="${st.tab === k ? 'on' : ''}" data-qtab="${k}">${l}</button>`).join('')}</div>
-      <div class="cm-grid">${qaGrid()}</div>
+      <div class="cm-tabs t-body">${[['fy', 'For You'], ['gn', 'General'], ['ma', 'My Activity']].map(([k, l]) => `<button class="${st.tab === k ? 'on' : ''}" data-qtab="${k}">${l}</button>`).join('')}<span class="cm-ink"></span></div>
+      <div class="cm-pane"><div class="cm-grid">${qaGrid()}</div></div>
       ${st.tab !== 'ma' ? '<p class="cm-more-link t-body cm-mut">View more</p>' : ''}
     </div>
   </div>`;
@@ -354,12 +355,32 @@ vC.addEventListener('click', e => {
   if (e.target.closest('[data-more]')){ open(oMore); return; }
   const m = e.target.closest('[data-match]'); if (m){ P().openPerson(MATCHES[+m.dataset.match]); return; }
   if (e.target.closest('[data-ask]')){ openAsk(); return; }
-  const t = e.target.closest('[data-qtab]'); if (t){ st.tab = t.dataset.qtab; renderTabs(); return; }
+  const t = e.target.closest('[data-qtab]'); if (t){ if (t.dataset.qtab !== st.tab){ const from = st.tab; st.tab = t.dataset.qtab; renderTabs(from); } return; }
   if (e.target.closest('[data-q]')){ st.sort = st.mine ? 'newest' : 'liked'; renderQA(); vQA.scrollTop = 0; P().go(vQA); }
 });
-function renderTabs(){
+const TABS = ['fy', 'gn', 'ma'];
+// underline slides under the active tab
+function placeInk(animate){
+  const ink = vC.querySelector('.cm-ink'), on = vC.querySelector('[data-qtab].on');
+  if (!ink || !on) return;
+  ink.style.transition = animate ? '' : 'none';
+  ink.style.left = `${on.offsetLeft}px`; ink.style.width = `${on.offsetWidth}px`;
+  if (!animate){ ink.offsetHeight; ink.style.transition = ''; }
+}
+// cards slide away from the new tab: a tab to the right pushes the cards left, and vice versa
+function renderTabs(from){
   vC.querySelectorAll('[data-qtab]').forEach(b => b.classList.toggle('on', b.dataset.qtab === st.tab));
-  vC.querySelector('.cm-grid').innerHTML = qaGrid();
+  placeInk(true);
+  const pane = vC.querySelector('.cm-pane'), old = pane.querySelector('.cm-grid');
+  const dir = Math.sign(TABS.indexOf(st.tab) - TABS.indexOf(from));
+  const next = document.createElement('div');
+  next.className = 'cm-grid'; next.innerHTML = qaGrid();
+  pane.querySelectorAll('.cm-grid.leaving').forEach(g => g.remove());
+  old.classList.add('leaving');
+  pane.appendChild(next);
+  const ease = 'cubic-bezier(.32,.72,0,1)', dur = 380;
+  old.animate([{transform:'translateX(0)', opacity:1}, {transform:`translateX(${-dir * 100}%)`, opacity:0}], {duration:dur, easing:ease, fill:'forwards'}).onfinish = () => old.remove();
+  next.animate([{transform:`translateX(${dir * 100}%)`, opacity:0}, {transform:'translateX(0)', opacity:1}], {duration:dur, easing:ease});
   const more = vC.querySelector('.cm-more-link');
   if (st.tab === 'ma') more?.remove();
   else if (!more) vC.querySelector('.cm-qa').insertAdjacentHTML('beforeend', '<p class="cm-more-link t-body cm-mut">View more</p>');

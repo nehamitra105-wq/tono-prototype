@@ -3,7 +3,7 @@
    ========================================================= */
 .pf-view{padding-top:62px}
 .pf-body{display:flex;flex-direction:column;gap:24px;padding:10px 20px 110px}
-.pf-num{font-weight:900;line-height:normal}
+.pf-num{font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;line-height:normal}
 
 /* header */
 .pf-head{position:relative;width:360px;display:flex;flex-direction:column;gap:10px}
