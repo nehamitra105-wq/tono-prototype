@@ -320,6 +320,28 @@ img{display:block}
 .ranked .names p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ranked .plus{width:34px;height:34px;border-radius:17px;border:1px solid var(--line);display:grid;place-items:center}
 .ranked .plus img{width:18px;height:18px}
+/* your song: search results drop over the list; the pick shows as a card */
+.ys-slot{position:relative}
+.song-results{position:absolute;left:0;right:0;top:calc(100% + 1px);z-index:5;display:none;flex-direction:column;max-height:228px;overflow-y:auto;
+  background:var(--navy);border:1px solid var(--secondary);border-radius:10px;padding:0 16px;scrollbar-width:thin}
+.song-results.on{display:flex}
+.song-results button{display:flex;gap:10px;align-items:center;padding:12px 0;text-align:left;color:var(--off-white)}
+.song-results button + button{border-top:1px solid var(--secondary)}
+.song-results img,.song-results .ph,.picked img,.picked .ph{width:54px;height:54px;border-radius:4px;object-fit:cover;flex:none;background:var(--line)}
+.song-results .names,.picked .names{display:flex;flex-direction:column;gap:4px;min-width:0}
+.song-results .names span,.picked .names p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-results .none{padding:14px 0}
+.picked{display:flex;gap:12px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:10px}
+.picked .names{flex:1}
+.picked .x{width:24px;height:24px;display:grid;place-items:center}
+.picked .x .sym{width:24px;height:24px;color:var(--off-white)}
+.song-input[hidden]{display:none}
+.ranked li.mine{border-bottom-color:var(--lilac)}
+.ranked li.mine .names .t-body{color:var(--lilac)}
+.ranked li.mine .you{color:var(--lilac)}
+.ranked li.gap{display:block;min-height:0;padding:6px 0;text-align:center;letter-spacing:2px}
+.ranked li.flash{animation:pl-flash 1.6s ease-out}
+@keyframes pl-flash{0%,35%{background:rgba(213,161,250,.16)}100%{background:transparent}}
 
 /* ---------- Music catalogue (reels) ---------- */
 .cat-view{scroll-snap-type:y proximity}
@@ -873,8 +895,64 @@ $('#history-slot').addEventListener('click', e => {
   slot.addEventListener('pointercancel', () => { x0 = null; });
 })();
 
-/* ================= DAILY PROMPT PLAYLIST ================= */
+/* ================= DAILY PROMPT PLAYLIST =================
+   Your song: search any song (iTunes Search, falls back to the app's own songs offline),
+   pick one and it joins the Group top 10 at the rank its popularity earns, highlighted. */
 const submitted = {};
+const PICKS = [64, 52, 47, 41, 36, 30, 27, 22, 18, 15];          // how many people picked each top-10 song
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = v => String(v).trim().toLowerCase();
+const same = (x, y) => norm(x.t) === norm(y.t) && norm(x.a) === norm(y.a);
+const LOCAL = [...TOP10.map(r => ({t:r.t, a:r.a, img:r.img})), ...SONGS.map(s => ({t:s.title, a:s.artist, img:s.art}))]
+  .filter((s, i, all) => all.findIndex(o => same(o, s)) === i);
+// other listeners who also picked a song that isn't in the top 10 (stable per song, 0–24)
+const othersFor = s => { let h = 0; for (const c of (s.t + s.a).toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h % 25; };
+function ranking(mine){
+  const list = TOP10.map((r, i) => ({...r, n:PICKS[i]}));
+  if (mine){
+    const hit = list.find(r => same(r, mine));
+    if (hit){ hit.n += 1; hit.mine = true; }
+    else list.push({t:mine.t, a:mine.a, img:mine.img, n:othersFor(mine) + 1, mine:true});
+  }
+  list.sort((x, y) => y.n - x.n || (x.mine ? -1 : 0));
+  const out = list.map((r, i) => ({...r, rank:i + 1}));
+  // below the top 10 there are many other answers; estimate where a less-picked song really sits
+  const me = out.find(r => r.mine);
+  if (me && me.rank > 10) me.rank = 11 + Math.round(Math.max(0, out[9].n - me.n) * 2.5);
+  return out;
+}
+const row = r => `
+  <li class="${r.mine ? 'mine' : ''}">
+    <p class="t-caption grey">${String(r.rank).padStart(2,'0')}</p>
+    <div class="thumb">${r.bg ? `<img class="bg" src="${r.bg}" alt="">` : ''}${r.img ? `<img src="${r.img}" alt="">` : ''}</div>
+    <div class="names"><p class="t-body">${esc(r.t)}</p><p class="t-caption grey">${esc(r.a)} · ${r.n} ${r.n === 1 ? 'pick' : 'picks'}${r.mine ? ' <span class="you">· incl. you</span>' : ''}</p></div>
+    <button class="plus" aria-label="Add ${esc(r.t)} to your music"><img src="assets/plus-circle.svg" alt=""></button>
+  </li>`;
+function rankedHTML(mine){
+  const all = ranking(mine), top = all.slice(0, 10), me = all.find(r => r.mine);
+  return top.map(row).join('') + (me && me.rank > 10 ? `<li class="gap t-caption grey" aria-hidden="true">···</li>${row(me)}` : '');
+}
+const pickedCard = s => `<div class="picked">${s.img ? `<img src="${s.img}" alt="">` : '<span class="ph"></span>'}
+  <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption grey">${esc(s.a)}</p></div>
+  <button class="x" data-unpick aria-label="Remove your song"><i class="sym" style="--i:url(assets/community/ph/x.svg)"></i></button></div>`;
+
+let searchSeq = 0;
+async function searchSongs(q){
+  const local = LOCAL.filter(s => (s.t + ' ' + s.a).toLowerCase().includes(q.toLowerCase()));
+  try {
+    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=12`, {signal:ctl.signal});
+    const j = await r.json();
+    const out = [];
+    for (const x of j.results || []){
+      const s = {t:x.trackName, a:x.artistName, img:(x.artworkUrl100 || '').replace('100x100bb', '200x200bb')};
+      if (s.t && !out.some(o => same(o, s))) out.push(s);
+      if (out.length >= 8) break;
+    }
+    return [...local.filter(l => !out.some(o => same(o, l))).slice(0, 2), ...out];
+  } catch (_) { return local; }
+}
+
 function openPlaylist(date, focus){
   const d = new Date(date), k = key(d);
   const isToday = sameDay(d, TODAY);
@@ -897,36 +975,66 @@ function openPlaylist(date, focus){
       ${isToday ? `
       <div class="your-song">
         <p class="t-caption">Your song</p>
-        <form class="song-input ${mine ? 'sent' : ''}" id="song-form">
-          <label><input id="song-field" type="text" placeholder="Search title or artist" autocomplete="off" value="${mine ? mine.replace(/"/g,'&quot;') : ''}" ${mine ? 'readonly' : ''}></label>
-          <button class="add" type="submit" aria-label="Add your song"><img src="assets/plus-input.svg" alt=""></button>
-        </form>
+        <div class="ys-slot">${mine ? pickedCard(mine) : ''}
+          <form class="song-input" id="song-form" ${mine ? 'hidden' : ''}>
+            <label><input id="song-field" type="text" placeholder="Search title or artist" autocomplete="off" aria-label="Search title or artist"></label>
+            <button class="add" type="submit" aria-label="Add your song"><img src="assets/plus-input.svg" alt=""></button>
+          </form>
+          <div class="song-results" id="song-results" role="listbox"></div>
+        </div>
       </div>` : ''}
       <section>
         <div class="sec-title"><p class="t-header">Group top 10</p><p class="r t-caption grey">Most Popular Answers</p></div>
-        <div class="ranked"><ul>
-          ${TOP10.map((r, i) => `
-            <li>
-              <p class="t-caption grey">${String(i+1).padStart(2,'0')}</p>
-              <div class="thumb">${r.bg ? `<img class="bg" src="${r.bg}" alt="">` : ''}${r.img ? `<img src="${r.img}" alt="">` : ''}</div>
-              <div class="names"><p class="t-body">${r.t}</p><p class="t-caption grey">${r.a}</p></div>
-              <button class="plus" aria-label="Add ${r.t} to your music"><img src="assets/plus-circle.svg" alt=""></button>
-            </li>`).join('')}
-        </ul></div>
+        <div class="ranked"><ul id="ranked">${rankedHTML(isToday ? mine : null)}</ul></div>
       </section>
     </div>`;
   push(vPlaylist);
   const form = vPlaylist.querySelector('#song-form');
-  if (form){
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const f = form.querySelector('input'), v = f.value.trim();
-      if (!v || submitted[k]) return;
-      submitted[k] = v; f.readOnly = true; f.blur(); form.classList.add('sent');
-      vPlaylist.querySelector('.joined .t-caption').textContent = `${songsFor(d) + 1} people joined`;
-    });
-    if (focus && !mine) setTimeout(() => form.querySelector('input').focus({preventScroll:true}), 460);
-  }
+  if (!form) return;
+  const field = form.querySelector('input'), res = vPlaylist.querySelector('#song-results'), slot = vPlaylist.querySelector('.ys-slot');
+  let found = [], timer = null;
+  const showResults = list => {
+    found = list;
+    res.innerHTML = list.length ? list.map((s, i) => `<button type="button" data-res="${i}">${s.img ? `<img src="${s.img}" alt="">` : '<span class="ph"></span>'}
+      <span class="names"><span class="t-body">${esc(s.t)}</span><span class="t-caption grey">${esc(s.a)}</span></span></button>`).join('')
+      : `<p class="t-caption grey none">No songs found</p>`;
+    res.classList.add('on');
+  };
+  field.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = field.value.trim();
+    if (!q){ res.classList.remove('on'); return; }
+    const seq = ++searchSeq;
+    timer = setTimeout(async () => { const list = await searchSongs(q); if (seq === searchSeq && field.value.trim()) showResults(list); }, 220);
+  });
+  // picking a song adds it to today's playlist and shows where it landed
+  const pick = s => {
+    submitted[k] = s;
+    res.classList.remove('on'); field.value = ''; field.blur(); form.hidden = true;
+    slot.insertAdjacentHTML('afterbegin', pickedCard(s));
+    vPlaylist.querySelector('.joined .t-caption').textContent = `${songsFor(d) + 1} people joined`;
+    const ul = vPlaylist.querySelector('#ranked'); ul.innerHTML = rankedHTML(s);
+    const li = ul.querySelector('li.mine');
+    li.classList.add('flash');
+    setTimeout(() => li.scrollIntoView({block:'center', behavior:'smooth'}), 120);
+  };
+  res.addEventListener('click', e => { const b = e.target.closest('[data-res]'); if (b) pick(found[+b.dataset.res]); });
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = field.value.trim(); if (!q) return;
+    const list = found.length && res.classList.contains('on') ? found : await searchSongs(q);
+    if (list.length) pick(list[0]); else showResults([]);
+  });
+  slot.addEventListener('click', e => {
+    if (!e.target.closest('[data-unpick]')) return;
+    delete submitted[k];
+    slot.querySelector('.picked')?.remove(); form.hidden = false;
+    vPlaylist.querySelector('.joined .t-caption').textContent = `${songsFor(d)} people joined`;
+    vPlaylist.querySelector('#ranked').innerHTML = rankedHTML(null);
+    field.focus({preventScroll:true});
+  });
+  vPlaylist.addEventListener('pointerdown', e => { if (!e.target.closest('.ys-slot')) res.classList.remove('on'); });
+  if (focus && !mine) setTimeout(() => field.focus({preventScroll:true}), 460);
 }
 vPlaylist.addEventListener('click', e => { if (e.target.closest('[data-back]')) goHome(); });
 $('#add-song').addEventListener('click', () => openPlaylist(TODAY, true));
