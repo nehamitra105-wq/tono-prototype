@@ -167,7 +167,7 @@ function setOpen(i){
 function recenter(z){ if (map) map.flyTo(JH, z ?? (st.drops[0] ? 13 : HOME_VIEW.z), {duration:.8}); }
 
 function renderC(){
-  requestAnimationFrame(() => placeInk(false));
+  requestAnimationFrame(() => { placeInk(false); sizePane(); });
   if (!vC.querySelector('.cm-rest')) buildMap();
   vC.querySelector('.cm-rest').innerHTML = `
   <div class="cm-sec">
@@ -185,7 +185,7 @@ function renderC(){
     <div class="cm-qa">
       <div class="cm-tabs t-body">${[['fy', 'For You'], ['gn', 'General'], ['ma', 'My Activity']].map(([k, l]) => `<button class="${st.tab === k ? 'on' : ''}" data-qtab="${k}">${l}</button>`).join('')}<span class="cm-ink"></span></div>
       <div class="cm-pane"><div class="cm-grid">${qaGrid()}</div></div>
-      ${st.tab !== 'ma' ? '<p class="cm-more-link t-body cm-mut">View more</p>' : ''}
+      <p class="cm-more-link t-body cm-mut${st.tab === 'ma' ? ' off' : ''}">View more</p>
     </div>
   </div>`;
 }
@@ -381,9 +381,19 @@ function renderTabs(from){
   const ease = 'cubic-bezier(.32,.72,0,1)', dur = 380;
   old.animate([{transform:'translateX(0)', opacity:1}, {transform:`translateX(${-dir * 100}%)`, opacity:0}], {duration:dur, easing:ease, fill:'forwards'}).onfinish = () => old.remove();
   next.animate([{transform:`translateX(${dir * 100}%)`, opacity:0}, {transform:'translateX(0)', opacity:1}], {duration:dur, easing:ease});
-  const more = vC.querySelector('.cm-more-link');
-  if (st.tab === 'ma') more?.remove();
-  else if (!more) vC.querySelector('.cm-qa').insertAdjacentHTML('beforeend', '<p class="cm-more-link t-body cm-mut">View more</p>');
+  vC.querySelector('.cm-more-link').classList.toggle('off', st.tab === 'ma');
+}
+// the Q&A area keeps the height of its tallest tab, so switching tabs never shifts the page
+function sizePane(){
+  const pane = vC.querySelector('.cm-pane'); if (!pane) return;
+  const keep = st.tab;
+  const probe = document.createElement('div');
+  probe.className = 'cm-grid'; probe.style.cssText = 'position:absolute;left:20px;right:20px;top:0;visibility:hidden;pointer-events:none';
+  pane.appendChild(probe);
+  let max = 0;
+  TABS.forEach(t => { st.tab = t; probe.innerHTML = qaGrid(); max = Math.max(max, probe.offsetHeight); });
+  st.tab = keep; probe.remove();
+  pane.style.minHeight = `${max}px`;
 }
 vQA.addEventListener('click', e => {
   if (e.target.closest('[data-back]')) return P().back();
