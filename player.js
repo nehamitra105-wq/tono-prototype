@@ -91,11 +91,31 @@ function render(){
     b.setAttribute('aria-pressed', st[k]);
   });
   $p('[data-btn="playing"]').setAttribute('aria-label', st.playing ? 'Pause' : 'Play');
-  $p('#pl-tags').innerHTML = st.tags.map(t => `<span class="pchip">${esc(t)}</span>`).join('') + `<button class="pchip" data-tag-open>+ Tag</button>`;
+  $p('#pl-tags').innerHTML = st.tags.map(t => `<span class="pchip">${esc(t)}</span>`).join('') + `<button class="pchip add" data-tag-open><i class="plus" aria-hidden="true"></i>Tag</button>`;
 }
 
 /* view changer: turntable → cover → video → turntable */
 $p('[data-view]').addEventListener('click', () => { st.view = VIEWS[(VIEWS.indexOf(st.view) + 1) % VIEWS.length]; render(); });
+
+/* or swipe sideways across the player (or the dots): left = next view, right = previous */
+let sw = null;
+v.addEventListener('pointerdown', e => {
+  if (e.button || e.target.closest('#pl-remote, #pl-tag-ov, [data-back]')) return;
+  sw = {x:e.clientX, y:e.clientY};
+});
+v.addEventListener('pointerup', e => {
+  if (!sw) return;
+  const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw = null;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+  const i = VIEWS.indexOf(st.view) + (dx < 0 ? 1 : -1);
+  if (i >= 0 && i < VIEWS.length){ st.view = VIEWS[i]; render(); }
+  // a swipe that ends on the dots isn't also a tap on them
+  const stop = ev => { ev.stopPropagation(); ev.preventDefault(); };
+  window.addEventListener('click', stop, {capture:true, once:true});
+  setTimeout(() => window.removeEventListener('click', stop, {capture:true}), 0);
+});
+v.addEventListener('pointercancel', () => { sw = null; });
+v.addEventListener('dragstart', e => { if (e.target.closest('.pl-stage, .pl-head')) e.preventDefault(); });
 
 /* remote buttons toggle to their "on" variant */
 remote.addEventListener('click', e => {

@@ -84,6 +84,10 @@
 .tag-row .chips::-webkit-scrollbar{display:none}
 .pchip{border:1.446px solid var(--lilac);border-radius:144.604px;padding:4.338px 11.388px;color:var(--lilac);font-weight:300;font-size:14.46px;line-height:normal;white-space:nowrap;display:flex;align-items:center;gap:6px;flex:none}
 
+.pchip.add{background:var(--off-white);border-color:var(--off-white);color:var(--off-black);gap:3px}
+.pchip.add .plus{width:12px;height:12px;background:currentColor;-webkit-mask:url(assets/community/ph/plus.svg) center/contain no-repeat;mask:url(assets/community/ph/plus.svg) center/contain no-repeat;margin-left:-3px}
+.pl-stage{touch-action:pan-y}
+
 /* song tag pop-up */
 .tag-ov{position:absolute;inset:0;z-index:20;display:none}
 .tag-ov.on{display:block}

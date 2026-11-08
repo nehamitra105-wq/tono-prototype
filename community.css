@@ -52,7 +52,7 @@
 /* ---------- sections ---------- */
 .cm-sec{position:relative;display:flex;flex-direction:column;gap:16px;padding:0 20px;margin-bottom:24px}
 .cm-sec > .t-header{line-height:normal}
-.cm-scroll{display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px}
+.cm-scroll{display:flex;gap:16px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 -20px;padding:0 20px}
 .cm-scroll::-webkit-scrollbar{display:none}
 .cm-top{display:grid;flex:none}
 .cm-top > *{grid-area:1/1}
