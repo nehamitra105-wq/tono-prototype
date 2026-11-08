@@ -14,7 +14,7 @@
 .view-changer img{position:absolute;left:5px;top:3px;height:20px}
 
 /* stage: everything above the remote */
-.pl-stage{position:absolute;inset:0}
+.pl-stage{position:absolute;inset:0;transform-origin:50% 62px;transition:transform .3s ease}
 .pl-layer{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .3s ease}
 .pl-layer.on{opacity:1}
 .pl-title{position:absolute;left:72px;width:258px;text-align:center;color:var(--off-white);display:flex;flex-direction:column;gap:8px;transition:top .3s ease}

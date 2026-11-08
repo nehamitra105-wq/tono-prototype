@@ -115,7 +115,7 @@
 .nb-toast.on{transform:translate(-50%,0);opacity:1;visibility:visible;transition:transform .4s var(--ease), opacity .2s, visibility 0s}
 .nb-toast .sym{width:18px;height:18px;background:var(--lilac)}
 
-.nb-toolbar{position:absolute;left:31px;top:758px;width:340px;height:71px;border-radius:12px;background:rgba(46,63,85,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:12}
+.nb-toolbar{position:absolute;left:31px;bottom:45px;width:340px;height:71px;border-radius:12px;background:rgba(46,63,85,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:12}
 .nb-toolbar button{position:absolute;top:14px;width:44px;height:44px;border-radius:24px;padding:4px 3px;display:grid;place-items:center;transition:background .2s}
 .nb-toolbar button img,.nb-toolbar button .sym{width:20px;height:20px}
 .nb-toolbar button .sym{background:#fff}

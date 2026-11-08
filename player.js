@@ -12,6 +12,8 @@ const SONG = {title:'Please Don’t Stop The Music', artist:'Rhianna', context:'
 const VIEWS = ['tt', 'cv', 'vd'];
 const REMOTE_TOP = {tt:513, cv:471, vd:513};
 const COLLAPSED_TOP = 749;
+// full screen on a shorter phone: the remote keeps its distance from the bottom and the artwork above it shrinks to fit
+const DY = () => Math.min(0, (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sh')) || 874) - 874);
 const REC_POOL = ['2010s', 'Happy', 'Electric', 'Club', 'R&B', 'Throwback', 'Pop', 'Dance', 'Late Night'];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -83,7 +85,9 @@ function render(){
   v.classList.toggle('playing', st.playing);
   v.querySelectorAll('[data-layer]').forEach(l => l.classList.toggle('on', l.dataset.layer === st.view));
   $p('.view-changer img').src = `${P}dots-${VIEWS.indexOf(st.view) + 1}.svg`;
-  remote.style.top = `${st.collapsed ? COLLAPSED_TOP : REMOTE_TOP[st.view]}px`;
+  const dy = DY(), top = st.collapsed ? COLLAPSED_TOP : REMOTE_TOP[st.view];
+  remote.style.top = `${top + dy}px`;
+  $p('.pl-stage').style.transform = dy ? `scale(${((top + dy - 62) / (top - 62)).toFixed(4)})` : '';
   remote.classList.toggle('bordered', st.view !== 'tt' && !st.collapsed);
   Object.keys(ICON).forEach(k => {
     const b = $p(`[data-btn="${k}"]`);
@@ -95,6 +99,7 @@ function render(){
 }
 
 /* view changer: turntable → cover → video → turntable */
+addEventListener('resize', () => render());
 $p('[data-view]').addEventListener('click', () => { st.view = VIEWS[(VIEWS.indexOf(st.view) + 1) % VIEWS.length]; render(); });
 
 /* or swipe sideways across the player (or the dots): left = next view, right = previous */
@@ -138,7 +143,7 @@ remote.addEventListener('pointermove', e => {
   if (Math.abs(dy) > 5) drag.moved = true;
   if (!drag.moved) return;
   remote.style.transition = 'none';
-  const lo = REMOTE_TOP[st.view] - 30, hi = COLLAPSED_TOP + 20;
+  const lo = REMOTE_TOP[st.view] + DY() - 30, hi = COLLAPSED_TOP + DY() + 20;
   remote.style.top = `${Math.min(hi, Math.max(lo, drag.top0 + dy))}px`;
 });
 const endRemote = e => {

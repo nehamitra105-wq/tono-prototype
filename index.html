@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D1218">
 <title>tono — Home prototype</title>
 <style>
 /* ---------- Font: Mundial only ---------- */
@@ -70,6 +74,20 @@ img{display:block}
 .lock.unlocked ~ .home-indicator{opacity:0}
 .restart{color:#8a8f98}
 
+/* ---------- Full screen on a phone: no frame, the 402-wide app scaled to the phone's width
+   and stretched to its height. "Restart flow" hides until a swipe up from the bottom. ---------- */
+html.full body{background:var(--off-black);overscroll-behavior:none}
+html.full .stage{display:block}
+html.full .device-wrap{width:calc(402px * var(--scale));height:calc(var(--sh) * var(--scale))}
+html.full .device{width:402px;height:var(--sh);padding:0;border-radius:0;background:none;box-shadow:none}
+html.full .device::before,html.full .device::after,html.full .island,html.full .home-indicator{display:none}
+html.full .screen{height:var(--sh);border-radius:0}
+html.full .statusbar > *,html.full .lock .swipe-ind{visibility:hidden}
+html.full .restart{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));z-index:1000;padding:10px 20px;border-radius:100px;
+  background:var(--off-white);color:var(--off-black);box-shadow:0 10px 30px rgba(0,0,0,.45);
+  opacity:0;transform:translate(-50%,16px);pointer-events:none;transition:opacity .25s, transform .3s var(--ease)}
+html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+
 /* ---------- Status bar ---------- */
 .statusbar{position:absolute;top:0;left:0;right:0;height:62px;display:flex;align-items:center;justify-content:center;padding:3px 8px 0;z-index:40}
 .statusbar.solid{background:var(--off-black)}
@@ -131,7 +149,7 @@ img{display:block}
 .notif .n-title{font-weight:600;line-height:17px}
 .notif .n-desc{font-weight:400;line-height:18px;white-space:nowrap}
 .notif .n-time{font-weight:400;font-size:15px;line-height:17px;color:#4d4d4d;mix-blend-mode:plus-lighter;white-space:nowrap}
-.lock .controls{position:absolute;left:46px;top:766px;width:310px;display:flex;justify-content:space-between}
+.lock .controls{position:absolute;left:46px;bottom:50px;width:310px;display:flex;justify-content:space-between}
 .lock .ctrl{position:relative;width:58px;height:58px;border-radius:100px;display:grid;place-items:center;color:#d9d9d9}
 .lock .ctrl .sym{position:relative;width:24px;height:24px;opacity:.9;mix-blend-mode:plus-lighter}
 
@@ -648,9 +666,14 @@ const $ = s => document.querySelector(s);
 const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
 
 /* ================= DEVICE SCALE ================= */
+// a phone (touch screen, narrow) gets the app full screen; computers and tablets get the iPhone frame
+const PHONE = matchMedia('(max-width: 600px) and (pointer: coarse)');
 function fit(){
-  const s = Math.min(1, (innerHeight - 70) / 902, (innerWidth - 32) / 430);
-  document.documentElement.style.setProperty('--scale', s.toFixed(4));
+  const root = document.documentElement, full = PHONE.matches;
+  root.classList.toggle('full', full);
+  const s = full ? innerWidth / 402 : Math.min(1, (innerHeight - 70) / 902, (innerWidth - 32) / 430);
+  root.style.setProperty('--scale', s.toFixed(4));
+  if (full) root.style.setProperty('--sh', `${(innerHeight / s).toFixed(1)}px`);
 }
 addEventListener('resize', fit); fit();
 
@@ -674,6 +697,27 @@ $('#notif').addEventListener('click', unlock);
     if (dy < -80) unlock();
   };
   lock.addEventListener('pointerup', end); lock.addEventListener('pointercancel', end);
+})();
+
+/* full screen: swipe up from the bottom of the screen to show "Restart flow" (hides again after a few seconds) */
+(() => {
+  const btn = $('#restart'); let y0 = null, x0 = 0, hideT;
+  const show = () => { btn.classList.add('show'); clearTimeout(hideT); hideT = setTimeout(hide, 4000); };
+  const hide = () => btn.classList.remove('show');
+  const start = (x, y) => {
+    if (!PHONE.matches || !lock.classList.contains('unlocked')) return;
+    y0 = y > innerHeight - 110 ? y : null; x0 = x;
+  };
+  const end = (x, y) => {
+    if (y0 === null) return;
+    const dy = y - y0, dx = x - x0; y0 = null;
+    if (dy < -50 && Math.abs(dx) < Math.abs(dy)) show();
+  };
+  addEventListener('touchstart', e => { if (!e.target.closest('#restart')) hide(); const t = e.touches[0]; start(t.clientX, t.clientY); }, {passive:true, capture:true});
+  addEventListener('touchend', e => { const t = e.changedTouches[0]; end(t.clientX, t.clientY); }, {passive:true, capture:true});
+  addEventListener('pointerdown', e => { if (e.pointerType !== 'touch'){ if (!e.target.closest('#restart')) hide(); start(e.clientX, e.clientY); } }, true);
+  addEventListener('pointerup', e => { if (e.pointerType !== 'touch') end(e.clientX, e.clientY); }, true);
+  btn.addEventListener('click', hide);
 })();
 
 $('#restart').addEventListener('click', () => {
