@@ -38,7 +38,7 @@ v.innerHTML = `
   <div class="pl-head">
     <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
     <p class="t-body">${esc(SONG.context)}</p>
-    <button class="view-changer" data-view aria-label="Change view"><img src="${P}dots-1.svg" alt=""></button>
+    <button class="view-changer" data-view aria-label="Change view"><i class="vc-dot" data-i="0"></i><i class="vc-dot" data-i="1"></i><i class="vc-dot" data-i="2"></i><i class="vc-knob"></i></button>
   </div>
   <div class="remote" id="pl-remote" aria-label="Remote">
     <img class="handle" src="${P}handle.svg" alt="">
@@ -84,7 +84,7 @@ function render(){
   v.classList.toggle('collapsed', st.collapsed);
   v.classList.toggle('playing', st.playing);
   v.querySelectorAll('[data-layer]').forEach(l => l.classList.toggle('on', l.dataset.layer === st.view));
-  $p('.view-changer img').src = `${P}dots-${VIEWS.indexOf(st.view) + 1}.svg`;
+  placeKnob(VIEWS.indexOf(st.view));
   const dy = DY(), top = st.collapsed ? COLLAPSED_TOP : REMOTE_TOP[st.view];
   remote.style.top = `${top + dy}px`;
   $p('.pl-stage').style.transform = dy ? `scale(${((top + dy - 62) / (top - 62)).toFixed(4)})` : '';
@@ -102,24 +102,68 @@ function render(){
 addEventListener('tono-fit', () => render());
 $p('[data-view]').addEventListener('click', () => { st.view = VIEWS[(VIEWS.indexOf(st.view) + 1) % VIEWS.length]; render(); });
 
-/* or swipe sideways across the player (or the dots): left = next view, right = previous */
-let sw = null;
-v.addEventListener('pointerdown', e => {
-  if (e.button || e.target.closest('#pl-remote, #pl-tag-ov, [data-back]')) return;
-  sw = {x:e.clientX, y:e.clientY};
+/* the dots: the white knob sits on the current view; drag it along (all the way to either end) to pick a view */
+const SLOT = [15, 38, 59];                       // knob centres inside the 78px pill (Figma dots-1/2/3)
+const DOT = [[0, 44, 66], [9, 0, 67], [8, 30, 0]]; // the small dots' centres for each view (Figma)
+const vc = $p('.view-changer'), knob = vc.querySelector('.vc-knob');
+function placeKnob(i, x){
+  knob.style.left = `${(x ?? SLOT[i]) - 10}px`;
+  vc.querySelectorAll('.vc-dot').forEach(d => {
+    const k = +d.dataset.i, far = Math.abs(k - i) > 1;
+    if (k !== i) d.style.left = `${DOT[i][k] - (far ? 3 : 4)}px`;
+    d.classList.toggle('far', far); d.classList.toggle('hide', k === i);
+  });
+}
+const nearest = x => SLOT.reduce((b, c, k) => Math.abs(c - x) < Math.abs(SLOT[b] - x) ? k : b, 0);
+let kd = null;
+vc.addEventListener('pointerdown', e => {
+  if (e.button) return;
+  const r = vc.getBoundingClientRect();
+  kd = {x0:e.clientX, s:r.width / 78, left:r.left, moved:false};
+  try { vc.setPointerCapture(e.pointerId); } catch (_) {}
 });
-v.addEventListener('pointerup', e => {
-  if (!sw) return;
-  const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw = null;
-  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-  const i = VIEWS.indexOf(st.view) + (dx < 0 ? 1 : -1);
-  if (i >= 0 && i < VIEWS.length){ st.view = VIEWS[i]; render(); }
-  // a swipe that ends on the dots isn't also a tap on them
+vc.addEventListener('pointermove', e => {
+  if (!kd) return;
+  if (!kd.moved && Math.abs(e.clientX - kd.x0) < 4) return;
+  kd.moved = true;
+  const x = Math.min(SLOT[2], Math.max(SLOT[0], (e.clientX - kd.left) / kd.s));
+  knob.style.transition = 'none';
+  const i = nearest(x);
+  if (VIEWS[i] !== st.view){ st.view = VIEWS[i]; render(); }
+  placeKnob(i, x);
+});
+const endKnob = () => {
+  if (!kd) return;
+  const moved = kd.moved; kd = null;
+  knob.style.transition = '';
+  placeKnob(VIEWS.indexOf(st.view));
+  if (moved) swallowClick();
+};
+vc.addEventListener('pointerup', endKnob);
+vc.addEventListener('pointercancel', endKnob);
+function swallowClick(){
   const stop = ev => { ev.stopPropagation(); ev.preventDefault(); };
   window.addEventListener('click', stop, {capture:true, once:true});
   setTimeout(() => window.removeEventListener('click', stop, {capture:true}), 0);
-});
-v.addEventListener('pointercancel', () => { sw = null; });
+}
+
+/* or swipe sideways across the player: left = next view, right = previous.
+   Touch uses touch events (they still finish if the browser takes over the gesture); a mouse uses pointer events. */
+let sw = null;
+const swStart = (x, y, t) => { sw = t.closest('#pl-remote, #pl-tag-ov, [data-back], .view-changer') ? null : {x, y}; };
+const swEnd = (x, y) => {
+  if (!sw) return;
+  const dx = x - sw.x, dy = y - sw.y; sw = null;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+  const i = VIEWS.indexOf(st.view) + (dx < 0 ? 1 : -1);
+  if (i >= 0 && i < VIEWS.length){ st.view = VIEWS[i]; render(); }
+  swallowClick();
+};
+v.addEventListener('touchstart', e => { const t = e.touches[0]; if (e.touches.length === 1) swStart(t.clientX, t.clientY, e.target); else sw = null; }, {passive:true});
+v.addEventListener('touchend', e => { const t = e.changedTouches[0]; swEnd(t.clientX, t.clientY); }, {passive:true});
+v.addEventListener('touchcancel', () => { sw = null; });
+v.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch' && !e.button) swStart(e.clientX, e.clientY, e.target); });
+v.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') swEnd(e.clientX, e.clientY); });
 v.addEventListener('dragstart', e => { if (e.target.closest('.pl-stage, .pl-head')) e.preventDefault(); });
 
 /* remote buttons toggle to their "on" variant */
