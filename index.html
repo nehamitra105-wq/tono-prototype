@@ -77,7 +77,10 @@ img{display:block}
 /* ---------- Full screen on a phone: no frame, the 402-wide app scaled to the phone's width
    and stretched to its height. "Restart flow" hides until a swipe up from the bottom. ---------- */
 html.full body{background:var(--off-black);overscroll-behavior:none}
-html.full .stage{display:block;top:0;bottom:auto;height:calc(var(--sh) * var(--scale))}
+/* iOS Home Screen apps report a viewport that stops short of the bottom by the status bar's height and clip
+   fixed content there, so the page itself is made as tall as the screen and the app sits in it (not fixed) */
+html.full,html.full body{height:var(--H);overflow:hidden}
+html.full .stage{display:block;position:absolute;top:0;left:0;right:0;bottom:auto;height:var(--H)}
 html.full .device-wrap{width:calc(402px * var(--scale));height:calc(var(--sh) * var(--scale))}
 html.full .device{width:402px;height:var(--sh);padding:0;border-radius:0;background:none;box-shadow:none}
 html.full .device::before,html.full .device::after,html.full .island,html.full .home-indicator{display:none}
@@ -685,7 +688,7 @@ function fit(){
   const H = full ? screenH() : innerHeight;
   const s = full ? innerWidth / 402 : Math.min(1, (innerHeight - 70) / 902, (innerWidth - 32) / 430);
   root.style.setProperty('--scale', s.toFixed(4));
-  if (full) root.style.setProperty('--sh', `${(H / s).toFixed(1)}px`);
+  if (full){ root.style.setProperty('--sh', `${(H / s).toFixed(1)}px`); root.style.setProperty('--H', `${H}px`); }
   dispatchEvent(new Event('tono-fit'));
 }
 addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 300));
