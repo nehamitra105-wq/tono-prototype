@@ -46,6 +46,10 @@
 /* ---------- nodes ---------- */
 .nd{position:absolute;border-radius:10px;color:#fff;cursor:pointer;outline:0.5px solid transparent;transition:outline-color .15s, box-shadow .15s}
 .nd.sel{outline-color:#fff}
+.nd .ed{display:none;width:.85em;height:.85em;margin-right:4px;vertical-align:-.08em;background:#fff}
+.nd.sel .ed{display:inline-block}
+.audio-meta .ed{margin-right:0}
+.nd-photo.sel p,.nd-video.sel p{width:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nd.dragging{box-shadow:0 18px 40px rgba(0,0,0,.45);z-index:5;cursor:grabbing}
 
 .nd-song{background:var(--node-song);width:162px;padding:10px;display:flex;flex-direction:column;gap:13px}

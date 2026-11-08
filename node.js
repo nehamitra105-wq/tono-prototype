@@ -166,23 +166,25 @@ function waveHTML(pos){
     <img class="scrub" src="${A}scrubber.svg" alt="" style="left:${(pos * WAVE_W).toFixed(1)}px"></div>`;
 }
 
+// shown only while a node is selected: a hint that its photo / audio / text / song can be changed
+const ED = `<i class="sym ed" style="--i:url(${A}tb-pencil.svg)" aria-hidden="true"></i>`;
 function nodeHTML(n){
   const cls = `nd${ui.sel === n.id ? ' sel' : ''}${ui.del.has(n.id) ? ' del' : ''}`;
   const pos = `style="left:${n.x}px;top:${n.y}px"`;
   switch (n.type){
     case 'song': return `<div class="${cls} nd-song${n.fresh ? ' fresh' : ''}" data-id="${n.id}" ${pos}>
         <div class="cd"><img class="${n.cd ? '' : 'cover'}" src="${n.img}" alt=""></div>
-        <div class="meta"><p class="t-body">${esc(n.title)}</p><p class="t-caption">${esc(n.sub)}</p></div></div>`;
+        <div class="meta"><p class="t-body">${ED}${esc(n.title)}</p><p class="t-caption">${esc(n.sub)}</p></div></div>`;
     case 'text': return `<div class="${cls} nd-text" data-id="${n.id}" ${pos}>
-        <p class="quote">“</p><p class="t-body">${esc(n.text)}</p>${n.sub ? `<p class="t-caption">${esc(n.sub)}</p>` : ''}</div>`;
+        <p class="quote">“</p><p class="t-body">${ED}${esc(n.text)}</p>${n.sub ? `<p class="t-caption">${esc(n.sub)}</p>` : ''}</div>`;
     case 'photo':
     case 'video': return `<div class="${cls} nd-${n.type}" data-id="${n.id}" ${pos}>
-        <img src="${n.img}" alt=""><span class="fade"></span><p class="t-body">${esc(n.title)}</p></div>`;
+        <img src="${n.img}" alt=""><span class="fade"></span><p class="t-body">${ED}${esc(n.title)}</p></div>`;
     case 'audio': return `<div class="${cls} nd-audio" data-id="${n.id}" ${pos}>
         ${waveHTML(n.pos || 0)}
         <div class="audio-meta t-caption">
           <button class="play-mini" data-play aria-label="Play ${esc(n.title)}"><i class="sym" style="--i:url(${A}ph-${ui.playing && ui.playing.id === n.id ? 'pause' : 'play'}.svg)"></i></button>
-          <span class="nm">${esc(n.title)}</span><span class="tm">${timeLabel(n)}</span>
+          ${ED}<span class="nm">${esc(n.title)}</span><span class="tm">${timeLabel(n)}</span>
         </div></div>`;
     case 'gen': return `<div class="${cls} nd-song nd-gen" data-id="${n.id}" ${pos}>
         <div class="cd"><span class="shine"></span></div>
