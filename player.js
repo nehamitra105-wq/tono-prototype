@@ -99,7 +99,7 @@ function render(){
 }
 
 /* view changer: turntable → cover → video → turntable */
-addEventListener('resize', () => render());
+addEventListener('tono-fit', () => render());
 $p('[data-view]').addEventListener('click', () => { st.view = VIEWS[(VIEWS.indexOf(st.view) + 1) % VIEWS.length]; render(); });
 
 /* or swipe sideways across the player (or the dots): left = next view, right = previous */

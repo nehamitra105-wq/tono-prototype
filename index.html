@@ -77,7 +77,7 @@ img{display:block}
 /* ---------- Full screen on a phone: no frame, the 402-wide app scaled to the phone's width
    and stretched to its height. "Restart flow" hides until a swipe up from the bottom. ---------- */
 html.full body{background:var(--off-black);overscroll-behavior:none}
-html.full .stage{display:block}
+html.full .stage{display:block;top:0;bottom:auto;height:calc(var(--sh) * var(--scale))}
 html.full .device-wrap{width:calc(402px * var(--scale));height:calc(var(--sh) * var(--scale))}
 html.full .device{width:402px;height:var(--sh);padding:0;border-radius:0;background:none;box-shadow:none}
 html.full .device::before,html.full .device::after,html.full .island,html.full .home-indicator{display:none}
@@ -668,14 +668,29 @@ const el = (html) => { const t = document.createElement('template'); t.innerHTML
 /* ================= DEVICE SCALE ================= */
 // a phone (touch screen, narrow) gets the app full screen; computers and tablets get the iPhone frame
 const PHONE = matchMedia('(max-width: 600px) and (pointer: coarse)');
+// the phone's real visible height: iOS can report innerHeight without the status bar (Home Screen app),
+// so also measure a 100dvh box and, when opened from the Home Screen, the screen itself
+const probe = document.createElement('div');
+probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100dvh;visibility:hidden;pointer-events:none';
+document.body.appendChild(probe);
+const STANDALONE = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+function screenH(){
+  let h = Math.max(innerHeight, probe.getBoundingClientRect().height);
+  if (STANDALONE) h = Math.max(h, innerWidth < innerHeight ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height));
+  return h;
+}
 function fit(){
   const root = document.documentElement, full = PHONE.matches;
   root.classList.toggle('full', full);
+  const H = full ? screenH() : innerHeight;
   const s = full ? innerWidth / 402 : Math.min(1, (innerHeight - 70) / 902, (innerWidth - 32) / 430);
   root.style.setProperty('--scale', s.toFixed(4));
-  if (full) root.style.setProperty('--sh', `${(innerHeight / s).toFixed(1)}px`);
+  if (full) root.style.setProperty('--sh', `${(H / s).toFixed(1)}px`);
+  dispatchEvent(new Event('tono-fit'));
 }
-addEventListener('resize', fit); fit();
+addEventListener('resize', fit); addEventListener('orientationchange', () => setTimeout(fit, 300));
+visualViewport?.addEventListener('resize', fit);
+fit(); addEventListener('load', fit); setTimeout(fit, 500);
 
 /* ================= LOCK → HOME ================= */
 const lock = $('#lock');
