@@ -107,7 +107,8 @@ const AREA = [
 // one per red dot: the drop-off points closest to you offer "Add a song" (then show yours);
 // every other dot already has a song someone else dropped there
 function locCard(i){
-  const d = st.drops[i] || (isNear(i) ? null : AREA[i]), where = SPOTS[i].name;
+  // a spot you searched for also offers "Add a song" (until you've left one there)
+  const d = st.drops[i] || (isNear(i) || st.searched === i ? null : AREA[i]), where = SPOTS[i].name;
   const pos = HAS_MAP ? 'left:0;top:0' : 'left:45px;top:235px';
   const top = d ? `<div class="card">
       <div class="row">
@@ -145,18 +146,32 @@ const distMi = (a, b) => {
   return 3959 * 2 * Math.asin(Math.sqrt(h));
 };
 const isNear = i => distMi(ME, SPOTS[i].ll) <= NEAR_MI;
+// more places you can search for; picking one that has no dot yet puts a new dot there
+const PLACES = [
+  {name:'Williamsburg, Brooklyn, NY', ll:[40.7081, -73.9571]}, {name:'Greenpoint, Brooklyn, NY', ll:[40.7305, -73.9515]},
+  {name:'Bushwick, Brooklyn, NY', ll:[40.6958, -73.9171]}, {name:'DUMBO, Brooklyn, NY', ll:[40.7033, -73.9881]},
+  {name:'Park Slope, Brooklyn, NY', ll:[40.6710, -73.9814]}, {name:'Prospect Park, Brooklyn, NY', ll:[40.6602, -73.9690]},
+  {name:'Coney Island, Brooklyn, NY', ll:[40.5755, -73.9707]}, {name:'Astoria, Queens, NY', ll:[40.7644, -73.9235]},
+  {name:'Long Island City, Queens, NY', ll:[40.7447, -73.9485]}, {name:'Flushing, Queens, NY', ll:[40.7675, -73.8331]},
+  {name:'Lower East Side, Manhattan, NY', ll:[40.7150, -73.9843]}, {name:'SoHo, Manhattan, NY', ll:[40.7233, -74.0030]},
+  {name:'Washington Square Park, Manhattan, NY', ll:[40.7308, -73.9973]}, {name:'Times Square, Manhattan, NY', ll:[40.7580, -73.9855]},
+  {name:'Central Park, Manhattan, NY', ll:[40.7829, -73.9654]}, {name:'Upper West Side, Manhattan, NY', ll:[40.7870, -73.9754]},
+  {name:'Hoboken, NJ', ll:[40.7440, -74.0324]},
+];
 let map = null; const markers = [];
 function buildMap(){
   vC.innerHTML = `
   <div class="cm-map">
     <p class="cm-map-title t-header">Leave a song on the map</p>
-    <div class="cm-search">${ic('magnifying-glass')}<input type="text" placeholder="Search location..." aria-label="Search location"></div>
+    <div class="cm-search">${ic('magnifying-glass')}<input type="text" placeholder="Search location..." aria-label="Search location" autocomplete="off" data-find></div>
+    <div class="cm-res cm-spots cm-find" role="listbox" aria-label="Locations"></div>
     <div class="cm-leaf" id="cm-leaf">${HAS_MAP ? '' : `<img class="map" src="${C}map.png" alt="">`}</div>
     <div class="cm-tools">
       <button class="cm-pit" data-recenter aria-label="Re-center"><span class="cm-round">${ic('gps-fix')}</span><span class="t-caption">Re-center</span></button>
     </div>
   </div>
   <div class="cm-rest"></div>`;
+  wireFind();
   if (!HAS_MAP){ vC.querySelector('.cm-leaf').insertAdjacentHTML('beforeend', locCard(0)); return; }
   map = L.map(vC.querySelector('#cm-leaf'), {zoomControl:false, scrollWheelZoom:false, zoomSnap:0, zoomDelta:.5, attributionControl:true, minZoom:10, maxZoom:17,
     maxBounds:[[40.45, -74.35], [41.0, -73.6]], maxBoundsViscosity:.8}).setView(HOME_VIEW.c, HOME_VIEW.z);
@@ -179,6 +194,39 @@ function buildMap(){
   L.tileLayer(ESRI + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxNativeZoom:16, pane:'overlayPane', className:'cm-labels'}).addTo(map);
   SPOTS.forEach((p, i) => { markers[i] = L.marker(p.ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); });
   L.marker(ME, {icon:L.divIcon({className:'cm-me-icon', html:`<i class="cm-ic" style="--i:url(${C2}person.svg)"></i>`, iconSize:[24, 24], iconAnchor:[12, 12]}), keyboard:false, interactive:false}).addTo(map);
+}
+/* ---------- search a location: suggestions as you type; pick one (or Enter) to fly to its dot ---------- */
+function wireFind(){
+  const inp = vC.querySelector('[data-find]'), list = vC.querySelector('.cm-find');
+  let hits = [];
+  const render = () => {
+    const q = inp.value.trim().toLowerCase();
+    if (!q){ list.classList.remove('on'); hits = []; return; }
+    const seen = new Set(), all = [...SPOTS, ...PLACES].filter(p => !seen.has(p.name) && seen.add(p.name));
+    hits = all.filter(p => p.name.toLowerCase().includes(q))
+      .sort((a, b) => a.name.toLowerCase().indexOf(q) - b.name.toLowerCase().indexOf(q) || distMi(ME, a.ll) - distMi(ME, b.ll)).slice(0, 6);
+    list.innerHTML = hits.length ? hits.map((p, k) => `<button role="option" data-find-pick="${k}">${ic('map-pin')}<span class="tx"><span class="t-body">${esc(p.name)}</span><span class="t-caption cm-mut">${distMi(ME, p.ll).toFixed(1)} mi away</span></span></button>`).join('')
+      : `<p class="t-body cm-mut">No places match “${esc(inp.value.trim())}”</p>`;
+    list.classList.add('on');
+  };
+  const pick = p => {
+    list.classList.remove('on'); inp.value = p.name; inp.blur();
+    let i = SPOTS.findIndex(o => o.name === p.name);
+    if (i < 0){ SPOTS.push({name:p.name, ll:p.ll}); i = SPOTS.length - 1; if (map) markers[i] = L.marker(p.ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); }
+    const was = st.searched; st.searched = i;
+    if (map && was != null && markers[was]) markers[was].setIcon(spotIcon(was));
+    if (map) markers[i].setIcon(spotIcon(i));
+    setOpen(null);
+    vC.scrollTo({top:0, behavior:'smooth'});
+    if (map){ map.flyTo(SPOTS[i].ll, 14, {duration:.9}); map.once('moveend', () => setOpen(i)); }
+    else setOpen(i);
+  };
+  inp.addEventListener('input', render);
+  inp.addEventListener('focus', render);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); if (!hits.length) render(); if (hits[0]) pick(hits[0]); } if (e.key === 'Escape'){ list.classList.remove('on'); inp.blur(); } });
+  // pick on pointerdown so the field's blur doesn't close the list first
+  list.addEventListener('pointerdown', e => { const b = e.target.closest('[data-find-pick]'); if (b){ e.preventDefault(); pick(hits[+b.dataset.findPick]); } });
+  inp.addEventListener('blur', () => setTimeout(() => list.classList.remove('on'), 120));
 }
 const spotIcon = i => L.divIcon({className:'cm-loc-icon', html:locCard(i), iconSize:[280, 110], iconAnchor:[140, 103]});
 function refreshPin(){
@@ -509,7 +557,8 @@ let seen = false, ob = -1, obWait = 0;
 const obEl = document.createElement('div');
 obEl.className = 'cm-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Community walkthrough');
 obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
-  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>`;
+  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>
+  <button class="ob-skip t-body" data-ob-skip>Skip</button>`;
 app.appendChild(obEl);
 function obLayout(){
   if (ob < 0) return;
@@ -553,14 +602,17 @@ function obShow(i){
     obEl.querySelector('.go').textContent = i === OB.length - 1 ? 'OK' : 'Next';
     // bring the step's spot into view, leaving room for the bubble
     const vr = vC.getBoundingClientRect(), tr = t.getBoundingClientRect(), k = vr.width / 402;
-    const want = step.side === 'above' ? (tr.top - vr.top) / k + vC.scrollTop - 330 : (tr.top - vr.top) / k + vC.scrollTop - 90;
+    const want = step.side === 'above' ? (tr.top - vr.top) / k + vC.scrollTop - 330 : (tr.top - vr.top) / k + vC.scrollTop - 140;   // leaves the top clear for Skip
     vC.scrollTo({top:i < 2 ? 0 : Math.max(0, want * k), behavior:'smooth'});
     settled(vC, () => { if (seq !== obSeq) return; obLayout(); requestAnimationFrame(() => { if (seq === obSeq) obEl.classList.add('on'); }); });
   }, wasOn ? 600 : 0);
 }
 function obStart(){ if (seen) return; seen = true; obEl.classList.add('live', 'shown'); obShow(0); }
 function obEnd(){ ob = -1; ++obSeq; obEl.classList.remove('on', 'shown'); setTimeout(() => { if (ob < 0) obEl.classList.remove('live'); }, 600); }
-obEl.addEventListener('click', e => { if (e.target.closest('[data-ob-next]')) ob < OB.length - 1 ? obShow(ob + 1) : obEnd(); });
+obEl.addEventListener('click', e => {
+  if (e.target.closest('[data-ob-skip]')) return obEnd();
+  if (e.target.closest('[data-ob-next]')) ob < OB.length - 1 ? obShow(ob + 1) : obEnd();
+});
 // only follow the page while a step is showing; between steps it's hidden and gets placed once the scroll settles
 vC.addEventListener('scroll', () => { if (ob >= 0 && obEl.classList.contains('on')) obLayout(); }, {passive:true});
 vC.addEventListener('transitionend', e => { if (e.target === vC && ob >= 0 && obEl.classList.contains('on')) obLayout(); });   // if the page slid in

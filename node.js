@@ -1538,7 +1538,8 @@ let obSeen = false, obi = -1;
 const obEl = document.createElement('div');
 obEl.className = 'cm-ob ds-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Deep Search walkthrough');
 obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
-  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>`;
+  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>
+  <button class="ob-skip t-body" data-ob-skip>Skip</button>`;
 app.append(obEl);
 const obPage = st => st.page === 'proj' ? proj : landing;
 function obLayout(){
@@ -1588,7 +1589,7 @@ function obShow(i){
       const t = pg.querySelector(st.el); if (!t) return;
       const vr = pg.getBoundingClientRect(), tr = t.getBoundingClientRect(), k = vr.width / 402;
       const y = (tr.top - vr.top) / k + pg.scrollTop;
-      pg.scrollTo({top:Math.max(0, (st.side === 'above' ? y - 330 : y - 90) * k), behavior:'smooth'});
+      pg.scrollTo({top:Math.max(0, (st.side === 'above' ? y - 330 : y - 140) * k), behavior:'smooth'});   // leaves the top clear for Skip
       settled(pg, () => { if (seq !== obSeq) return; obLayout(); requestAnimationFrame(() => { if (seq === obSeq) obEl.classList.add('on'); }); });
     }, opening ? 650 : 0);
   }, wasOn ? 600 : 0);
@@ -1599,6 +1600,8 @@ function obStart(){
 }
 function obEnd(){ obi = -1; ++obSeq; obEl.classList.remove('on', 'shown'); setTimeout(() => { if (obi < 0) obEl.classList.remove('live'); }, 600); }
 obEl.addEventListener('click', e => {
+  // Skip ends the walkthrough wherever it is and lands back on the Deep Search page
+  if (e.target.closest('[data-ob-skip]')){ obEnd(); if (current === proj) backToLanding(); landing.scrollTo({top:0, behavior:'smooth'}); return; }
   if (!e.target.closest('[data-ob-next]')) return;
   if (obi < OBS.length - 1) return obShow(obi + 1);
   obEnd();

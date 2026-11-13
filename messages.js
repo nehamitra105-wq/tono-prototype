@@ -18,7 +18,7 @@ const MAYA_MIX = [
 ];
 const fresh = () => ({
   maya:{name:'Maya', handle:'@QuietMango42', ava:M + 'ava-maya.png', pfp:M + 'pfp-maya.png',
-    thread:[{me:false, t:'did u see XG dropped a new single??'}, {me:true, t:'omg not yet, is it good'}]},
+    thread:[{me:false, t:'did u see XG dropped a new single??'}, {me:true, t:'omg not yet, is it good'}, {me:false, t:'it’s SO good. the chorus has been on repeat all day'}], unread:1},
   elias:{name:'Elias', handle:'@neon_drifter', ava:M + 'ava-elias.png', pfp:M + 'ava-elias.png', thread:[{me:false, t:'that playlist you made was so good'}]},
   sofia:{name:'Sofia', handle:'@PixelFox88', ava:M + 'ava-sofia.png', pfp:M + 'ava-sofia.png', thread:[{me:true, t:'see u at the show friday!'}]},
   theo:{name:'Theo', handle:'@cosmic.pancake', ava:M + 'ava-theo.png', pfp:M + 'ava-theo.png', thread:[{me:false, t:'ok this song is stuck in my head now'}]},
@@ -49,6 +49,7 @@ function back(){
   if (!prev || prev === home){ stack.length = 0; goHome(); return; }
   const leaving = current;
   leaving.classList.add('offright'); prev.classList.remove('offleft'); current = prev;
+  if (prev === vIn) renderInbox();   // read counts + last messages are fresh when you come back
   setTimeout(() => leaving.classList.remove('on-top'), 600);
 }
 // after Send: the two curate pages leave together and the chat slides back in
@@ -69,7 +70,11 @@ vIn.innerHTML = `
     <div class="mi-list"></div>
   </div>
   <div class="mc-bar"><span class="mc-plus"><img src="${M}plus.svg" alt=""></span><div class="mc-box"><div class="mc-line"><textarea rows="1" placeholder="Message..." aria-label="Message"></textarea></div></div></div>`;
-const lastLine = p => { const m = p.thread[p.thread.length - 1]; return m.letter ? (m.me ? 'You sent a question' : 'Sent you a question') : m.mix ? (m.me ? 'You sent a mixtape' : 'Sent you a mixtape') : m.t; };
+// the inbox shows the last message in each chat ("You: …" when it was yours)
+const lastLine = p => {
+  const th = p.thread.filter(m => !m.typing), m = th[th.length - 1]; if (!m) return '';
+  return m.letter ? (m.me ? 'You sent a question' : 'Sent you a question') : m.mix ? (m.me ? 'You sent a mixtape' : 'Sent you a mixtape') : (m.me ? `You: ${m.t}` : m.t);
+};
 function renderInbox(){
   const reqs = Object.values(P).filter(p => p.request && !answered).length;
   vIn.querySelector('.mi-tabs').innerHTML = `
@@ -79,8 +84,8 @@ function renderInbox(){
   const list = Object.entries(P).filter(([, p]) => (tab === 'req' ? p.request : !p.request || answered) && (!q || (p.name + p.handle).toLowerCase().includes(q)));
   vIn.querySelector('.mi-list').innerHTML = list.length ? list.map(([id, p]) => `
     <button class="mi-row" data-who="${id}"><img src="${p.ava}" alt="">
-      <span class="who"><span class="t-header">${esc(p.name)}</span><span class="t-body ${p.request && !answered ? '' : 'sub'}">${p.request && !answered ? esc(lastLine(p)) : esc(p.handle)}</span></span>
-      ${p.request && !answered ? '<span class="dot" aria-label="New"></span>' : ''}</button>`).join('')
+      <span class="who"><span class="t-header">${esc(p.name)}</span><span class="t-body ${(p.request && !answered) || p.unread ? '' : 'sub'}">${esc(lastLine(p))}</span></span>
+      ${p.unread ? `<span class="mi-unread" aria-label="${p.unread} unread">${p.unread}</span>` : p.request && !answered ? '<span class="dot" aria-label="New"></span>' : ''}</button>`).join('')
     : `<p class="t-body mi-empty">${tab === 'req' ? 'No requests right now' : 'No chats found'}</p>`;
 }
 vIn.addEventListener('click', e => {
@@ -139,7 +144,8 @@ function syncSend(){
 }
 function toggleMenu(on){ menu.classList.toggle('on', on); bar.classList.toggle('menu', on); }
 function openChat(id){
-  who = id; ta.value = ''; toggleMenu(false); setComposer('text'); renderChat(false); go(vChat);
+  who = id; P[id].unread = 0;   // opening the chat reads it
+  ta.value = ''; toggleMenu(false); setComposer('text'); renderChat(false); go(vChat);
 }
 function add(m){ P[who].thread.push(m); renderChat(true); }
 ta.addEventListener('input', syncSend);

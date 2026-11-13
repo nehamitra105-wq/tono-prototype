@@ -211,3 +211,8 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-loc .ask-drop{position:absolute;left:50%;bottom:26px;transform:translate(-50%,6px);display:flex;gap:8px;align-items:center;white-space:nowrap;
   padding:12px 16px;border-radius:10px;background:var(--off-white);color:var(--off-black);opacity:0;pointer-events:none;transition:opacity .6s var(--slow), transform .6s var(--slow)}
 .cm-loc.open .ask-drop{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+/* Skip: top right for the whole walkthrough (Community + Deep Search) */
+.cm-ob .ob-skip{position:absolute;right:20px;top:72px;z-index:3;padding:6px 2px;color:var(--off-white);opacity:0;transition:opacity .6s var(--slow)}
+.cm-ob.shown .ob-skip{opacity:1}
+/* location search suggestions under the map's search bar */
+.cm-map .cm-find{left:20px;right:20px;top:92px;z-index:6}
