@@ -299,3 +299,6 @@
 }
 .dp-out.fresh{animation:out-glow 4.8s ease-in-out infinite, out-pop .9s var(--slow)}
 @keyframes out-pop{0%{transform:scale(.97)}60%{transform:scale(1.015)}100%{transform:none}}
+
+/* save-draft prompt when leaving a new project */
+.dp-save{z-index:47}

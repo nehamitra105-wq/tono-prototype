@@ -505,7 +505,7 @@ const OB = [
   {el:'[data-ask]', text:'Have a question? Ask the community for their input!', side:'above'},
   {el:'.cm-qa', text:'View and respond to questions other users have asked in the community', side:'above'},
 ];
-let seen = false, ob = -1;
+let seen = false, ob = -1, obWait = 0;
 const obEl = document.createElement('div');
 obEl.className = 'cm-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Community walkthrough');
 obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
@@ -574,7 +574,9 @@ function openCommunity(){
   P().setTab('community'); P().go(vC);
   if (map) requestAnimationFrame(() => map.invalidateSize());
   // first visit: the walkthrough opens right away with the page (opening Community is what starts it)
-  if (!seen) requestAnimationFrame(() => requestAnimationFrame(obStart));
+  // first visit: a 2s beat on the page, then the walkthrough starts (only if they're still here)
+  clearTimeout(obWait);
+  if (!seen) obWait = setTimeout(() => { if (current === vC) obStart(); }, 2000);
 }
 
 document.getElementById('restart')?.addEventListener('click', () => { ALL_OV.forEach(close); clearTimeout(st._pinT); st = fresh(); seen = false; obEnd(); MATCHES.forEach(m => { m.following = false; }); if (map){ refreshPin(); map.setView(HOME_VIEW.c, HOME_VIEW.z); } });

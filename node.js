@@ -1244,7 +1244,7 @@ function rename(n){
 
 proj.addEventListener('click', e => {
   const t = e.target;
-  if (t.closest('[data-back]')) return backToLanding();
+  if (t.closest('[data-back]')) return cur.saved === false ? askSave() : backToLanding();
   if (t.closest('[data-full]')) return open();
   if (t.closest('[data-discover]') || t.closest('[data-shuffle]')) return extract();
   const add = t.closest('[data-add]');
@@ -1277,6 +1277,29 @@ function openProject(id){
   renderProj(true); proj.scrollTop = 0;
   push(proj);
 }
+/* leaving a new project: keep it as a draft, or throw it away */
+const saveDlg = document.createElement('div');
+saveDlg.className = 'nb-overlay dp-save'; saveDlg.setAttribute('role', 'dialog'); saveDlg.setAttribute('aria-label', 'Save draft');
+app.append(saveDlg);
+function askSave(){
+  stopProjAudio(); closeMenu();
+  saveDlg.innerHTML = `<div class="save-pop"><p class="t-header">Save draft?</p>
+    <p class="t-caption grey">Keep “${esc(cur.name)}” in your drafts to pick it up later.</p>
+    <div class="row"><button class="btn btn-secondary t-body" data-nosave>Don’t save</button><button class="btn btn-primary t-body" data-save>Save</button></div></div>`;
+  saveDlg.classList.add('on');
+}
+saveDlg.addEventListener('click', e => {
+  if (e.target === saveDlg){ saveDlg.classList.remove('on'); return; }   // tap outside: stay on the project
+  if (e.target.closest('[data-save]')){
+    cur.saved = true; saveList(); persist();
+    saveDlg.classList.remove('on'); backToLanding(); note(`Saved “${cur.name}” to your drafts`, `${D}ph-check.svg`);
+  } else if (e.target.closest('[data-nosave]')){
+    const gone = cur;
+    boards = boards.filter(b => b !== gone); saveList();
+    try { localStorage.removeItem(KEY(gone.id)); } catch (_) {}
+    saveDlg.classList.remove('on'); backToLanding();
+  }
+});
 function backToLanding(){
   stopProjAudio(); closeMenu();
   proj.classList.add('offright');
@@ -1487,7 +1510,7 @@ landing.addEventListener('click', e => {
   if (e.target.closest('[data-new]')){
     let n = 1; const name = k => k === 1 ? 'New project' : `New project ${k}`;
     while (boards.some(x => x.name === name(n))) n++;
-    const nb = {id:`b${Date.now().toString(36)}`, name:name(n)};
+    const nb = {id:`b${Date.now().toString(36)}`, name:name(n), saved:false};   // asks to be saved on the way out
     boards.push(nb); saveList(); openProject(nb.id);
   }
 });
@@ -1496,7 +1519,7 @@ function openDrafts(){
   renderLanding();
   landing.classList.remove('offleft');
   push(landing);
-  if (!obSeen) setTimeout(obStart, 650);   // first visit: the walkthrough starts once the page is in
+  if (!obSeen) setTimeout(obStart, 2000);   // first visit: a 2s beat on the page, then the walkthrough (obStart checks they're still here)
 }
 
 /* ================= FIRST-VISIT WALKTHROUGH =================
