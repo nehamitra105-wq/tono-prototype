@@ -1,0 +1,4 @@
+
+# Finder / iCloud duplicate copies ("deep 2.css", "cd 3.png", ...)
+* [0-9].*
+* [0-9][0-9].*
