@@ -44,7 +44,7 @@ const genres = c => `<div class="pf-genres"><p class="hd">Top genres</p><div cla
     <button class="pf-tile flow" data-genre="Electro-pop" style="flex:1;background:${c[4]}"><p class="pf-num" style="font-size:18px">10%</p><p class="lbl">Electro-pop</p></button>
   </div></div></div>`;
 const tops = (title, hl, rows) => `<div class="pf-tops">
-  <div class="hd t-caption"><p>${title}</p><p class="mut">This month</p></div>
+  <div class="hd"><p class="t-body">${title}</p><p class="t-caption mut">This month</p></div>
   <div class="hl"><img src="${hl.img}" alt=""><div class="tx">${hl.lines.join('')}</div></div>
   <ol class="t-caption">${rows.map((r, i) => `<li><span><span class="mut">#${i + 2}</span>${esc(r[0])}</span><span class="mut">${r[1]}</span></li>`).join('')}</ol></div>`;
 

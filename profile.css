@@ -49,13 +49,15 @@
 .pf-tile.flow .pf-num,.pf-tile.flow .lbl{position:static}
 
 /* top artists / songs */
-.pf-tops{background:var(--navy);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:10px}
-.pf-tops .hd{display:flex;justify-content:space-between}
-.pf-tops .hl{border:1px solid var(--lilac);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center}
+.pf-tops{background:var(--navy);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.pf-tops .hd{display:flex;justify-content:space-between;align-items:center;color:var(--off-white)}
+/* Figma 982:9247: the #1 card's edge runs lilac → pink */
+.pf-tops .hl{border:1px solid transparent;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:center;
+  background:linear-gradient(var(--navy), var(--navy)) padding-box, var(--tag-gradient) border-box}
 .pf-tops .hl img{width:40px;height:40px;border-radius:8px;object-fit:cover}
 .pf-tops .hl .tx{display:flex;flex-direction:column;gap:2px;color:var(--off-white);white-space:nowrap}
 .pf-tops .hl .dim{opacity:.6}
-.pf-tops ol{list-style:none;display:flex;flex-direction:column;gap:4px}
+.pf-tops ol{list-style:none;display:flex;flex-direction:column;gap:12px}
 .pf-tops li{display:flex;justify-content:space-between;white-space:nowrap}
 .pf-tops li span:first-child{display:flex;gap:8px}
 .mut{color:rgba(248,248,248,.6)}

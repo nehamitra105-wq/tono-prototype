@@ -10,7 +10,8 @@
 const P = 'assets/player/';
 const SONG = {title:'Please Don’t Stop The Music', artist:'Rhianna', context:'Movin’'};
 const VIEWS = ['tt', 'cv', 'vd'];
-const REMOTE_TOP = {tt:513, cv:471, vd:513};
+// the player is a sheet below the status bar (Figma 1003:20034): its controls sit 552px down the screen
+const REMOTE_TOP = {tt:500.5, cv:500.5, vd:507.5};
 const COLLAPSED_TOP = 749;
 // full screen on a shorter phone: the remote keeps its distance from the bottom and the artwork above it shrinks to fit
 const DY = () => Math.min(0, (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sh')) || 874) - 874);
@@ -24,17 +25,19 @@ const v = document.createElement('section');
 v.className = 'view player-view offright';
 v.id = 'view-player';
 v.setAttribute('aria-label', 'Player');
-const title = (cls = '') => `<div class="pl-title ${cls}"><p class="t-header">${esc(SONG.title)}</p><p class="t-body">${esc(SONG.artist)}</p></div>`;
+const title = (src = false) => `<div class="pl-title"><p class="t-header">${esc(SONG.title)}</p><p class="t-body">${esc(SONG.artist)}</p>${src ? `<p class="pl-src"><span>Playing from</span><img src="${P}spotify.png" alt="Spotify"></p>` : ''}</div>`;
 v.innerHTML = `
   <div class="pl-stage">
-    <div class="pl-layer vd-l" data-layer="vd"><div class="vd-wrap"><div class="vd"><img src="${P}video.png" alt=""></div></div>${title()}</div>
+    <div class="pl-layer vd-l" data-layer="vd"><div class="vd-wrap"><div class="vd"><img src="${P}video.png" alt=""></div></div><img class="vd-min" src="${P}video.png" alt="">${title(true)}</div>
     <div class="pl-layer tt" data-layer="tt">
       <div class="tt-angle"><img src="${P}vinyl-angle.png" alt=""></div>
       <img class="tt-top" src="${P}vinyl-top.png" alt="">
-      ${title()}
+      ${title(true)}
     </div>
-    <div class="pl-layer cv" data-layer="cv"><img class="cv-art" src="${P}cover.png" alt="">${title()}</div>
+    <div class="pl-layer cv" data-layer="cv"><img class="cv-art" src="${P}cover.png" alt="">${title(true)}</div>
   </div>
+  <button class="pl-grip" data-grip aria-label="Close the player"></button>
+  <button class="pl-full" data-full aria-label="Full screen"><img src="${P}expand.svg" alt=""></button>
   <div class="pl-head">
     <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
     <p class="t-body">${esc(SONG.context)}</p>
@@ -82,6 +85,8 @@ const ICON = {playing:['play', 'pause'], add:['add', 'add-on'], like:['like', 'l
 
 function render(){
   v.classList.toggle('collapsed', st.collapsed);
+  $p('[data-full] img').src = st.collapsed ? `${P}ph-arrows-in-simple.svg` : `${P}expand.svg`;
+  $p('[data-full]').setAttribute('aria-label', st.collapsed ? 'Exit full screen' : 'Full screen');
   v.classList.toggle('playing', st.playing);
   v.querySelectorAll('[data-layer]').forEach(l => l.classList.toggle('on', l.dataset.layer === st.view));
   placeKnob(VIEWS.indexOf(st.view));
@@ -293,6 +298,9 @@ document.addEventListener('click', e => {
   hideNow(); current = from || home; from = null;
 }, true);
 $p('[data-back]').addEventListener('click', closePlayer);
+$p('[data-grip]').addEventListener('click', closePlayer);
+// full screen: the artwork takes over and the controls tuck away; tap again to bring them back
+$p('[data-full]').addEventListener('click', () => { st.collapsed = !st.collapsed; render(); });
 document.getElementById('restart')?.addEventListener('click', () => { if (current === v){ hideNow(); current = home; } ov.classList.remove('on'); });
 
 render(); renderMini();

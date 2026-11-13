@@ -134,3 +134,61 @@
 .mp-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--off-white)}
 /* landing pages leave room at the bottom so nothing hides behind it */
 .app.mini-on #view-home::after,.app.mini-on #view-nodes::after,.app.mini-on #view-profile::after,.app.mini-on #view-community::after{content:"";display:block;height:86px}
+
+/* ---------- full player as a sheet (Figma 1003:20034): lilac top edge, starts under the status bar,
+   the page you came from stays visible above it ---------- */
+.player-view{background:var(--off-black);clip-path:inset(66px -3px 0 -3px round 10px 10px 0 0)}
+.player-view::before{content:"";position:absolute;left:-3px;right:-3px;top:66px;bottom:-2px;border:1.446px solid var(--lilac);border-radius:10px 10px 0 0;pointer-events:none;z-index:9}
+.pl-grip{position:absolute;left:50%;top:75.5px;width:46px;height:20px;margin-left:-23px;z-index:10;cursor:pointer}
+.pl-grip::before{content:"";position:absolute;left:0;right:0;top:0;height:4.3px;border-radius:3px;background:var(--lilac)}
+.pl-head{top:110.5px}
+.pl-full{position:absolute;left:356px;top:165.5px;width:24px;height:24px;z-index:6;display:grid;place-items:center}
+.pl-full img{width:21px;height:20px}
+/* everything above the controls moves down with the header */
+.tt-angle{top:181.5px}
+.pl-layer.tt .pl-title{top:446.5px}
+.cv-art{left:51px;top:198px;width:300px;height:300px}
+.pl-layer.cv .pl-title{top:508px}
+.pl-layer.vd-l .pl-title{top:205px}
+.pl-src{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:0;font-weight:400;font-size:10px;line-height:1;color:var(--off-white)}
+.pl-src img{width:55px;height:15px;object-fit:contain}
+.player-view.collapsed .pl-src{display:none}
+/* the controls sit right on the sheet: no panel, edge or handle of their own */
+.remote{background:transparent;box-shadow:none}
+.remote::after,.remote .handle,.remote .grab{display:none}
+.player-view.collapsed .remote{opacity:0;pointer-events:none;filter:none}
+.player-view.collapsed .remote::before{display:none}
+/* "+ Tag" is a lilac outline like the other tags (Figma 1003:20034) */
+.remote .pchip.add{background:none;border-color:var(--lilac);color:var(--lilac)}
+
+/* ---------- per-view layouts (Figma 1003:19644: Record / Album / vid, Min and Max) ---------- */
+/* min (controls showing): art between the header and the title, "Playing from" under the artist */
+.pl-head,.pl-full{transition:top .6s var(--slow)}
+.pl-layer .pl-title{left:72px;width:258px;gap:8px;transition:top .6s var(--slow)}
+.pl-layer .pl-title .t-header{font-size:20px}
+.pl-layer .pl-title .t-body{font-size:16px}
+.cv-art{left:80.2px;top:181.5px;width:242.6px;height:238px;border:0;object-fit:cover}
+.pl-layer.cv .pl-title{top:446.5px;width:258px;left:72px;gap:8px}
+.vd-min{position:absolute;left:44px;top:202px;width:316px;height:213px;object-fit:cover;transition:opacity .3s ease}
+.pl-layer.vd-l .pl-title{top:453.5px}
+.vd-wrap{opacity:0;transition:opacity .3s ease}
+/* max (full screen): header drops a little, the expand button joins it, art grows, title sits low */
+.player-view.collapsed .pl-head{top:122px}
+.player-view.collapsed .pl-full{top:133px;left:356px}
+.player-view.collapsed .tt-top{top:238px;left:1px;width:401px;height:395px;object-fit:cover}
+.player-view.collapsed .pl-layer.tt .pl-title{top:705px}
+.player-view.collapsed .cv-art{left:18px;top:272px;width:366.4px;height:328px}
+.player-view.collapsed .pl-layer.cv .pl-title{top:705px;width:258px;left:72px;gap:8px}
+.player-view.collapsed .pl-layer.cv .pl-title .t-header{font-size:20px}
+.player-view.collapsed .pl-layer.cv .pl-title .t-body{font-size:16px}
+.player-view.collapsed .vd-wrap{opacity:1}
+.player-view.collapsed .vd-min{opacity:0}
+.player-view.collapsed .pl-layer.vd-l .pl-title{top:705px}
+/* Add a Song Tag sits where the hi-fi puts it */
+.tag-pop{top:239px;transform:translateX(-50%)}
+.tag-pop{animation:pl-pop .3s var(--slow)}
+@keyframes pl-pop{from{opacity:0;transform:translate(-50%, 8px)}}
+/* in full screen the shrink button takes the dots' place in the header */
+.pl-full{z-index:7}
+.view-changer{transition:opacity .3s ease}
+.player-view.collapsed .view-changer{opacity:0;pointer-events:none}
