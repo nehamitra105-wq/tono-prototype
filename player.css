@@ -111,3 +111,26 @@
 .tag-pop .none{color:#8d8d8d}
 .tag-pop .confirm{width:100%;padding:12px;border-radius:10px;background:var(--navy);color:#8d8d8d;transition:background .2s, color .2s}
 .tag-pop .confirm:enabled{background:var(--off-white);color:var(--off-black)}
+
+/* ---------- full player slides up from the mini player ---------- */
+.view.player-view.on-top{z-index:5}
+.view.player-view.offdown{transform:translateY(100%)}
+
+/* ---------- mini player (Figma 1003:19676): sits on the nav bar, its bottom edge tucked under it ---------- */
+.mini-pl{position:absolute;left:-3px;bottom:59px;width:408px;height:99px;z-index:4;overflow:hidden;
+  border:1px solid var(--lilac);border-bottom:0;border-radius:10px 10px 0 0;background:var(--off-black);
+  transform:translateY(100%);visibility:hidden;transition:transform .6s var(--slow), visibility 0s .6s}
+.mini-pl.on{transform:none;visibility:visible;transition:transform .6s var(--slow), visibility 0s}
+.app.instant .mini-pl{transition:none}
+.mp-open{position:absolute;left:14px;top:17px;width:258px;display:flex;flex-direction:column;gap:2px;text-align:left;color:var(--off-white)}
+.mp-open span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-open .t-header{font-size:20px;line-height:normal}
+.mp-btn{position:absolute;top:17px;width:33px;height:33px;border-radius:50%}
+.mp-btn img{position:absolute;left:-8px;top:-8px;width:53px;height:53px;max-width:none;pointer-events:none}
+.mp-btn[data-madd]{left:310px}
+.mp-btn[data-mplay]{left:361px}
+.mp-btn:active{transform:scale(.94)}
+.mp-bar{position:absolute;left:0;right:0;top:70px;height:3px;background:#4C4C4C}
+.mp-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--off-white)}
+/* landing pages leave room at the bottom so nothing hides behind it */
+.app.mini-on #view-home::after,.app.mini-on #view-nodes::after,.app.mini-on #view-profile::after,.app.mini-on #view-community::after{content:"";display:block;height:86px}

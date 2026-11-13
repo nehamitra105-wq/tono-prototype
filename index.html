@@ -33,6 +33,7 @@
   --placeholder:#686B65;
   --tag-gradient:linear-gradient(145.73deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);
   --ease:cubic-bezier(.32,.72,0,1);
+  --slow:cubic-bezier(.65,0,.35,1);   /* hi-fis post UT: every move is this slow curve over 600 ms */
   --scale:1;
 }
 
@@ -159,12 +160,12 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 /* ---------- App + views ---------- */
 .app{position:absolute;inset:0;z-index:10}
 .view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:var(--off-black);padding-top:62px;
-  transition:transform .45s var(--ease);scrollbar-width:none;overscroll-behavior:contain}
+  transition:transform .6s var(--slow);scrollbar-width:none;overscroll-behavior:contain}
 .view::-webkit-scrollbar{display:none}
 .view.offright{transform:translateX(100%)}
 .view.offleft{transform:translateX(-28%)}
 /* screens that have slid away are hidden once the slide ends, so their edge pixels can't show through the screen on top */
-.view.offright,.view.offleft{visibility:hidden;transition:transform .45s var(--ease), visibility 0s .45s}
+.view.offright,.view.offleft{visibility:hidden;transition:transform .6s var(--slow), visibility 0s .6s}
 .view.on-top{z-index:2}
 /* global-nav tab switches are instant (no slide) */
 .app.instant .view{transition:none !important}
@@ -175,6 +176,7 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .tab{width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--off-white)}
 .tab .sym{width:24px;height:24px;background:currentColor}
 .tab.active{color:var(--lilac)}
+.tab[data-tab="discovery"].active .sym{--i:url(assets/home2/nav-compass.svg) !important}   /* filled compass when on Discovery */
 
 /* ---------- Home ---------- */
 .home-header{padding:24px 22px;background:var(--off-black);backdrop-filter:blur(22px)}
@@ -386,10 +388,10 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .play-lg .inner img{position:absolute;left:-8px;top:-8px;width:93px;height:93px;max-width:none}
 .reel.playing .play-lg{opacity:0;transform:scale(.85)}
 .reel .media .tap{position:absolute;inset:0;z-index:2}
-.wave{position:absolute;left:50%;transform:translateX(-50%);top:406px;width:298px;height:38px;display:flex;gap:4px;align-items:center;z-index:1}
-.wave i{flex:1;background:linear-gradient(100deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);transform-origin:center}
-.reel.playing .wave i{animation:wave 0.9s ease-in-out infinite alternate}
-@keyframes wave{0%{transform:scaleY(1)}50%{transform:scaleY(.45)}100%{transform:scaleY(1.25)}}
+.wave{position:absolute;left:calc(50% - 1.5px);transform:translateX(-50%);top:406px;width:316px;height:42px;display:flex;gap:2px;align-items:center;z-index:1;pointer-events:none}
+.wave i{width:1px;flex:none;border-radius:1px;background:linear-gradient(180deg, var(--lilac), var(--pinky-pie));transform-origin:center}
+.reel.playing .wave i{animation:wave var(--d) ease-in-out var(--o) infinite alternate}
+@keyframes wave{0%{transform:scaleY(var(--hi))}45%{transform:scaleY(var(--lo))}100%{transform:scaleY(1)}}
 .reel .info{width:100%;min-height:112px;padding:15px 4px 2px;display:flex;justify-content:space-between;align-items:center}
 .reel .info .l{width:190.797px}
 .reel .info .ttl{padding-top:8px;height:31px}
@@ -399,9 +401,9 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 
 /* ---------- More actions sheet ---------- */
 .sheet-wrap{position:absolute;inset:0;z-index:50;pointer-events:none}
-.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .6s var(--slow)}
 .sheet{position:absolute;left:0;right:0;bottom:0;background:#000;border-radius:10px 10px 0 0;padding:44px 20px 52px;display:flex;flex-direction:column;gap:24px;
-  transform:translateY(100%);transition:transform .38s var(--ease);touch-action:none}
+  transform:translateY(100%);transition:transform .6s var(--slow);touch-action:none}
 .sheet .handle{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:44px;height:4px}
 .sheet .item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;color:#fff}
 .sheet .item .ic{width:24px;height:24px;display:grid;place-items:center}
@@ -412,11 +414,14 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .sheet-wrap.open .sheet{transform:none}
 </style>
 <link rel="stylesheet" href="node.css">
+<link rel="stylesheet" href="deep.css">
 <link rel="stylesheet" href="drop.css">
 <link rel="stylesheet" href="player.css">
 <link rel="stylesheet" href="profile.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="community.css">
+<link rel="stylesheet" href="home2.css">
+<link rel="stylesheet" href="msgs.css">
 </head>
 <body>
 <div class="stage">
@@ -435,7 +440,7 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
             </div>
           </div>
           <div class="swipe-ind"></div>
-          <p class="inline-w">Oct 18 <i class="sym" style="--i:url(assets/ph-globe.svg)"></i> SFO 9:41 AM</p>
+          <p class="inline-w">Nov 13 <i class="sym" style="--i:url(assets/ph-globe.svg)"></i> SFO 9:41 AM</p>
           <div class="big-clock" role="img" aria-label="9:41"></div>
           <div class="widgets">
             <div class="w-table">
@@ -485,79 +490,18 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
             </div>
           </div>
 
-          <!-- HOME -->
+          <!-- HOME (hi-fis post UT, Figma 982:15821) — built by home2.js -->
           <main class="view" id="view-home">
             <header class="home-header">
               <div class="row">
-                <div class="logo-box"><img src="assets/tono.svg" alt="tono"></div>
+                <div class="logo-box"><img src="assets/home2/tono.svg" alt="tono"></div>
                 <div class="head-actions">
-                  <button class="btn-search" aria-label="Search"><img src="assets/search.svg" alt=""></button>
-                  <button class="avatar t-body" aria-label="Profile">AM</button>
+                  <button class="btn-search" aria-label="Search"><img src="assets/home2/glyph-search.svg" alt=""></button>
+                  <button class="btn-search" aria-label="Messages"><img src="assets/home2/glyph-chat.svg" alt=""></button>
                 </div>
               </div>
             </header>
-
-            <div class="home-body" id="home-body">
-              <div class="prompt-stack">
-                <article class="card daily">
-                  <div class="top">
-                    <p class="t-caption grey">Daily prompt</p>
-                    <button class="history-link t-link" id="history-link" aria-expanded="false">History</button>
-                  </div>
-                  <h2 class="t-ginormous gradient-text">A song that feels like winter.</h2>
-                  <div class="tags"><span class="tag t-caption">Late Night Listeners</span><span class="tag t-caption">Soft Pop Fans</span></div>
-                  <div class="joined-wrap">
-                    <div class="joined">
-                      <div class="avatars"><span><b class="t-avatar">MK</b></span><span><b class="t-avatar">JL</b></span><span><b class="t-avatar">NS</b></span></div>
-                      <p class="t-caption">247 people joined today</p>
-                      <div class="streak"><div><img src="assets/fire.svg" alt=""><span class="t-caption">7</span></div></div>
-                    </div>
-                  </div>
-                  <div class="cta-wrap">
-                    <div class="cta">
-                      <button class="btn btn-primary t-body" id="add-song">Add a Song</button>
-                      <button class="btn btn-secondary t-body" id="view-playlist-btn">View Playlist</button>
-                    </div>
-                  </div>
-                </article>
-                <div id="history-slot"></div>
-              </div>
-
-              <section class="mc">
-                <div class="mc-head">
-                  <p class="t-header-db">Music Catalogue</p>
-                  <button class="mc-open" id="open-catalogue"><span class="t-caption grey">Open the full catalogue</span><img src="assets/arrow-right-18.svg" alt=""></button>
-                </div>
-                <div class="albums" id="albums"></div>
-              </section>
-
-              <section class="more" aria-label="More ways to discover">
-                <!-- teasers: live mini versions of each feature (Figma 960:4873) -->
-                <button class="card tile tz-node">
-                  <svg class="tz-art" viewBox="0 0 174 156" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="tz-g1" x1="85.5" y1="46" x2="85.5" y2="82" gradientUnits="userSpaceOnUse"><stop stop-color="#BD2FA9"/><stop offset="1" stop-color="#E13F5D"/></linearGradient>
-                      <linearGradient id="tz-g2" x1="63.5" y1="46" x2="108.5" y2="19" gradientUnits="userSpaceOnUse"><stop stop-color="#BD2FA9"/><stop offset="1" stop-color="#8B4BE6"/></linearGradient>
-                    </defs>
-                    <path class="nd" d="M66 46C76.36 46 87.33 82 105 82" stroke="url(#tz-g1)"/>
-                    <path class="nd" d="M66 45.93C87.31 47.84 81.73 9 100 9" stroke="url(#tz-g2)"/>
-                    <path class="pulse p1" d="M66 46C76.36 46 87.33 82 105 82" pathLength="100"/>
-                    <path class="pulse p2" d="M66 45.93C87.31 47.84 81.73 9 100 9" pathLength="100"/>
-                    <rect class="n n1" x="12" y="7" width="51" height="67" rx="10" fill="#BD2FA9"/>
-                    <rect class="n n2" x="103" y="-13" width="51" height="51" rx="10" fill="#8B4BE6"/>
-                    <rect class="n n3" x="108" y="64" width="79" height="32" rx="10" fill="#E13F5D"/>
-                  </svg>
-                  <span class="tz-fade"></span>
-                  <div class="tz-txt"><p class="t-body-db">Node Discovery</p><div class="go"><span class="t-caption">Continue your draft</span><img src="assets/arrow-right-15.svg" alt=""></div></div>
-                </button>
-                <button class="card tile tz-drop">
-                  <div class="tz-stack" aria-hidden="true"></div>
-                  <span class="tz-fade"></span>
-                  <div class="tz-txt"><p class="t-body-db">Record Dropoff</p><div class="go"><span class="t-caption">You have a question!</span><img src="assets/arrow-right-15.svg" alt=""></div></div>
-                </button>
-                <span class="badge t-caption2" aria-label="1 new question">1</span>
-              </section>
-            </div>
+            <div class="h2-body" id="home-body"></div>
           </main>
 
           <!-- DAILY PROMPT PLAYLIST -->
@@ -569,7 +513,7 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
           <nav class="tabbar" aria-label="Global navigation">
             <button class="tab active" data-tab="discovery"><i class="sym" style="--i:url(assets/nav-compass.svg)"></i><span class="t-nav">Discovery</span></button>
             <button class="tab" data-tab="community"><i class="sym" style="--i:url(assets/nav-users.svg)"></i><span class="t-nav">Community</span></button>
-            <button class="tab" data-tab="player"><i class="sym" style="--i:url(assets/nav-play.svg)"></i><span class="t-nav">Player</span></button>
+            <button class="tab" data-tab="deep"><i class="sym" style="--i:url(assets/home2/nav-node.svg)"></i><span class="t-nav">Deep Search</span></button>
             <button class="tab" data-tab="profile"><i class="sym" style="--i:url(assets/nav-user.svg)"></i><span class="t-nav">Profile</span></button>
           </nav>
 
@@ -595,13 +539,14 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 
 <script>
 /* ================= DATA ================= */
-const TODAY = new Date(2026, 9, 18);            // prototype "today": Sun Oct 18 2026
+const TODAY = new Date(2026, 10, 13);           // prototype "today": Fri Nov 13 2026 (hi-fis post UT)
 const EARLIEST = new Date(2025, 10, 1);         // history goes back to Nov 2025
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MON3 = MONTHS.map(m => m.slice(0,3));
 
 const SONGS = [
-  {title:"Wonderwall", artist:"Oasis", art:"assets/art-wonderwall.png", media:"assets/video-1.png", len:"4:19"},
+  {title:"Wonderwall", artist:"Oasis", art:"assets/home2/song-wonderwall.png", media:"assets/home2/sfy-wonderwall.png", len:"4:19"},
+  {title:"With", artist:"RESCENE", art:"assets/home2/sfy-with.png", media:"assets/home2/sfy-with.png", len:"3:11"},
   {title:"Riptide", artist:"Vance Joy", art:"assets/art-riptide.png", media:"assets/video-2.png", len:"3:24"},
   {title:"Babydoll", artist:"Dominic Fike", art:"assets/art-babydoll.png", media:"assets/art-babydoll.png", len:"1:38"},
   {title:"Midnight City", artist:"M83", art:"assets/drop/art-m83.png", media:"assets/drop/art-m83.png", len:"4:03"},
@@ -611,17 +556,19 @@ const SONGS = [
   {title:"Coney Island Baby", artist:"Lou Reed", art:"assets/drop/art-coney.png", media:"assets/drop/art-coney.png", len:"6:36"},
 ];
 
+// Group top 10 (Figma 1171:5917)
+const T10 = 'assets/home2/t10-';
 const TOP10 = [
-  {t:"Remember", a:"Sam Ock", img:"assets/art-row1.png", bg:"assets/art-row1-bg.png"},
-  {t:"Winter Waltz", a:"FRANKIE", img:"assets/art-row2.png"},
-  {t:"Christmas Song", a:"back number", img:"assets/art-row3.png"},
-  {t:"Love you on Christmas", a:"Yerin Baek", img:"assets/art-row4.png"},
-  {t:"Come Softly", a:"Grouper"},
-  {t:"Avril 14th", a:"Aphex Twin"},
-  {t:"Everything In Its Right Place", a:"Radiohead"},
-  {t:"Untrue", a:"Burial"},
-  {t:"Anemone", a:"The Brian Jonestown Massacre"},
-  {t:"Limerence", a:"Yves Tumor"},
+  {t:"Remember", a:"Sam Ock", img:T10 + "01.png"},
+  {t:"Winter Waltz", a:"FRANKIE", img:T10 + "02.png"},
+  {t:"Christmas Song", a:"back number", img:T10 + "03.png"},
+  {t:"Love you on Christmas", a:"Yerin Baek", img:T10 + "04.png"},
+  {t:"Come Softly", a:"Grouper", img:T10 + "05.png"},
+  {t:"Winter Things", a:"Ariana Grande", img:T10 + "06.png"},
+  {t:"snowy", a:"Stella Jang", img:T10 + "07.png"},
+  {t:"In Winter", a:"Chan", img:T10 + "08.png"},
+  {t:"Snow On The Beach", a:"Taylor Swift", img:T10 + "09.png"},
+  {t:"Wintertime", a:"Norah Jones", img:T10 + "10.png"},
 ];
 
 const POOL = [
@@ -646,8 +593,9 @@ const hash = n => { n = (n ^ 61) ^ (n >>> 16); n = n + (n << 3); n = n ^ (n >>> 
 const isOct26 = d => d.getFullYear() === 2026 && d.getMonth() === 9;
 
 function promptFor(d){
+  if (sameDay(d, TODAY)) return POOL[10];
   if (isOct26(d) && OCT[d.getDate()] !== undefined) return POOL[OCT[d.getDate()]];
-  return POOL[hash(key(d)) % POOL.length];
+  return POOL[hash(key(d)) % (POOL.length - 1)];        // "winter" stays today's (and Oct 18's) prompt
 }
 function songsFor(d){
   if (sameDay(d, TODAY)) return 247;
@@ -740,7 +688,7 @@ $('#notif').addEventListener('click', unlock);
 
 $('#restart').addEventListener('click', () => {
   closeSheet(); goHome(true);
-  state.open = false; renderHistory();
+  window.tonoHome?.reset();
   $('#view-home').scrollTop = 0;
   lock.classList.remove('unlocked');
   const n = $('#notif-list'); n.style.animation = 'none'; n.offsetHeight; n.style.animation = '';
@@ -766,196 +714,9 @@ function goHome(instant){
   leaving.classList.add('offright');
   home.classList.remove('offleft');
   current = home;
-  setTimeout(() => { leaving.classList.remove('on-top'); stopAll(); }, instant ? 0 : 450);
+  setTimeout(() => { leaving.classList.remove('on-top'); stopAll(); }, instant ? 0 : 600);
   if (instant) requestAnimationFrame(() => { leaving.style.transition = home.style.transition = ''; });
 }
-
-/* ================= HOME: CATALOGUE ROW ================= */
-$('#albums').append(...SONGS.map((s, i) => el(`
-  <div class="album">
-    <button class="art ${i===0 ? 'selected' : ''}" data-open="${i}" aria-label="Play ${s.title}">
-      <img class="cover" src="${s.art}" alt="">
-      ${i===0 ? '<span class="play-sm"><img src="assets/play-small.svg" alt=""></span>' : ''}
-    </button>
-    <div class="txt">
-      <p class="title t-body">${s.title}</p>
-      <p class="artist t-caption grey">${s.artist}</p>
-      <button class="dots" data-more="${i}" aria-label="More actions"><img src="assets/dots-three.svg" alt=""></button>
-    </div>
-  </div>`)));
-$('#albums').addEventListener('click', e => {
-  const o = e.target.closest('[data-open]'), m = e.target.closest('[data-more]');
-  if (m) openSheet(+m.dataset.more);
-  else if (o) openCatalogue(+o.dataset.open);
-});
-$('#open-catalogue').addEventListener('click', () => openCatalogue(0));
-
-/* ================= HOME: PROMPT HISTORY ================= */
-const state = { open:false, mode:'week', sel:new Date(TODAY), weekStart:mondayOf(TODAY), month:new Date(TODAY.getFullYear(), TODAY.getMonth(), 1), menu:false };
-
-$('#history-link').addEventListener('click', () => {
-  state.open = !state.open;
-  if (state.open){ state.mode = 'week'; state.sel = new Date(TODAY); state.weekStart = mondayOf(TODAY); state.month = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); }
-  renderHistory();
-});
-
-function weekLabel(start){
-  const first = new Date(start.getFullYear(), start.getMonth(), 1);
-  const offset = (first.getDay()+6)%7;
-  const n = Math.ceil((start.getDate() + offset) / 7);
-  return `${MON3[start.getMonth()]} ${start.getFullYear()}  · Week ${n}`;
-}
-function canNext(){
-  if (state.mode === 'week') return addDays(state.weekStart, 7) <= TODAY;
-  return new Date(state.month.getFullYear(), state.month.getMonth()+1, 1) <= TODAY;
-}
-function canPrev(){
-  if (state.mode === 'week') return addDays(state.weekStart, -1) >= EARLIEST;
-  return new Date(state.month.getFullYear(), state.month.getMonth()-1, 1) >= EARLIEST;
-}
-
-function calendarHTML(){
-  if (state.mode === 'week'){
-    const L = ['M','T','W','T','F','S','S'];
-    return `<div class="week">${L.map((l, i) => {
-      const d = addDays(state.weekStart, i);
-      const fut = isFuture(d), sel = sameDay(d, state.sel);
-      return `<div class="wd"><p class="t-weekday grey">${l}</p>
-        <button class="dot t-link ${sel ? 'sel' : ''}" data-day="${key(d)}" ${fut ? 'disabled style="opacity:.38"' : (!answered(d) && !sel ? 'style="opacity:.38"' : '')}>${d.getDate()}</button></div>`;
-    }).join('')}</div>`;
-  }
-  const y = state.month.getFullYear(), m = state.month.getMonth();
-  const lead = (new Date(y, m, 1).getDay()+6)%7, n = new Date(y, m+1, 0).getDate();
-  let cells = '';
-  for (let i = 0; i < lead; i++) cells += `<span class="day empty"></span>`;
-  for (let dd = 1; dd <= n; dd++){
-    const d = new Date(y, m, dd), fut = isFuture(d), sel = sameDay(d, state.sel);
-    cells += `<button class="day t-num ${sel ? 'sel' : ''} ${(fut || !answered(d)) ? 'dim' : ''}" data-day="${key(d)}" ${fut ? 'disabled' : ''}>${dd}</button>`;
-  }
-  return `<div class="month">
-    <div class="letters">${['M','T','W','T','F','S','S'].map(l => `<p class="t-caption2 grey">${l}</p>`).join('')}</div>
-    <div class="days">${cells}</div></div>`;
-}
-
-function renderHistory(dir){
-  const slot = $('#history-slot');
-  $('#history-link').setAttribute('aria-expanded', state.open);
-  $('#home-body').classList.toggle('history-open', state.open);
-  if (!state.open){ slot.innerHTML = ''; return; }
-
-  const label = state.mode === 'week' ? weekLabel(state.weekStart) : `${MONTHS[state.month.getMonth()]} ${state.month.getFullYear()}`;
-  const s = state.sel;
-  const existing = slot.querySelector('.history');
-  const panel = el(`
-    <section class="card history" aria-label="Prompt history">
-      <div class="h-top">
-        <p class="t-header">Prompt History</p>
-        <div class="range" role="tablist">
-          <button class="t-caption ${state.mode==='week' ? 'on' : ''}" data-mode="week">week</button>
-          <button class="t-caption ${state.mode==='month' ? 'on' : ''}" data-mode="month">month</button>
-        </div>
-      </div>
-      <div class="h-nav"><div class="grid">
-        <button class="circle-btn" data-step="-1" aria-label="Previous" ${canPrev() ? '' : 'disabled'}><img src="assets/arrow-left-cal.svg" alt=""></button>
-        <div class="h-label">
-          <p class="lbl t-body">${label}</p>
-          <button class="chev" data-menu aria-label="Choose a month" aria-expanded="${state.menu}"><img src="assets/calendar-dots.svg" alt=""></button>
-        </div>
-        <button class="circle-btn" data-step="1" aria-label="Next" ${canNext() ? '' : 'disabled'}><img src="assets/arrow-right-cal.svg" alt=""></button>
-      </div></div>
-      <div class="month-menu ${state.menu ? 'open' : ''}">${monthMenuHTML()}</div>
-      <div class="cal-area"><div class="cal-slide ${dir ? 'no-anim ' + (dir > 0 ? 'out-right' : 'out-left') : ''}">${calendarHTML()}</div></div>
-      <div class="pick-card-wrap">
-        <button class="pick-card" data-playlist="${key(s)}">
-          <p class="t-caption2 grey">${MON3[s.getMonth()]} ${s.getDate()}</p>
-          <p class="p t-body">${promptFor(s)}</p>
-          <p class="meta t-caption2 grey">${songsFor(s)} songs · View playlist</p>
-          <span class="arrow"><img src="assets/card-arrow.svg" alt=""></span>
-        </button>
-      </div>
-    </section>`);
-  if (existing) panel.style.animation = 'none';
-  slot.replaceChildren(panel);
-  if (dir){
-    const sl = panel.querySelector('.cal-slide');
-    requestAnimationFrame(() => requestAnimationFrame(() => { sl.classList.remove('no-anim','out-left','out-right'); }));
-  }
-  if (state.menu){ const on = panel.querySelector('.month-menu .on'); on && on.scrollIntoView({block:'center'}); }
-}
-
-function monthMenuHTML(){
-  const items = [];
-  for (let d = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); d >= EARLIEST; d = new Date(d.getFullYear(), d.getMonth()-1, 1)){
-    const on = state.mode === 'month' ? (d.getFullYear()===state.month.getFullYear() && d.getMonth()===state.month.getMonth())
-                                      : (d.getFullYear()===state.weekStart.getFullYear() && d.getMonth()===state.weekStart.getMonth());
-    items.push(`<button class="t-body ${on ? 'on' : ''}" data-pick="${d.getFullYear()}-${d.getMonth()}">${MONTHS[d.getMonth()]} ${d.getFullYear()}</button>`);
-  }
-  return items.join('');
-}
-
-// landing rule: today if it's in range, otherwise the first day of that week / month
-function setWeek(start){
-  state.weekStart = start;
-  const end = addDays(start, 6);
-  state.sel = (TODAY >= start && TODAY <= end) ? new Date(TODAY) : new Date(start);
-}
-function setMonth(first){
-  state.month = first;
-  state.sel = (TODAY.getFullYear()===first.getFullYear() && TODAY.getMonth()===first.getMonth()) ? new Date(TODAY) : new Date(first);
-}
-function step(dir){
-  if (dir > 0 && !canNext()) return;
-  if (dir < 0 && !canPrev()) return;
-  state.menu = false;
-  if (state.mode === 'week') setWeek(addDays(state.weekStart, 7*dir));
-  else setMonth(new Date(state.month.getFullYear(), state.month.getMonth()+dir, 1));
-  renderHistory(dir);
-}
-
-$('#history-slot').addEventListener('click', e => {
-  const t = e.target.closest('button'); if (!t) { if (state.menu){ state.menu=false; renderHistory(); } return; }
-  if (t.dataset.mode && t.dataset.mode !== state.mode){
-    state.mode = t.dataset.mode; state.menu = false;
-    if (state.mode === 'month') state.month = new Date(state.sel.getFullYear(), state.sel.getMonth(), 1);
-    else state.weekStart = mondayOf(state.sel);
-    renderHistory();
-  } else if (t.dataset.step){ step(+t.dataset.step); }
-  else if (t.hasAttribute('data-menu')){ state.menu = !state.menu; renderHistory(); }
-  else if (t.dataset.pick){
-    const [y, m] = t.dataset.pick.split('-').map(Number);
-    const first = new Date(y, m, 1);
-    state.menu = false;
-    const dir = first > (state.mode === 'month' ? state.month : state.weekStart) ? 1 : -1;
-    if (state.mode === 'month') setMonth(first);
-    else { const w = mondayOf(first); setWeek(w < EARLIEST ? mondayOf(addDays(first, 7)) : w); if (!(TODAY >= state.weekStart && TODAY <= addDays(state.weekStart,6))) state.sel = first < state.weekStart ? new Date(state.weekStart) : first; }
-    renderHistory(dir);
-  }
-  else if (t.dataset.day){
-    const k = +t.dataset.day; state.sel = new Date(Math.floor(k/10000), Math.floor(k/100)%100 - 1, k%100);
-    state.menu = false; renderHistory();
-  }
-  else if (t.dataset.playlist){ openPlaylist(state.sel); }
-});
-
-// swipe between weeks / months
-(() => {
-  let x0 = null, y0 = null;
-  const slot = $('#history-slot');
-  slot.addEventListener('pointerdown', e => { if (e.target.closest('.cal-area')){ x0 = e.clientX; y0 = e.clientY; } });
-  const end = e => {
-    if (x0 === null) return;
-    const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
-      e.preventDefault();
-      swallowClick = true;
-      step(dx < 0 ? 1 : -1);
-    }
-  };
-  let swallowClick = false;
-  slot.addEventListener('click', e => { if (swallowClick){ swallowClick = false; e.stopImmediatePropagation(); } }, true);
-  slot.addEventListener('pointerup', end);
-  slot.addEventListener('pointercancel', () => { x0 = null; });
-})();
 
 /* ================= DAILY PROMPT PLAYLIST =================
    Your song: search any song (iTunes Search, falls back to the app's own songs offline),
@@ -986,14 +747,19 @@ function ranking(mine){
 const row = r => `
   <li class="${r.mine ? 'mine' : ''}">
     <p class="t-caption grey">${String(r.rank).padStart(2,'0')}</p>
-    <div class="thumb">${r.bg ? `<img class="bg" src="${r.bg}" alt="">` : ''}${r.img ? `<img src="${r.img}" alt="">` : ''}</div>
+    <div class="thumb">${r.img ? `<img src="${r.img}" alt="">` : ''}</div>
     <div class="names"><p class="t-body">${esc(r.t)}</p><p class="t-caption grey">${esc(r.a)} · ${r.n} ${r.n === 1 ? 'pick' : 'picks'}${r.mine ? ' <span class="you">· incl. you</span>' : ''}</p></div>
-    <button class="plus" aria-label="Add ${esc(r.t)} to your music"><img src="assets/plus-circle.svg" alt=""></button>
+    <button class="dots-btn" aria-label="More for ${esc(r.t)}"><img src="assets/home2/dots-three-26.svg" alt=""></button>
   </li>`;
 function rankedHTML(mine){
   const all = ranking(mine), top = all.slice(0, 10), me = all.find(r => r.mine);
   return top.map(row).join('') + (me && me.rank > 10 ? `<li class="gap t-caption grey" aria-hidden="true">···</li>${row(me)}` : '');
 }
+// the song a listener sent on an earlier day (2026/10/18 is Snowman by Sia in the hi-fi)
+const PAST = [{t:'Snowman', a:'Sia', img:'assets/home2/your-snowman.png'}, {t:'snowfall', a:'Øneheart & reidenshi', img:'assets/home2/snowfall.png'},
+  {t:'Snow (Hey Oh)', a:'Red Hot Chili Peppers', img:'assets/home2/snow-heyoh.png'}, {t:'Riptide', a:'Vance Joy', img:'assets/home2/song-riptide.png'},
+  {t:'Babydoll', a:'Dominic Fike', img:'assets/home2/song-babydoll.png'}];
+const pastPick = d => (isOct26(d) && d.getDate() === 18) ? PAST[0] : PAST[hash(key(d) * 5) % PAST.length];
 const pickedCard = s => `<div class="picked">${s.img ? `<img src="${s.img}" alt="">` : '<span class="ph"></span>'}
   <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption grey">${esc(s.a)}</p></div>
   <button class="x" data-unpick aria-label="Remove your song"><i class="sym" style="--i:url(assets/community/ph/x.svg)"></i></button></div>`;
@@ -1018,7 +784,7 @@ async function searchSongs(q){
 function openPlaylist(date, focus){
   const d = new Date(date), k = key(d);
   const isToday = sameDay(d, TODAY);
-  const mine = submitted[k];
+  const mine = submitted[k] || (!isToday && answered(d) ? pastPick(d) : null);
   vPlaylist.innerHTML = `
     <div class="subhead"><div class="row">
       <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
@@ -1034,9 +800,9 @@ function openPlaylist(date, focus){
           <p class="t-caption">${songsFor(d) + (mine ? 1 : 0)} people joined</p>
         </div></div>
       </article>
-      ${isToday ? `
+      ${isToday && !mine ? `
       <div class="your-song">
-        <p class="t-caption">Your song</p>
+        <p class="t-body">Your song</p>
         <div class="ys-slot">${mine ? pickedCard(mine) : ''}
           <form class="song-input" id="song-form" ${mine ? 'hidden' : ''}>
             <label><input id="song-field" type="text" placeholder="Search title or artist" autocomplete="off" aria-label="Search title or artist"></label>
@@ -1044,10 +810,15 @@ function openPlaylist(date, focus){
           </form>
           <div class="song-results" id="song-results" role="listbox"></div>
         </div>
+      </div>` : mine ? `
+      <div class="your-song">
+        <p class="t-body">Your song</p>
+        <div class="picked past">${mine.img ? `<img src="${mine.img}" alt="">` : '<span class="ph"></span>'}
+          <div class="names"><p class="t-body">${esc(mine.t)}</p><p class="t-caption grey">${esc(mine.a)}</p></div></div>
       </div>` : ''}
       <section>
         <div class="sec-title"><p class="t-header">Group top 10</p><p class="r t-caption grey">Most Popular Answers</p></div>
-        <div class="ranked"><ul id="ranked">${rankedHTML(isToday ? mine : null)}</ul></div>
+        <div class="ranked"><ul id="ranked">${rankedHTML(mine)}</ul></div>
       </section>
     </div>`;
   push(vPlaylist);
@@ -1099,21 +870,25 @@ function openPlaylist(date, focus){
   if (focus && !mine) setTimeout(() => field.focus({preventScroll:true}), 460);
 }
 vPlaylist.addEventListener('click', e => { if (e.target.closest('[data-back]')) goHome(); });
-$('#add-song').addEventListener('click', () => openPlaylist(TODAY, true));
-document.querySelector('.cta .btn-secondary').addEventListener('click', () => openPlaylist(TODAY));
 
 /* ================= MUSIC CATALOGUE (reels) ================= */
-const BARS = [14,14,30,22,14,30,14,22,30,14,14,22,14,14,30,22,14,30,14,22];
+// waveform from the hi-fi (Figma 1167:5967): 106 one-pixel strokes, 3px apart.
+// While a reel plays every stroke moves on its own speed, depth and offset, like a live audio level.
+const BARS = [27, 17, 21, 27, 17, 27, 27, 17, 21, 27, 17, 17, 17, 21, 21, 21, 27, 27, 27, 17, 17, 17, 35, 35, 27, 27, 27, 35, 35, 35, 35, 35, 21, 21, 21, 27, 27, 27, 41, 41, 41, 27, 21, 21, 17, 17, 17, 27, 27, 27, 17, 21, 17, 17, 41, 41, 41, 27, 21, 21, 21, 35, 35, 35, 27, 27, 17, 27, 35, 27, 27, 27, 27, 17, 17, 35, 17, 27, 17, 17, 17, 17, 27, 41, 27, 27, 27, 27, 17, 17, 17, 17, 17, 27, 21, 21, 21, 27, 17, 17, 35, 35, 21, 21, 21, 17];
+const waveHTML = () => BARS.map((h, i) => {
+  const r = n => (Math.sin((i + 1) * n) + 1) / 2;                                   // stable per stroke
+  return `<i style="height:${h}px;--d:${(0.38 + r(12.9898) * 0.62).toFixed(2)}s;--o:-${(r(78.233) * 1.2).toFixed(2)}s;--lo:${(0.25 + r(3.71) * 0.35).toFixed(2)};--hi:${(1.05 + r(9.17) * 0.45).toFixed(2)}"></i>`;
+}).join('');
 function buildCatalogue(){
   vCat.innerHTML = `
     <div class="subhead"><div class="row">
       <button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
-      <p class="t-body">Music Catalogue</p><span class="spacer"></span>
+      <p class="t-body">Songs For You</p><span class="spacer"></span>
     </div></div>
     <div class="cat-body">
       <div class="cat-tools">
         <button class="tool-btn"><img src="assets/refresh.svg" alt=""><span class="t-caption">Refresh</span></button>
-        <button class="tool-select"><span class="t-caption">All</span><img src="assets/chevron-down.svg" alt=""></button>
+        <button class="tool-select"><span class="t-caption">All Tags</span><img src="assets/home2/caret-down.svg" alt=""></button>
         <label class="search-bar"><img src="assets/magnifier.svg" alt=""><input type="text" placeholder="Search title, artist, genre, or moods..."></label>
       </div>
       ${SONGS.map((s, i) => `
@@ -1121,7 +896,7 @@ function buildCatalogue(){
           <div class="media">
             <img class="cover" src="${s.media}" alt="">
             <span class="play-lg"><span class="inner"><img src="assets/play-large.svg" alt=""></span></span>
-            <div class="wave">${BARS.map(h => `<i style="height:${h}px"></i>`).join('')}</div>
+            <div class="wave">${waveHTML()}</div>
             <button class="tap" data-play="${i}" aria-label="Play ${s.title}"></button>
           </div>
           <div class="info">
@@ -1179,7 +954,6 @@ sheet.addEventListener('click', e => { if (e.target.closest('.item')) closeSheet
   sheet.addEventListener('pointerup', end); sheet.addEventListener('pointercancel', end);
 })();
 
-renderHistory();
 </script>
 <script src="node.js"></script>
 <script src="drop.js"></script>
@@ -1188,6 +962,7 @@ renderHistory();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="community.js"></script>
 <script src="hscroll.js"></script>
-<script src="teasers.js"></script>
+<script src="home2.js"></script>
+<script src="messages.js"></script>
 </body>
 </html>

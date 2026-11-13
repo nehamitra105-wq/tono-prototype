@@ -10,8 +10,8 @@
   --wave:#CACACA;
 }
 
-.node-view{position:absolute;inset:0;z-index:45;background:var(--off-black);overflow:hidden;overflow:clip;transition:transform .45s var(--ease);touch-action:none;user-select:none;-webkit-user-select:none}
-.node-view.offright{transform:translateX(100%);visibility:hidden;transition:transform .45s var(--ease), visibility 0s .45s}
+.node-view{position:absolute;inset:0;z-index:45;background:var(--off-black);overflow:hidden;overflow:clip;transition:transform .6s var(--slow);touch-action:none;user-select:none;-webkit-user-select:none}
+.node-view.offright{transform:translateX(100%);visibility:hidden;transition:transform .6s var(--slow), visibility 0s .6s}
 .node-view .statusbar{z-index:20}
 
 /* canvas + panning world */
@@ -252,3 +252,6 @@
 .nd-new .nd-dots{opacity:.07}
 .nd-new .nd-txt{justify-content:flex-start}
 .nd-new .sym{width:20px;height:20px;margin:4px;background:currentColor}
+
+/* Deep Search tab root: no Back */
+.nd-view.tab-root .nd-head .back{visibility:hidden}

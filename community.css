@@ -7,12 +7,13 @@
 .cm-mut{color:rgba(248,248,248,.6)}
 
 /* ---------- map ---------- */
-.cm-map{position:relative;height:546px}
-.cm-search{position:absolute;left:20px;right:20px;top:10px;height:44px;border:1px solid var(--off-white);border-radius:20px;display:flex;gap:10px;align-items:center;padding:0 16px;z-index:3}
+.cm-map{position:relative;height:556px}
+.cm-map-title{position:absolute;left:20px;top:10px;z-index:3;line-height:normal}
+.cm-search{position:absolute;left:20px;right:20px;top:42px;height:44px;border:1px solid var(--off-white);border-radius:20px;display:flex;gap:10px;align-items:center;padding:0 16px;z-index:3}
 .cm-search .cm-ic{width:20px;height:20px;color:var(--off-white)}
 .cm-search input{flex:1;min-width:0;color:var(--off-white);font-weight:300;font-size:16px;line-height:1.2}
 .cm-search input::placeholder{color:var(--off-white);opacity:.5}
-.cm-leaf{position:absolute;left:17px;top:61px;width:369px;height:509px;isolation:isolate;z-index:1;background:var(--off-black);
+.cm-leaf{position:absolute;left:17px;top:93px;width:369px;height:463px;isolation:isolate;z-index:1;background:var(--off-black);
   -webkit-mask:linear-gradient(to bottom, transparent 0, #000 9%, #000 86%, transparent 100%), linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);
   -webkit-mask-composite:source-in;mask:linear-gradient(to bottom, transparent 0, #000 9%, #000 86%, transparent 100%), linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%);mask-composite:intersect}
 .cm-leaf .map{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
@@ -25,7 +26,7 @@
 .cm-loc-icon{background:none;border:0;pointer-events:none}
 .cm-loc-icon .cm-loc{z-index:auto}
 .cm-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--pinky-pie);pointer-events:none}
-.cm-tools{position:absolute;left:344px;top:421px;width:44px;display:flex;flex-direction:column;gap:17px;align-items:center;z-index:3}
+.cm-tools{position:absolute;left:330px;top:448px;width:56px;display:flex;flex-direction:column;gap:17px;align-items:center;z-index:3}
 .cm-round{width:36px;height:36px;border-radius:18px;background:var(--off-white);display:grid;place-items:center;color:var(--off-black)}
 .cm-pit{display:flex;flex-direction:column;gap:6px;align-items:center;color:var(--off-white)}
 
@@ -156,3 +157,57 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-loc-field:focus-within{border-color:var(--lilac)}
 .cm-spots button .cm-ic{flex:none;color:rgba(248,248,248,.6)}
 .cm-spots .tx .t-body{color:var(--off-white)}
+
+/* ---------- hi-fis post UT (Figma 982:13936) ---------- */
+.cm-me-icon{background:none;border:0}
+.cm-me-icon .cm-ic{width:24px;height:24px;color:var(--lilac);filter:drop-shadow(0 0 6px rgba(213,161,250,.6))}
+.cm-sec-hd{display:flex;justify-content:space-between;align-items:center}
+.cm-view-more{display:flex;gap:4px;align-items:center;color:rgba(248,248,248,.6)}
+.cm-view-more .cm-ic{transform:rotate(180deg)}
+
+/* Find other listeners (Figma 981:10812) */
+.cm-lhead{display:flex;gap:8px;align-items:center;height:44px;padding:0 20px;margin-top:10px}
+.cm-lhead .back{width:24px;height:24px;color:var(--off-white)}
+.cm-lhead .t-header{flex:1;text-align:center}
+.cm-lhead span{width:24px}
+.cm-lbody{display:flex;flex-direction:column;gap:20px;padding:20px 20px 40px}
+.cm-search.static{position:static}
+.cm-sort{display:flex;gap:4px;align-items:center}
+.cm-sort .cm-ic{width:24px;height:24px}
+.cm-llist{display:flex;flex-direction:column;gap:20px}
+.cm-lrow{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cm-lrow .who{display:flex;flex-direction:column;gap:12px;align-items:flex-start;text-align:left;color:var(--off-white);min-width:0}
+.cm-lrow .id{display:flex;gap:10px;align-items:center}
+.cm-lrow .id img{width:45px;height:45px;border-radius:50%;object-fit:cover;flex:none}
+.cm-lrow .id > span{display:flex;flex-direction:column;gap:4px}
+.cm-lrow .who > .t-caption{white-space:nowrap}
+.cm-follow{width:111px;flex:none;padding:8px 20px;border-radius:10px;background:var(--off-white);color:var(--off-black);border:1px solid var(--off-white);
+  transition:background .6s var(--slow), color .6s var(--slow)}
+.cm-follow.on{background:none;color:var(--off-white)}
+
+/* first-visit walkthrough (Figma 1289:6630) */
+.cm-ob{position:absolute;inset:0;z-index:28;pointer-events:none;visibility:hidden}
+.cm-ob.live{visibility:visible;pointer-events:auto}
+.cm-ob .dim{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s var(--slow)}
+.cm-ob .dim path,.cm-ob .dim .cover{fill:rgba(13,18,24,.78)}
+.cm-ob .dim .ring{fill:none;stroke:var(--pinky-pie);stroke-width:2;stroke-dasharray:var(--dash, 4 8);stroke-linecap:round;animation:nb-march 1.1s linear infinite;opacity:0;transition:opacity .6s var(--slow)}
+/* between steps the screen stays dimmed: the spotlight closes (cover fades in), the ring + bubble fade out,
+   the page scrolls underneath, then everything fades back in at the next spot */
+.cm-ob .dim .cover{opacity:1;transition:opacity .6s var(--slow)}
+.cm-ob.shown .dim{opacity:1}
+.cm-ob.on .dim .cover{opacity:0}
+.cm-ob.on .dim .ring{opacity:1}
+.cm-ob .bub{position:absolute;width:201px;min-height:118px;padding:13px;border-radius:10px;background:var(--lilac);color:var(--off-black);display:flex;flex-direction:column;justify-content:space-between;gap:24px;
+  opacity:0;transform:translateY(6px);transition:opacity .6s var(--slow), transform .6s var(--slow)}
+.cm-ob.on .bub{opacity:1}
+.cm-ob.on .bub{transform:none}
+.cm-ob .tip{position:absolute;right:18px;bottom:-15px;width:24px;height:16px;background:var(--lilac);clip-path:polygon(0 0, 100% 0, 85% 100%)}
+.cm-ob .bub.up .tip{bottom:auto;top:-15px;clip-path:polygon(85% 0, 100% 100%, 0 100%)}
+.cm-ob .ft{display:flex;justify-content:space-between;align-items:center}
+.cm-ob .n b{font-weight:600}
+.cm-ob .n span{color:var(--secondary)}
+.cm-ob .go{background:var(--off-white);color:var(--off-black);padding:3px 9px;border-radius:7.5px;line-height:1.2}
+/* a dot you haven't dropped on: "Add a song" sits where the song card would (Figma 981:10170) */
+.cm-loc .ask-drop{position:absolute;left:50%;bottom:26px;transform:translate(-50%,6px);display:flex;gap:8px;align-items:center;white-space:nowrap;
+  padding:12px 16px;border-radius:10px;background:var(--off-white);color:var(--off-black);opacity:0;pointer-events:none;transition:opacity .6s var(--slow), transform .6s var(--slow)}
+.cm-loc.open .ask-drop{opacity:1;transform:translate(-50%,0);pointer-events:auto}

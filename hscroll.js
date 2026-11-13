@@ -4,7 +4,7 @@
    A drag doesn't count as a tap on the item underneath.
    ========================================================= */
 (() => {
-const ROWS = '.albums, .cm-scroll';
+const ROWS = '.albums, .cm-scroll, .h2-strip';
 let d = null;
 document.addEventListener('pointerdown', e => {
   if (e.pointerType === 'touch' || e.button !== 0) return;   // touch already scrolls natively

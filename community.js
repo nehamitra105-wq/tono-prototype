@@ -31,11 +31,16 @@ const TOP = [
   {n:2, t:'Empire State of Mind', a:'Jay-Z, Alicia Keys', img:C + 't2.png', ml:37},
   {n:3, t:'What’s Next', a:'Drake', img:C + 't3.png', ml:41},
 ];
+// Find other listeners (Figma 982:13993 / Follower List 981:10812)
+const C2 = 'assets/comm2/';
 const MATCHES = [
-  {name:'blueivy321', handle:'@blueivy321', img:C + 'v1.png', pct:92, following:false},
-  {name:'supanova', handle:'@supanova', img:C + 'v2.png', pct:87, following:false},
-  {name:'b3llaella', handle:'@b3llaella', img:C + 'v3.png', pct:83, following:false},
-  {name:'evitina', handle:'@evitina', img:C + 'v4.png', pct:83, following:false},
+  {name:'Anthony', full:'Anthony Reia', ig:'@ace_anthony34', handle:'@cosmogalaxy', img:C2 + 'ava-anthony.png', pct:92, likes:'Malcom Todd · R&B · K-pop', following:false},
+  {name:'Suzi', handle:'@supanova', img:C2 + 'ava-suzi.png', pct:87, likes:'Aespa · K-pop · Pop', following:false},
+  {name:'Bella', handle:'@b3llaella', img:C2 + 'ava-bella.png', pct:83, likes:'Twice · K-pop', following:false},
+  {name:'Tina', handle:'@evitina', img:C2 + 'ava-tina.png', pct:83, likes:'Stray Kids · K-pop', following:false},
+  {name:'Sofia', handle:'@pixelFox88', img:C2 + 'ava-sofia.png', pct:79, likes:'Laufey · Hearts2Hearts', following:false},
+  {name:'Naomi', handle:'@mossy_lantern', img:C2 + 'ava-naomi.png', pct:79, likes:'Laufey · IVE', following:false},
+  {name:'Zara', handle:'@glitchbloom', img:C2 + 'ava-zara.png', pct:70, likes:'Laufey · Classical', following:false},
 ];
 const QS = {
   fy:[
@@ -87,31 +92,33 @@ function qaGrid(){
   return QS[st.tab].map(qCard).join('');
 }
 
-// the song already at each red dot (popular in that area) until you drop your own there
+// songs other listeners already left at the drop-off points out of your reach
 const S = (t, a, img) => ({t, a, img:C + img});
 const AREA = [
-  S('Brooklyn’s Finest', 'Jay-Z, Notorious B.I.G.', 'brooklyns-finest.png'),
+  null,
   S('Midnight City', 'M83', 'midnight-city.png'),
   S('Empire State of Mind', 'Jay-Z, Alicia Keys', 't2.png'),
   S('Late Night Lover', '三稜鏡', 'late-night-lover.png'),
   S('What’s Next', 'Drake', 't3.png'),
   S('Coney Island Baby', 'Lou Reed', 't1.png'),
   S('Sweetest Pie', 'Megan Thee Stallion, Dua Lipa', 'sweetest-pie.png'),
-  S('telepatia', 'Kali Uchis', 'telepatia.png'),
+  null,
 ];
-// one per red dot: tapping it shows the song there (yours, after a Pit Stop)
+// one per red dot: the drop-off points closest to you offer "Add a song" (then show yours);
+// every other dot already has a song someone else dropped there
 function locCard(i){
-  const d = st.drops[i] || AREA[i], where = SPOTS[i].name;
+  const d = st.drops[i] || (isNear(i) ? null : AREA[i]), where = SPOTS[i].name;
   const pos = HAS_MAP ? 'left:0;top:0' : 'left:45px;top:235px';
-  return `<div class="cm-loc ${st.open === i ? 'open' : ''}" style="${pos}" data-loc data-spot="${i}">
-    <div class="card">
+  const top = d ? `<div class="card">
       <div class="row">
         <div class="cv"><img src="${d.img}" alt=""><span class="dim"></span>${ic('play-circle')}</div>
         <div class="tx"><div><p class="t-body">${esc(d.t)}</p><p class="t-caption">${esc(d.a)}</p></div><p class="t-caption">${esc(where)}</p></div>
       </div>
       <span class="cm-dots">${ic('dots-three')}</span>
-    </div>
-    <button class="pin" data-pin aria-label="Song at ${esc(where)}"><img src="${C}marker-on.png" alt=""></button>
+    </div>` : `<button class="ask-drop t-body" data-pit>${ic('music-notes-plus')}Add a song</button>`;
+  return `<div class="cm-loc ${st.open === i ? 'open' : ''} ${i === 0 ? 'me' : ''}" style="${pos}" data-loc data-spot="${i}">
+    ${top}
+    <button class="pin" data-pin aria-label="${d ? `Song at ${esc(where)}` : `Add a song at ${esc(where)}`}"><img src="${C}marker-on.png" alt=""></button>
   </div>`;
 }
 
@@ -130,15 +137,23 @@ const SPOTS = [
   {name:'East Elmhurst, Queens, NY', ll:[40.761, -73.865]},
 ];
 const JH = SPOTS[0].ll;
+const ME = [JH[0] + .0045, JH[1] + .011];          // where the listener is (the person icon)
+const NEAR_MI = 1;                                  // you can only drop a song at points this close
+const distMi = (a, b) => {
+  const r = x => x * Math.PI / 180, dLa = r(b[0] - a[0]), dLo = r(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLo / 2) ** 2;
+  return 3959 * 2 * Math.asin(Math.sqrt(h));
+};
+const isNear = i => distMi(ME, SPOTS[i].ll) <= NEAR_MI;
 let map = null; const markers = [];
 function buildMap(){
   vC.innerHTML = `
   <div class="cm-map">
+    <p class="cm-map-title t-header">Leave a song on the map</p>
     <div class="cm-search">${ic('magnifying-glass')}<input type="text" placeholder="Search location..." aria-label="Search location"></div>
     <div class="cm-leaf" id="cm-leaf">${HAS_MAP ? '' : `<img class="map" src="${C}map.png" alt="">`}</div>
     <div class="cm-tools">
-      <button class="cm-round" data-recenter aria-label="Re-center">${ic('gps-fix')}</button>
-      <button class="cm-pit" data-pit><span class="cm-round">${ic('music-notes-plus')}</span><span class="t-caption">Pit Stop</span></button>
+      <button class="cm-pit" data-recenter aria-label="Re-center"><span class="cm-round">${ic('gps-fix')}</span><span class="t-caption">Re-center</span></button>
     </div>
   </div>
   <div class="cm-rest"></div>`;
@@ -163,6 +178,7 @@ function buildMap(){
   L.tileLayer(ESRI + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxNativeZoom:16, attribution:'Esri, HERE, Garmin, © OpenStreetMap'}).addTo(map);
   L.tileLayer(ESRI + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxNativeZoom:16, pane:'overlayPane', className:'cm-labels'}).addTo(map);
   SPOTS.forEach((p, i) => { markers[i] = L.marker(p.ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); });
+  L.marker(ME, {icon:L.divIcon({className:'cm-me-icon', html:`<i class="cm-ic" style="--i:url(${C2}person.svg)"></i>`, iconSize:[24, 24], iconAnchor:[12, 12]}), keyboard:false, interactive:false}).addTo(map);
 }
 const spotIcon = i => L.divIcon({className:'cm-loc-icon', html:locCard(i), iconSize:[280, 110], iconAnchor:[140, 103]});
 function refreshPin(){
@@ -200,11 +216,11 @@ function renderC(){
       <button class="cm-dots" data-more aria-label="More actions">${ic('dots-three')}</button></div></div></div>`).join('')}</div>
   </div>
   <div class="cm-sec">
-    <p class="t-header">People who match your vibe</p>
-    <div class="cm-scroll">${MATCHES.map((m, i) => `<button class="cm-match" data-match="${i}"><img src="${m.img}" alt=""><p class="t-body">${esc(m.name)}</p><p class="t-caption cm-mut">${m.pct}% match</p></button>`).join('')}</div>
+    <div class="cm-sec-hd"><p class="t-header">Find other listeners</p><button class="cm-view-more" data-listeners><span class="t-caption">View more</span>${ic('caret-left')}</button></div>
+    <div class="cm-scroll">${MATCHES.slice(0, 5).map((m, i) => `<button class="cm-match" data-match="${i}"><img src="${m.img}" alt=""><p class="t-body">${esc(m.name)}</p><p class="t-caption cm-mut">${m.pct}% match</p></button>`).join('')}</div>
   </div>
-  <div class="cm-sec" style="gap:28px" id="cm-qa">
-    <div class="cm-ask"><p class="t-header">Ask the crowd</p><button class="cm-btn t-body" data-ask>${ic('plus')}Ask a question</button></div>
+  <div class="cm-sec" style="gap:24px" id="cm-qa">
+    <div class="cm-ask"><p class="t-header">Crowd Q&amp;A</p><button class="cm-btn t-body" data-ask>${ic('plus')}Ask a question</button></div>
     <div class="cm-qa">
       <div class="cm-tabs t-body">${[['fy', 'For You'], ['gn', 'General'], ['ma', 'My Activity']].map(([k, l]) => `<button class="${st.tab === k ? 'on' : ''}" data-qtab="${k}">${l}</button>`).join('')}<span class="cm-ink"></span></div>
       <div class="cm-pane"><div class="cm-grid">${qaGrid()}</div></div>
@@ -304,15 +320,15 @@ function setWhere(i){ st.spot = i; whereIn.value = i === null ? '' : SPOTS[i].na
 function showSpots(on){
   spotList.classList.toggle('on', on); if (!on) return;
   const q = whereIn.value.trim().toLowerCase(), typed = q && !(st.spot !== null && SPOTS[st.spot].name.toLowerCase() === q);
-  const hits = SPOTS.map((p, i) => ({p, i, d:miles(JH, p.ll)}))
-    .filter(o => !typed || o.p.name.toLowerCase().includes(q)).sort((x, y) => x.d - y.d);
+  const hits = SPOTS.map((p, i) => ({p, i, d:miles(ME, p.ll)}))
+    .filter(o => isNear(o.i) && (!typed || o.p.name.toLowerCase().includes(q))).sort((x, y) => x.d - y.d);
   spotList.style.top = `${whereIn.closest('.cm-loc-field').offsetTop + whereIn.closest('.cm-loc-field').offsetHeight + 1}px`;
-  spotList.innerHTML = hits.length ? hits.map(({p, i, d}) => `<button role="option" data-spot-pick="${i}">${ic('map-pin')}<span class="tx"><span class="t-body">${esc(p.name)}</span><span class="t-caption cm-mut">${i === 0 ? 'Current location' : `${d.toFixed(1)} mi away`}</span></span></button>`).join('')
+  spotList.innerHTML = hits.length ? hits.map(({p, i, d}) => `<button role="option" data-spot-pick="${i}">${ic('map-pin')}<span class="tx"><span class="t-body">${esc(p.name)}</span><span class="t-caption cm-mut">${d < .5 ? 'Right by you' : `${d.toFixed(1)} mi away`}</span></span></button>`).join('')
     : `<p class="t-body cm-mut">No nearby spots</p>`;
 }
 whereIn.addEventListener('focus', () => { whereIn.select(); showSpots(true); });
 whereIn.addEventListener('input', () => {
-  const q = whereIn.value.trim().toLowerCase(), hit = SPOTS.findIndex(p => p.name.toLowerCase() === q);
+  const q = whereIn.value.trim().toLowerCase(), hit = SPOTS.findIndex((p, i) => isNear(i) && p.name.toLowerCase() === q);
   st.spot = hit < 0 ? null : hit; dropOk(); showSpots(true);
 });
 whereIn.addEventListener('keydown', e => { if (e.key === 'Enter'){ spotList.querySelector('[data-spot-pick]')?.click(); whereIn.blur(); } });
@@ -394,8 +410,8 @@ vC.addEventListener('click', e => {
 vC.addEventListener('click', e => {
   const pitBtn = e.target.closest('[data-pit]');
   if (pitBtn){
-    // starts where the listener is; the location field can move it to any red dot
-    setWhere(0); showSpots(false);
+    // the dot that was tapped is the location (it can still be changed in the field)
+    setWhere(+(pitBtn.closest('[data-spot]')?.dataset.spot ?? 0)); showSpots(false);
     setOpen(null); pit.reset(); open(oPit); return;
   }
   const pin = e.target.closest('[data-pin]');
@@ -403,6 +419,7 @@ vC.addEventListener('click', e => {
   if (e.target.closest('[data-recenter]')){ recenter(); return; }
   if (e.target.closest('[data-more]')){ open(oMore); return; }
   const m = e.target.closest('[data-match]'); if (m){ P().openPerson(MATCHES[+m.dataset.match]); return; }
+  if (e.target.closest('[data-listeners]')){ openListeners(); return; }
   if (e.target.closest('[data-ask]')){ openAsk(); return; }
   const t = e.target.closest('[data-qtab]'); if (t){ if (t.dataset.qtab !== st.tab){ const from = st.tab; st.tab = t.dataset.qtab; renderTabs(from); } return; }
   if (e.target.closest('[data-q]')){ st.sort = st.mine ? 'newest' : 'liked'; renderQA(); vQA.scrollTop = 0; P().go(vQA); }
@@ -454,15 +471,113 @@ vQA.addEventListener('click', e => {
   vQA.addEventListener('pointerdown', e => { const r = vQA.getBoundingClientRect(); if ((e.clientX - r.left) / (r.width / 402) < 24){ sx = e.clientX; sy = e.clientY; } });
   vQA.addEventListener('pointerup', e => { if (sx === null) return; const dx = e.clientX - sx, dy = Math.abs(e.clientY - sy); sx = null; if (dx > 60 && dx > dy) P().back(); }); }
 
+/* ---------- Find other listeners (Figma 981:10812) ---------- */
+const vL = makeView('view-listeners', 'Find other listeners');
+function listenersHTML(q = ''){
+  const list = MATCHES.filter(m => !q || (m.name + m.handle + m.likes).toLowerCase().includes(q.toLowerCase()));
+  return list.length ? list.map(m => { const i = MATCHES.indexOf(m); return `<div class="cm-lrow">
+      <button class="who" data-match="${i}"><span class="id"><img src="${m.img}" alt=""><span><span class="t-header">${esc(m.name)}</span><span class="t-body">${esc(m.handle)}</span></span></span>
+        <span class="t-caption cm-mut">${m.pct}% match · ${esc(m.likes)}</span></button>
+      <button class="cm-follow t-body ${m.following ? 'on' : ''}" data-follow="${i}">${m.following ? 'Following' : 'Follow'}</button></div>`; }).join('')
+    : `<p class="t-body cm-mut">No listeners found</p>`;
+}
+function openListeners(){
+  vL.innerHTML = `<div class="cm-lhead"><button class="back" data-back aria-label="Back">${ic('caret-left')}</button><p class="t-header">Find other listeners</p><span></span></div>
+    <div class="cm-lbody">
+      <div class="cm-search static">${ic('magnifying-glass')}<input type="text" placeholder="Search user..." aria-label="Search user"></div>
+      <div class="cm-sec-hd"><p class="t-header">Top Matches</p><span class="cm-sort t-caption">Similar tastes${ic('caret-down')}</span></div>
+      <div class="cm-llist">${listenersHTML()}</div>
+    </div>`;
+  vL.querySelector('input').addEventListener('input', e => { vL.querySelector('.cm-llist').innerHTML = listenersHTML(e.target.value.trim()); });
+  vL.scrollTop = 0; P().go(vL);
+}
+vL.addEventListener('click', e => {
+  if (e.target.closest('[data-back]')) return P().back();
+  const f = e.target.closest('[data-follow]');
+  if (f){ const m = MATCHES[+f.dataset.follow]; m.following = !m.following; f.classList.toggle('on', m.following); f.textContent = m.following ? 'Following' : 'Follow'; return; }
+  const m = e.target.closest('[data-match]'); if (m) P().openPerson(MATCHES[+m.dataset.match]);
+});
+
+/* ---------- first visit: a 4-step walkthrough (Figma 1289:6630) ---------- */
+const OB = [
+  {el:'.cm-leaf', text:'See what songs people have left in the area', side:'over'},
+  {el:'.cm-search', text:'Search or tap any location to leave a song for other people to discover', side:'below'},
+  {el:'[data-ask]', text:'Have a question? Ask the community for their input!', side:'above'},
+  {el:'.cm-qa', text:'View and respond to questions other users have asked in the community', side:'above'},
+];
+let seen = false, ob = -1;
+const obEl = document.createElement('div');
+obEl.className = 'cm-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Community walkthrough');
+obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
+  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>`;
+app.appendChild(obEl);
+function obLayout(){
+  if (ob < 0) return;
+  const step = OB[ob], t = vC.querySelector(step.el); if (!t) return;
+  const A = app.getBoundingClientRect(), k = A.width / 402, W = 402, H = A.height / k;
+  const r = t.getBoundingClientRect(), pad = 4;
+  const x = (r.left - A.left) / k - pad, y = (r.top - A.top) / k - pad, w = r.width / k + pad * 2, h = r.height / k + pad * 2;
+  const svg = obEl.querySelector('svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const rr = 10;
+  svg.querySelector('path').setAttribute('d', `M0 0H${W}V${H}H0Z M${x + rr} ${y}H${x + w - rr}A${rr} ${rr} 0 0 1 ${x + w} ${y + rr}V${y + h - rr}A${rr} ${rr} 0 0 1 ${x + w - rr} ${y + h}H${x + rr}A${rr} ${rr} 0 0 1 ${x} ${y + h - rr}V${y + rr}A${rr} ${rr} 0 0 1 ${x + rr} ${y}Z`);
+  svg.querySelectorAll('.ring, .cover').forEach(r => { r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', w); r.setAttribute('height', h); });
+  const bub = obEl.querySelector('.bub'), bh = bub.offsetHeight || 118;
+  let top = step.side === 'above' ? y - 21 - bh : step.side === 'below' ? y + h + 21 : y + h - bh + 40;
+  if (step.side === 'over') top = Math.min(top, y + h - 60);
+  bub.style.top = `${top}px`;
+  bub.style.left = `${Math.min(W - 201 - 20, Math.max(20, x + w - 201 - (step.side === 'over' ? 80 : 18)))}px`;
+  bub.classList.toggle('up', step.side !== 'above');
+}
+// wait until a smooth scroll has come to rest (or there was nothing to scroll)
+function settled(el, done){
+  let last = el.scrollTop, still = 0, t0 = performance.now();
+  const tick = now => {
+    if (Math.abs(el.scrollTop - last) < .5) still++; else still = 0;
+    last = el.scrollTop;
+    if (still >= 5 || now - t0 > 1200) done(); else requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+// one step at a time: fade the current step out → swap the words → scroll while hidden → fade the next one in
+let obSeq = 0;
+function obShow(i){
+  const seq = ++obSeq, wasOn = obEl.classList.contains('on');
+  obEl.classList.remove('on');
+  setTimeout(() => {
+    if (seq !== obSeq) return;
+    ob = i;
+    const step = OB[i], t = vC.querySelector(step.el);
+    obEl.querySelector('.txt').textContent = step.text;
+    obEl.querySelector('.n').innerHTML = `<b>${i + 1}</b>/<span>${OB.length}</span>`;
+    obEl.querySelector('.go').textContent = i === OB.length - 1 ? 'OK' : 'Next';
+    // bring the step's spot into view, leaving room for the bubble
+    const vr = vC.getBoundingClientRect(), tr = t.getBoundingClientRect(), k = vr.width / 402;
+    const want = step.side === 'above' ? (tr.top - vr.top) / k + vC.scrollTop - 330 : (tr.top - vr.top) / k + vC.scrollTop - 90;
+    vC.scrollTo({top:i < 2 ? 0 : Math.max(0, want * k), behavior:'smooth'});
+    settled(vC, () => { if (seq !== obSeq) return; obLayout(); requestAnimationFrame(() => { if (seq === obSeq) obEl.classList.add('on'); }); });
+  }, wasOn ? 600 : 0);
+}
+function obStart(){ if (seen) return; seen = true; obEl.classList.add('live', 'shown'); obShow(0); }
+function obEnd(){ ob = -1; ++obSeq; obEl.classList.remove('on', 'shown'); setTimeout(() => { if (ob < 0) obEl.classList.remove('live'); }, 600); }
+obEl.addEventListener('click', e => { if (e.target.closest('[data-ob-next]')) ob < OB.length - 1 ? obShow(ob + 1) : obEnd(); });
+// only follow the page while a step is showing; between steps it's hidden and gets placed once the scroll settles
+vC.addEventListener('scroll', () => { if (ob >= 0 && obEl.classList.contains('on')) obLayout(); }, {passive:true});
+vC.addEventListener('transitionend', e => { if (e.target === vC && ob >= 0 && obEl.classList.contains('on')) obLayout(); });   // if the page slid in
+addEventListener('resize', () => { if (ob >= 0) obLayout(); });
+document.addEventListener('click', e => { if (ob >= 0 && e.target.closest('.tabbar')) obEnd(); }, true);
+
 function openCommunity(){
   ALL_OV.forEach(close);
   P().resetToHome(false);
   renderC(); refreshPin(); vC.scrollTop = 0;
   P().setTab('community'); P().go(vC);
   if (map) requestAnimationFrame(() => map.invalidateSize());
+  // first visit: the walkthrough opens right away with the page (opening Community is what starts it)
+  if (!seen) requestAnimationFrame(() => requestAnimationFrame(obStart));
 }
 
-document.getElementById('restart')?.addEventListener('click', () => { ALL_OV.forEach(close); clearTimeout(st._pinT); st = fresh(); if (map){ refreshPin(); map.setView(HOME_VIEW.c, HOME_VIEW.z); } });
+document.getElementById('restart')?.addEventListener('click', () => { ALL_OV.forEach(close); clearTimeout(st._pinT); st = fresh(); seen = false; obEnd(); MATCHES.forEach(m => { m.following = false; }); if (map){ refreshPin(); map.setView(HOME_VIEW.c, HOME_VIEW.z); } });
 renderC();
 window.tonoCommunity = {open:openCommunity, get state(){ return {...st}; }};
 })();

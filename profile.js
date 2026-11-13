@@ -22,7 +22,7 @@ const PEOPLE = [
   {name:'Rafael', handle:'@SleepyComet', img:PF+'f09.png', following:false},
   {name:'Imani', handle:'@ember.circuit', img:PF+'f10.png', following:false},
 ];
-const PROMPT = 'What are the best house-esq songs in 3rd to 5th gen kpop?';
+const PROMPT = 'Songs for a 3am drive?';
 
 /* ---------- shared card builders ---------- */
 const stats = () => `<div class="pf-stats">
@@ -32,15 +32,16 @@ const stats = () => `<div class="pf-stats">
 const card = (lead, big, sub = '', bigW = '') => `<div class="pf-card">
   <p class="lead t-body">${lead}</p>
   <p class="big gradient-text"${bigW ? ` style="width:${bigW}px"` : ''}>${big}</p>${sub ? `<p class="sub t-caption">${sub}</p>` : ''}</div>`;
+// each tile opens a sheet with the artists that make up that genre (Figma 1124:18479 / 1108:14438)
 const genres = c => `<div class="pf-genres"><p class="hd">Top genres</p><div class="pf-tiles">
   <div class="col">
-    <div class="pf-tile" style="height:147px;background:${c[0]}"><p class="pf-num" style="font-size:32px">34%</p><p class="lbl" style="top:51px">Pop</p></div>
-    <div class="pf-tile" style="flex:1;background:${c[1]}"><p class="pf-num" style="font-size:28px">25%</p><p class="lbl" style="top:46px">Dream pop</p></div>
+    <button class="pf-tile" data-genre="Pop" style="height:147px;background:${c[0]}"><p class="pf-num" style="font-size:32px">34%</p><p class="lbl" style="top:51px">Pop</p></button>
+    <button class="pf-tile" data-genre="Dream pop" style="flex:1;background:${c[1]}"><p class="pf-num" style="font-size:28px">25%</p><p class="lbl" style="top:46px">Dream pop</p></button>
   </div>
   <div class="col">
-    <div class="pf-tile" style="height:105px;background:${c[2]}"><p class="pf-num" style="font-size:26px">18%</p><p class="lbl" style="top:44px">Jazz</p></div>
-    <div class="pf-tile" style="height:88px;background:${c[3]}"><p class="pf-num" style="font-size:22px">13%</p><p class="lbl" style="top:40px">Neosoul</p></div>
-    <div class="pf-tile flow" style="flex:1;background:${c[4]}"><p class="pf-num" style="font-size:18px">10%</p><p class="lbl">Electro-pop</p></div>
+    <button class="pf-tile" data-genre="Jazz" style="height:105px;background:${c[2]}"><p class="pf-num" style="font-size:26px">18%</p><p class="lbl" style="top:44px">Jazz</p></button>
+    <button class="pf-tile" data-genre="Neosoul" style="height:88px;background:${c[3]}"><p class="pf-num" style="font-size:22px">13%</p><p class="lbl" style="top:40px">Neosoul</p></button>
+    <button class="pf-tile flow" data-genre="Electro-pop" style="flex:1;background:${c[4]}"><p class="pf-num" style="font-size:18px">10%</p><p class="lbl">Electro-pop</p></button>
   </div></div></div>`;
 const tops = (title, hl, rows) => `<div class="pf-tops">
   <div class="hd t-caption"><p>${title}</p><p class="mut">This month</p></div>
@@ -94,7 +95,7 @@ const vFollow = makeView('view-followers', 'Followers');
 const vSettings = makeView('view-settings', 'Settings');
 const vPage = makeView('view-settings-page', 'Settings page');
 
-let meHours = 'week', themHours = 'month', person = null, followTab = 'followers', followQuery = '';
+let meHours = 'week', themHours = 'month', person = null, themBack = false, followTab = 'followers', followQuery = '';
 const toggles = {private:true, sync:true, saveLiked:true, suggest:false, nf_followers:false, nf_recs:true, nf_comm:false, nf_daily:true, nf_mile:true, nf_weekly:true, nf_quiet:true};
 
 function renderMe(){
@@ -109,6 +110,7 @@ function renderMe(){
         <button class="pf-follows t-body" data-go="followers"><span>865 followers</span><span>865  following</span></button>
       </div>
       <div class="pf-prompt"><p class="t-caption">${esc(PROMPT)}</p></div>
+      <p class="pf-bio t-body">IG: @mushqueen<br>You’re exactly where you’re meant to be~ ✨</p>
     </div>
     <div class="pf-stack">
       ${stats()}
@@ -118,20 +120,26 @@ function renderMe(){
       ${hours(meHours)}
     </div></div>`;
 }
+const first = p => (p.full || p.name).split(' ')[0];
 function renderThem(){
   const p = person;
-  vThem.innerHTML = `<div class="pf-body">
+  vThem.innerHTML = `${themBack ? `<div class="pf-subhead"><button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button><p class="t-body">${esc(first(p))}’s profile</p><span class="sp"></span></div>` : ''}
+    <div class="pf-body${themBack ? ' under-head' : ''}">
     <div class="pf-head">
       <div class="pf-top">
-        <div class="pf-id"><img class="ava" src="${p.img}" alt=""><div class="who"><p class="t-header">${esc(p.name)}</p><p class="t-body">${esc(p.handle)}</p></div>
-          <span class="pf-chip t-body" style="align-self:flex-start">Top Explorer</span></div>
+        <div class="pf-id"><img class="ava" src="${p.img}" alt=""><div class="who"><p class="t-header">${esc(p.full || p.name)}</p><p class="t-body">${esc(p.handle)}</p></div></div>
         <button class="pf-gear" data-go="settings" aria-label="Settings"><img src="${PF}ph-gear.svg" alt=""></button>
       </div>
       <div class="pf-row2">
-        <button class="pf-action t-body ${p.following ? 'on' : ''}" data-follow>${p.following ? 'Following' : 'Follow'}</button>
+        <span class="pf-chip t-body">Top Explorer</span>
         <button class="pf-follows gap t-body" data-go="followers"><span>865 followers</span><span>865  following</span></button>
       </div>
       <div class="pf-prompt" style="left:0"><p class="t-caption">${esc(PROMPT)}</p></div>
+      <p class="pf-bio t-body">IG: ${esc(p.ig || '@' + p.handle.replace(/^@/, '').toLowerCase())}</p>
+      <div class="pf-btns">
+        <button class="pf-action t-body ${p.following ? 'on' : ''}" data-follow>${p.following ? 'Following' : 'Follow'}</button>
+        <button class="pf-msg t-body" data-message>Message</button>
+      </div>
     </div>
     <div class="pf-stack">
       ${stats()}
@@ -141,12 +149,49 @@ function renderThem(){
       ${hours(themHours)}
     </div></div>`;
 }
+
+/* ---------- genre sheet: the artists behind a genre ---------- */
+const P2 = 'assets/pf2/';
+const ART = {weeknd:['The Weeknd', P2 + 'a-weeknd.png'], kid:['Kid Bloom', P2 + 'a-kidbloom.png'], justice:['Justice', P2 + 'a-justice.png'],
+  tyler:['Tyler, the Creator', P2 + 'a-tyler.png'], cas:['Cigarettes After Sex', P2 + 'a-cas.png'], ethel:['Ethel Cain', P2 + 'a-ethel.png']};
+// Pop follows the hi-fi; the other genres reuse the same artists in another order
+const ORDERS = {'Pop':['weeknd', 'kid', 'justice', 'tyler', 'cas'], 'Dream pop':['cas', 'ethel', 'kid', 'weeknd', 'justice'], 'Jazz':['tyler', 'justice', 'cas', 'kid', 'ethel'],
+  'Neosoul':['kid', 'weeknd', 'ethel', 'tyler', 'cas'], 'Electro-pop':['justice', 'weeknd', 'tyler', 'kid', 'ethel']};
+const SHARED = ['justice', 'cas', 'kid', 'ethel', 'weeknd'];
+const PLAYS = [456, 112, 100, 87, 56], SPLAYS = [231, 211, 195, 95, 92];
+const artistRows = (keys, plays) => keys.map((k, i) => `<div class="pf-artist"><span class="n t-caption">${String(i + 1).padStart(2, '0')}</span>
+  <img src="${ART[k][1]}" alt=""><span class="nm"><span class="t-body">${esc(ART[k][0])}</span><span class="t-caption">${plays[i]} plays</span></span>
+  <span class="dots"><img src="${P2}dots.svg" alt=""></span></div>`).join('');
+const acc = (id, title, body, open) => `<div class="pf-acc ${open ? 'open' : ''}" data-acc="${id}">
+  <button class="hd t-body" data-acc-tog>${title}<img src="${P2}caret-down.svg" alt=""></button>
+  <div class="bd"><div class="in">${body}</div></div></div>`;
+const gsw = document.createElement('div');
+gsw.className = 'pf-gsheet-wrap'; gsw.setAttribute('aria-hidden', 'true');
+gsw.innerHTML = `<div class="bd" data-gclose></div><div class="pf-gsheet" role="dialog"><span class="grab"></span>
+  <div class="hd"><p class="t-header"></p><button data-gclose aria-label="Close"><img src="${P2}x.svg" alt=""></button></div><div class="body"></div></div>`;
+app.appendChild(gsw);
+function openGenre(g, them){
+  const keys = ORDERS[g] || ORDERS.Pop, low = g.toLowerCase();
+  gsw.querySelector('.t-header').textContent = g;
+  gsw.querySelector('.body').innerHTML = them
+    ? acc('shared', `Shared ${low} artists`, `<div class="pf-shared"><p class="big">${32 - Object.keys(ORDERS).indexOf(g) * 5} shared artists</p><p class="t-body">You both always go back to ${esc(ART[SHARED[0]][0])}.</p></div>${artistRows(SHARED, SPLAYS)}`, true)
+      + acc('top', `${esc(first(person))}’s top ${low} artists`, artistRows(keys, PLAYS), false)
+    : `<div class="pf-acc open static"><p class="hd t-body">Top ${low} artists</p><div class="bd"><div class="in">${artistRows(keys, PLAYS)}</div></div></div>`;
+  gsw.querySelector('.pf-gsheet').scrollTop = 0;
+  gsw.classList.add('open'); gsw.setAttribute('aria-hidden', 'false');
+}
+gsw.addEventListener('click', e => {
+  if (e.target.closest('[data-gclose]')){ gsw.classList.remove('open'); gsw.setAttribute('aria-hidden', 'true'); return; }
+  const t = e.target.closest('[data-acc-tog]'); if (t) t.closest('.pf-acc').classList.toggle('open');
+});
+[vMe, vThem].forEach(v => v.addEventListener('click', e => { const g = e.target.closest('[data-genre]'); if (g) openGenre(g.dataset.genre, v === vThem); }));
+
 function renderFollowers(){
   const q = followQuery.trim().toLowerCase();
   const list = PEOPLE.filter(p => (followTab === 'followers' || p.following) && (!q || (p.name + ' ' + p.handle).toLowerCase().includes(q)));
   const listHTML = list.length ? list.map(p => `<div class="pf-person" data-person="${PEOPLE.indexOf(p)}" role="button" tabindex="0">
       <img src="${p.img}" alt=""><div class="nm"><p class="t-header">${esc(p.name)}</p><p class="t-body">${esc(p.handle)}</p></div>
-      <button class="pf-action t-body" data-fol="${PEOPLE.indexOf(p)}">${p.following ? 'Following' : 'Follow'}</button></div>`).join('')
+      <button class="pf-action t-body ${p.following ? 'following' : ''}" data-fol="${PEOPLE.indexOf(p)}">${p.following ? 'Following' : 'Follow'}</button></div>`).join('')
     : `<p class="pf-empty t-body">No one matches “${esc(followQuery)}”</p>`;
   if (!vFollow.firstChild){
     vFollow.innerHTML = `<div class="pf-subhead"><button class="back" data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button><p class="t-body">Followers</p><span class="sp"></span></div>
@@ -157,6 +202,7 @@ function renderFollowers(){
       </div>`;
   }
   vFollow.querySelectorAll('[data-ftab]').forEach(b => b.classList.toggle('on', b.dataset.ftab === followTab));
+  vFollow.querySelector('.pf-subhead .t-body').textContent = followTab === 'followers' ? 'Followers' : 'Following';
   vFollow.querySelector('[data-fcount]').textContent = followTab === 'followers' ? 'Followers (865)' : 'Following (865)';
   vFollow.querySelector('[data-flist]').innerHTML = listHTML;
 }
@@ -241,12 +287,12 @@ function resetToHome(animate){
   const top = current;
   ALL().forEach(v => { if (v !== home && v !== top) instantly(v, () => { v.classList.add('offright'); v.classList.remove('offleft', 'on-top'); }); });
   if (top && top !== home){
-    if (animate){ top.classList.add('offright'); setTimeout(() => top.classList.remove('on-top'), 450); }
+    if (animate){ top.classList.add('offright'); setTimeout(() => top.classList.remove('on-top'), 600); }
     else instantly(top, () => { top.classList.add('offright'); top.classList.remove('on-top'); });
   }
   instantly(home, () => home.classList.remove('offleft'));
   stack.forEach(v => { if (v !== top || !animate) v.style.zIndex = ''; });
-  if (top && animate) setTimeout(() => { top.style.zIndex = ''; }, 450);
+  if (top && animate) setTimeout(() => { top.style.zIndex = ''; }, 600);
   current = home; stack.length = 0;
 }
 function go(v){
@@ -258,7 +304,7 @@ function back(){
   if (stack.length < 2){ return; }
   const top = stack.pop(), prev = stack[stack.length - 1];
   top.classList.add('offright'); prev.classList.remove('offleft'); current = prev;
-  setTimeout(() => { if (!stack.includes(top)){ top.classList.remove('on-top'); top.style.zIndex = ''; } }, 450);
+  setTimeout(() => { if (!stack.includes(top)){ top.classList.remove('on-top'); top.style.zIndex = ''; } }, 600);
   if (prev === vSettings) renderSettings();
 }
 const setTab = name => tabbar.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
@@ -280,6 +326,8 @@ tabbar.addEventListener('click', e => {
   else if (t.dataset.tab === 'discovery' && inProfile){ e.stopImmediatePropagation(); resetToHome(true); setTab('discovery'); }
   else if (t.dataset.tab === 'player' && inProfile){ resetToHome(false); }
   else if (t.dataset.tab === 'community'){ e.stopImmediatePropagation(); window.tonoCommunity?.open(); }
+  else if (t.dataset.tab === 'deep'){ e.stopImmediatePropagation(); if (inProfile) resetToHome(false); window.tonoNode?.openTab(); }
+  else if (t.dataset.tab === 'discovery') setTab('discovery');
 }, true);
 
 /* ---------- interactions ---------- */
@@ -297,8 +345,10 @@ vMe.addEventListener('click', e => {
   if (g.dataset.go === 'followers'){ followTab = 'followers'; followQuery = ''; vFollow.innerHTML = ''; renderFollowers(); vFollow.scrollTop = 0; go(vFollow); }
 });
 vThem.addEventListener('click', e => {
+  if (e.target.closest('[data-back]')) return back();
   if (onHours(e, false)) return;
   if (e.target.closest('[data-follow]')){ person.following = !person.following; renderThem(); return; }
+  if (e.target.closest('[data-message]')){ window.tonoMsgs?.openWith({name:first(person), handle:person.handle, img:person.img}); return; }
   const g = e.target.closest('[data-go]'); if (!g) return;
   if (g.dataset.go === 'settings'){ renderSettings(); vSettings.scrollTop = 0; go(vSettings); }
   if (g.dataset.go === 'followers'){ followTab = 'followers'; followQuery = ''; vFollow.innerHTML = ''; renderFollowers(); vFollow.scrollTop = 0; go(vFollow); }
@@ -328,8 +378,8 @@ vPage.addEventListener('click', e => {
   v.addEventListener('pointerup', e => { if (sx === null) return; const dx = (e.clientX - sx), dy = Math.abs(e.clientY - sy); sx = null; if (dx > 60 && dx > dy) back(); });
 });
 
-document.getElementById('restart')?.addEventListener('click', () => { resetToHome(false); setTab('discovery'); });
+document.getElementById('restart')?.addEventListener('click', () => { resetToHome(false); setTab('discovery'); gsw.classList.remove('open'); });
 // shared with community.js: same screen stack, and someone else's profile
-function openPerson(p){ person = p; themHours = 'month'; renderThem(); vThem.scrollTop = 0; go(vThem); }
+function openPerson(p){ person = p; themBack = true; themHours = 'month'; renderThem(); vThem.scrollTop = 0; go(vThem); }
 window.tonoProfile = {open:openProfile, openPerson, go, back, resetToHome, setTab, get stack(){ return stack.map(v => v.id); }};
 })();

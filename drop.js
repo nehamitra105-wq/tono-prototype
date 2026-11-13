@@ -6,7 +6,11 @@
 (() => {
 const D = 'assets/drop/';
 const MAX_PICKS = 5;
-const REQUEST = {user:'Username', q:'What are the best house-esq songs in 3rd to 5th gen kpop?'};
+const M = 'assets/msg/';
+// the question being answered (set by Messages → View Question)
+let REQUEST = {user:'supanova', pfp:M + 'pfp-supanova.png', q:'Hi! I saw that your into kpop, I just wanted to ask what are the best house-esq songs in 3rd to 5th gen kpop?'};
+const KPOP = [{t:'404 (New Era)', a:'KiiiKiii', art:M + 's-404.png'}, {t:'Hypnotize', a:'XG', art:M + 's-hypnotize.png'}, {t:'Whiplash', a:'aespa', art:M + 's-whiplash.png'}];
+const COLORS = ['#FFFFFF', '#E84545', '#EF8655', '#FFE030', '#77DA3A', '#3ADAB7', '#4D86E9', '#8257EE', '#EF64CF'];
 
 // suggestions from the listener's library — order follows the hi-fi cascade (top-right → bottom-left)
 const CASCADE = [
@@ -24,6 +28,7 @@ const LIKES = [0,0,0,0,276,243,219,198,164,131];
 const LIBRARY = (() => {
   const out = [];
   const add = s => { if (!out.some(o => key(o) === key(s))) out.push(s); };
+  KPOP.forEach(s => add({...s}));
   (typeof TOP10 !== 'undefined' ? TOP10 : []).forEach((r, i) => add({t:r.t, a:r.a, art:r.img, likes:LIKES[i] || 0}));
   (typeof SONGS !== 'undefined' ? SONGS : []).forEach(s => add({t:s.title, a:s.artist, art:s.art}));
   CASCADE.forEach(s => add({t:s.t, a:s.a, art:s.art, c:s.c}));
@@ -45,44 +50,56 @@ const tabbar = app.querySelector('.tabbar');
 const drop = document.createElement('section');
 drop.className = 'view drop-view offright';
 drop.id = 'view-drop';
-drop.setAttribute('aria-label', 'Record drop off');
+drop.setAttribute('aria-label', 'Curate a mixtape');
 drop.innerHTML = `
   <div class="dhead">
-    <button data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
-    <p class="t-header">Record Drop off</p>
-    <button data-next aria-label="Review picks"><img src="${D}arrow-right.svg" alt=""></button>
+    <button data-back aria-label="Back"><img src="${M}caret-left.svg" alt=""></button>
+    <p class="t-header">Curate a mixtape</p>
+    <span style="width:24px"></span>
   </div>
-  <div class="req">
-    <div class="who"><img src="${D}pfp.svg" alt=""><span class="t-caption">${esc(REQUEST.user)}</span></div>
-    <p class="t-body">${esc(REQUEST.q)}</p>
+  <div class="dscroll">
+  <div class="dtop">
+    <div class="req">
+      <div class="who"><img id="drop-pfp" src="${REQUEST.pfp}" alt=""><span class="t-caption" id="drop-user">${esc(REQUEST.user)}</span></div>
+      <p class="t-body" id="drop-qtext">${esc(REQUEST.q)}</p>
+    </div>
+    <div class="ddots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="dpicks" id="drop-picks"></div>
+    <p class="dcount t-caption" id="drop-pcount"></p>
+    <label class="dsearch"><img src="assets/magnifier.svg" alt="">
+      <input type="text" id="drop-q" placeholder="Add a song" autocomplete="off">
+      <button class="clear" data-clear aria-label="Close search"><img src="assets/node/x.svg" alt=""></button>
+    </label>
   </div>
-  <label class="dsearch"><img src="assets/magnifier.svg" alt="">
-    <input type="text" id="drop-q" placeholder="Search kpop songs..." autocomplete="off">
-    <button class="clear" data-clear aria-label="Close search"><img src="assets/node/x.svg" alt=""></button>
-  </label>
-  <div class="sugg-title"><p class="t-header">Our suggestions</p><p class="t-caption grey" id="drop-count"></p></div>
+  <div class="sugg-title"><p class="t-header">Suggested Answers</p><p class="t-caption grey" id="drop-count" hidden></p></div>
   <div class="now" id="drop-now"></div>
   <div class="cascade" id="drop-cascade" aria-label="Drag to shuffle suggestions"></div>
-  <div class="dresults" id="drop-results"><div class="ranked"><ul></ul></div></div>`;
+  <div class="dresults" id="drop-results"><div class="ranked"><ul></ul></div></div>
+  </div>
+  <button class="dcontinue t-body" data-next disabled>Continue</button>`;
 
 const fin = document.createElement('section');
 fin.className = 'view final-view offright';
 fin.id = 'view-drop-final';
-fin.setAttribute('aria-label', 'Send off');
+fin.setAttribute('aria-label', 'Decorate your mixtape');
 fin.innerHTML = `
-  <div class="dhead" style="position:absolute">
-    <button data-back aria-label="Back"><img src="assets/caret-left.svg" alt=""></button>
-    <p class="t-header">Record Drop off</p>
-    <button data-send aria-label="Send picks"><img src="${D}paper-plane.svg" alt=""></button>
+  <div class="msg-title" style="position:absolute"><button data-back aria-label="Back"><img src="${M}caret-left.svg" alt=""></button><p class="t-header">Curate a mixtape</p></div>
+  <div class="mx-page">
+    <div class="mx-cd-wrap">
+      <div class="mx-cd" id="mx-cd"><img class="case" src="${M}cd-case.png" alt="Your mixtape"><span class="tint"></span><img class="label" alt=""><canvas width="590" height="518"></canvas></div>
+      <div class="mx-pal" id="mx-pal"><div class="row">${COLORS.map((c, i) => `<button style="background:${c}" data-color="${i}" aria-label="Colour ${i + 1}"></button>`).join('')}</div>
+        <span class="tip"><img src="${M}pointer.svg" alt=""></span></div>
+      <div class="mx-tools" role="toolbar" aria-label="Decorate the CD">
+        <button data-tool="color" aria-label="Colour"><span class="swatch"></span></button>
+        <button data-tool="pen" aria-label="Draw"><img src="${M}pen.svg" alt=""></button>
+        <button data-tool="image" aria-label="Add a cover"><img src="${M}image.svg" alt=""></button>
+        <button data-tool="sticker" aria-label="Add a sticker"><img src="${M}smiley-sticker.svg" alt=""></button>
+      </div>
+    </div>
+    <label class="mx-note"><textarea rows="1" id="mx-note" placeholder="Add a note" aria-label="Add a note"></textarea></label>
+    <div class="mx-list"><p class="t-body title">My List</p><div id="mx-mylist"></div></div>
   </div>
-  <div class="cd"><img src="${D}cd-case.png" alt=""></div>
-  <label class="fname"><input id="drop-name" type="text" value="My kpop house recs" aria-label="Name your picks"></label>
-  <p class="fcount t-body" id="drop-fcount"></p>
-  <div class="flist ranked"><ul id="drop-flist"></ul></div>`;
-fin.style.padding = '0';
-fin.querySelector('.dhead').style.cssText = 'position:absolute;left:0;top:72px;width:402px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;z-index:6';
-fin.querySelectorAll('.dhead button').forEach(b => b.style.cssText = 'width:24px;height:24px;display:grid;place-items:center');
-
+  <button class="mx-send t-body" data-send><img src="${M}plane-dark.svg" alt="">Send</button>`;
 const toastEl = document.createElement('div');
 toastEl.className = 'drop-toast t-body';
 toastEl.innerHTML = '<i class="sym"></i><span></span>';
@@ -131,7 +148,7 @@ function layout(){
     el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
     el.style.opacity = a > 4.6 ? 0 : 1;
     el.style.zIndex = 50 + Math.round(k);   // keep stack order: the cover below stays in front of the one jutting out
-    el.classList.toggle('picked', isPicked(deck[i]));
+    el.classList.toggle('chosen', isPicked(deck[i]));
   });
 }
 let shown = -1;
@@ -187,8 +204,17 @@ function stopSnippet(silent){
   if (!silent && was !== null) renderNow(true);
 }
 function syncCount(){
-  $d('#drop-count').textContent = `${picks.length}/${MAX_PICKS} picked`;
-  layout(); renderNow(true);
+  $d('#drop-picks').innerHTML = picks.map((s, i) => `<div class="dpick"><button data-unpick="${i}" aria-label="Remove ${esc(s.t)}"><img src="${M}x.svg" alt=""></button>
+    ${thumbOf(s) ? `<img src="${thumbOf(s)}" alt="">` : '<span class="ph"></span>'}<div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption">${esc(s.a)}</p></div></div>`).join('');
+  $d('#drop-pcount').textContent = picks.length ? `${picks.length}/${MAX_PICKS} Songs` : '';
+  $d('[data-next]').disabled = !picks.length;
+  place(); layout(); renderNow(true);
+}
+// everything under the question moves down as songs are added (Figma 1045:5257)
+function place(){
+  const top = $d('.dtop'), h = top.offsetHeight;
+  drop.style.setProperty('--sy', `${120 + h + 24}px`);      // Suggested Answers sits 24px under Add a song
+  drop.style.setProperty('--ry', `${120 + h + 12}px`);
 }
 
 let anim = null;
@@ -273,7 +299,7 @@ function renderResults(){
           <img src="${isPicked(s) ? 'assets/node/check.svg' : 'assets/plus-circle.svg'}" alt=""></button></div>
     </li>`).join('') : `<p class="empty t-body">No songs match “${esc(qIn.value)}”</p>`;
 }
-function openSearch(){ stopSnippet(); drop.classList.add('searching'); renderResults(); }
+function openSearch(){ stopSnippet(); drop.classList.add('searching'); $d('.dscroll').scrollTop = 0; renderResults(); }
 function closeSearch(){ drop.classList.remove('searching'); qIn.value = ''; qIn.blur(); layout(); renderNow(true); }
 qIn.addEventListener('focus', openSearch);
 qIn.addEventListener('input', renderResults);
@@ -294,54 +320,90 @@ $d('#drop-results').addEventListener('click', e => {
 });
 
 /* ================= NAV: open, review, send ================= */
+function openFor(req){
+  if (req) REQUEST = {...REQUEST, ...req};
+  $d('#drop-user').textContent = REQUEST.user; $d('#drop-pfp').src = REQUEST.pfp; $d('#drop-qtext').textContent = REQUEST.q;
+  open();
+}
 function open(){
   closeSearch(); syncCount();
-  if (typeof push === 'function') push(drop);
+  window.tonoMsgs ? window.tonoMsgs.go(drop) : push(drop);
+  requestAnimationFrame(place);
 }
 function back(){
   if (drop.classList.contains('searching')) return closeSearch();
   stopSnippet();
-  if (typeof goHome === 'function') goHome();
+  window.tonoMsgs ? window.tonoMsgs.back() : goHome();
+}
+/* ================= DECORATE THE CD (Figma 982:12703 → 1070:5232) ================= */
+const cd = fin.querySelector('#mx-cd'), pal = fin.querySelector('#mx-pal'), canvas = cd.querySelector('canvas'), ctx = canvas.getContext('2d');
+const deco = {color:0, tool:null};
+function paint(){
+  const c = COLORS[deco.color];
+  cd.querySelector('.tint').style.background = deco.color ? c : 'transparent';
+  fin.querySelector('.swatch').style.background = c;
+  pal.querySelectorAll('[data-color]').forEach(b => b.classList.toggle('on', +b.dataset.color === deco.color));
+  fin.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === deco.tool));
+  pal.classList.toggle('on', deco.tool === 'color');
 }
 function renderFinal(){
-  fin.querySelector('#drop-fcount').textContent = `${picks.length}/${MAX_PICKS} songs picked`;
-  fin.querySelector('#drop-flist').innerHTML = picks.map((s, i) => `
-    <li>
-      <p class="t-caption grey">${String(i + 1).padStart(2, '0')}</p>
-      <div class="thumb">${thumbOf(s) ? `<img src="${thumbOf(s)}" alt="">` : ''}</div>
-      <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption grey">${esc(s.a)}</p></div>
-      <button class="rm" data-rm="${i}" aria-label="Remove ${esc(s.t)}"><img src="assets/node/x.svg" alt=""></button>
-    </li>`).join('');
-  fin.querySelector('[data-send]').disabled = picks.length === 0;
+  fin.querySelector('#mx-mylist').innerHTML = picks.map(s => `<div class="mx-row">${thumbOf(s) ? `<img src="${thumbOf(s)}" alt="">` : '<span class="ph"></span>'}
+    <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption">${esc(s.a)}</p></div></div>`).join('');
+  paint();
 }
+function resetDeco(){
+  deco.color = 0; deco.tool = null; ctx.clearRect(0, 0, canvas.width, canvas.height);
+  cd.querySelectorAll('.stk').forEach(x => x.remove()); cd.querySelector('.label').style.display = 'none';
+  fin.querySelector('#mx-note').value = ''; paint();
+}
+fin.addEventListener('click', e => {
+  const t = e.target.closest('[data-tool]');
+  if (t){
+    const tool = t.dataset.tool;
+    if (tool === 'image'){       // the first song's cover becomes the disc label
+      const lab = cd.querySelector('.label'), s0 = picks.find(thumbOf);
+      if (s0){ lab.src = thumbOf(s0); lab.style.display = lab.style.display === 'block' ? 'none' : 'block'; }
+      deco.tool = null;
+    } else if (tool === 'sticker'){
+      const k = document.createElement('span'), r = `${Math.round(Math.random() * 50 - 25)}deg`; k.className = 'stk';
+      k.style.left = `${50 + Math.random() * 190}px`; k.style.top = `${25 + Math.random() * 180}px`; k.style.setProperty('--r', r); k.style.transform = `rotate(${r})`;
+      cd.appendChild(k); deco.tool = null;
+    } else deco.tool = deco.tool === tool ? null : tool;
+    paint(); return;
+  }
+  const c = e.target.closest('[data-color]'); if (c){ deco.color = +c.dataset.color; deco.tool = null; paint(); return; }
+  if (deco.tool === 'color' && !e.target.closest('.mx-pal')){ deco.tool = null; paint(); }
+});
+// pen: draw on the disc
+let pen = null;
+const cdPt = e => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * canvas.width, (e.clientY - r.top) / r.height * canvas.height]; };
+cd.addEventListener('pointerdown', e => {
+  if (deco.tool !== 'pen') return;
+  pen = cdPt(e); cd.setPointerCapture(e.pointerId);
+  ctx.strokeStyle = deco.color ? COLORS[deco.color] : '#D5A1FA'; ctx.lineWidth = 6; ctx.lineCap = ctx.lineJoin = 'round';
+});
+cd.addEventListener('pointermove', e => { if (!pen) return; const p = cdPt(e); ctx.beginPath(); ctx.moveTo(...pen); ctx.lineTo(...p); ctx.stroke(); pen = p; });
+cd.addEventListener('pointerup', () => { pen = null; });
+cd.addEventListener('pointercancel', () => { pen = null; });
+const note = fin.querySelector('#mx-note');
+note.addEventListener('input', () => { note.style.height = 'auto'; note.style.height = note.scrollHeight + 'px'; });
+
 function review(){
-  if (!picks.length){ toast('Pick at least 1 song to send'); return; }
+  if (!picks.length){ toast('Add at least 1 song'); return; }
   stopSnippet();
   renderFinal();
   fin.scrollTop = 0;
-  fin.classList.add('on-top');
-  requestAnimationFrame(() => { fin.classList.remove('offright'); drop.classList.add('offleft'); current = fin; });
+  window.tonoMsgs ? window.tonoMsgs.go(fin) : push(fin);
 }
 function backFromFinal(){
-  fin.classList.add('offright'); drop.classList.remove('offleft'); current = drop;
-  setTimeout(() => fin.classList.remove('on-top'), 450);
+  window.tonoMsgs?.back();
   syncCount();
 }
 function send(){
   if (!picks.length) return;
-  const n = picks.length, name = fin.querySelector('#drop-name').value.trim() || 'My picks';
-  sent.querySelector('#drop-sent-sub').textContent = `“${name}” · ${n} song${n === 1 ? '' : 's'}`;
-  sent.classList.add('on');
-  setTimeout(() => {
-    // back to Home; the mailbox is cleared
-    fin.style.transition = drop.style.transition = 'none';
-    fin.classList.add('offright'); fin.classList.remove('on-top');
-    drop.classList.remove('offleft'); current = drop;
-    requestAnimationFrame(() => { fin.style.transition = drop.style.transition = ''; goHome(); });
-    sent.classList.remove('on');
-    document.querySelector('.more .badge')?.remove();
-    picks = []; deck = CASCADE.map(s => ({...s})); f = 4; buildCases(); syncCount();
-  }, 1700);
+  const out = {picks:picks.slice(), color:deco.color ? COLORS[deco.color] : null, note:note.value.trim()};
+  window.tonoMsgs?.mixtapeSent(out);
+  setTimeout(() => { picks = []; deck = CASCADE.map(s => ({...s})); f = 4; buildCases(); syncCount(); resetDeco(); }, 700);
 }
 
 drop.addEventListener('click', e => {
@@ -351,15 +413,16 @@ drop.addEventListener('click', e => {
 fin.addEventListener('click', e => {
   if (e.target.closest('[data-back]')) backFromFinal();
   else if (e.target.closest('[data-send]')) send();
-  else { const r = e.target.closest('[data-rm]'); if (r){ picks.splice(+r.dataset.rm, 1); renderFinal(); if (!picks.length) backFromFinal(); } }
 });
+$d('#drop-picks').addEventListener('click', e => { const u = e.target.closest('[data-unpick]'); if (u){ picks.splice(+u.dataset.unpick, 1); syncCount(); } });
 
 // entry point on Home: the Record Drop-off tile
 document.querySelector('.more .tile:nth-child(2)')?.addEventListener('click', open);
 document.getElementById('restart')?.addEventListener('click', () => {
   [drop, fin].forEach(v => { v.style.transition = 'none'; v.classList.add('offright'); v.classList.remove('offleft', 'on-top'); requestAnimationFrame(() => v.style.transition = ''); });
+  picks = []; deck = CASCADE.map(s => ({...s})); f = 4; buildCases(); syncCount(); resetDeco();
 });
 
 buildCases(); syncCount();
-window.tonoDrop = {open, get picks(){ return picks; }, get front(){ return deck[idx()].t; }};
+window.tonoDrop = {open, openFor, get picks(){ return picks; }, get front(){ return deck[idx()].t; }};
 })();

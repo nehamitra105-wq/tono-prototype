@@ -1,0 +1,219 @@
+/* =========================================================
+   HOME — hi-fis post UT (Figma section 982:15128)
+   date strip · daily prompt · Songs / Playlists For You · Your Saves · Concerts Near You
+   + Add a Song sheet, "Song submitted!" banner, Playlists For You, playlist, Your Saves, folder pages.
+   Every move uses the slow 600 ms curve (--slow).
+   ========================================================= */
+.h2-body{display:flex;flex-direction:column;gap:28px;padding:0 22px 108px}
+.h2-top{display:flex;flex-direction:column;gap:20px}
+.h2-head{width:360px;display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.h2-more{display:flex;gap:4px;align-items:center;color:rgba(248,248,248,.6)}
+.h2-more img{width:24px;height:24px;transform:rotate(180deg)}
+.h2-sec{display:flex;flex-direction:column;gap:14px}
+
+/* date strip: scroll sideways through earlier weeks */
+.h2-date{display:flex;flex-direction:column;gap:8px;width:356px}
+.h2-date{position:relative}
+.h2-cal{width:20px;height:20px;display:grid;place-items:center}
+/* calendar pop-up */
+.h2-calpop{position:absolute;left:0;right:0;top:36px;z-index:8;background:var(--navy);border:1px solid var(--secondary);border-radius:10px;padding:16px;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);opacity:0;transform:translateY(-8px);pointer-events:none;visibility:hidden;
+  transition:opacity .6s var(--slow), transform .6s var(--slow), visibility 0s .6s}
+.h2-calpop.on{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .6s var(--slow), transform .6s var(--slow)}
+.cp-head{display:flex;gap:8px;margin-bottom:14px}
+.cp-sel{position:relative;display:flex;align-items:center;border:1px solid var(--secondary);border-radius:10px;background:var(--off-black)}
+.cp-sel:first-child{flex:1}
+.cp-sel select{appearance:none;-webkit-appearance:none;background:none;border:0;color:var(--off-white);font:inherit;font-weight:300;font-size:16px;line-height:1.2;
+  padding:10px 38px 10px 12px;width:100%;cursor:pointer;outline:0}
+.cp-sel select option{background:var(--navy);color:var(--off-white)}
+.cp-sel img{position:absolute;right:10px;width:20px;height:20px;pointer-events:none}
+.cp-sel:focus-within{border-color:var(--lilac)}
+.cp-letters,.cp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cp-letters{margin-bottom:8px;text-align:center;color:rgba(248,248,248,.6)}
+.cp-grid .cd{height:40px;border-radius:10px;background:var(--secondary);color:var(--off-white);font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;font-size:14px;
+  transition:background .6s var(--slow), color .6s var(--slow)}
+.cp-grid .cd.today{box-shadow:inset 0 0 0 1px var(--lilac)}
+.cp-grid .cd.sel{background:var(--lilac);color:var(--navy)}
+.cp-grid .cd:disabled{background:none;opacity:.35;cursor:default}
+.cp-today{display:block;margin:14px auto 0;color:var(--lilac)}
+.h2-cal img{width:20px;height:20px}
+.h2-strip{display:flex;gap:5.665px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+.h2-strip::-webkit-scrollbar{display:none}
+.h2-week{display:flex;gap:5.665px;flex:none;scroll-snap-align:start}
+.h2-day{position:relative;width:46px;height:46px;flex:none;border-radius:10px;background:var(--secondary);color:var(--off-white);
+  transition:background .6s var(--slow), color .6s var(--slow)}
+.h2-day .wd{position:absolute;left:0;right:0;top:7px;font-weight:400;font-size:10px;line-height:normal;text-align:center}
+.h2-day .n{position:absolute;left:0;right:0;top:29.5px;transform:translateY(-50%);font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;font-size:20px;line-height:1;text-align:center}
+.h2-day.sel{background:var(--lilac);color:var(--navy)}
+.h2-day:disabled{background:var(--navy);opacity:.5;cursor:default}
+
+/* daily prompt card (single button, Figma "Daily Prompt v2") */
+.h2-daily .top .t-body{color:#fff}
+.h2-daily .swap{transition:opacity .6s var(--slow)}
+.h2-daily.fading .swap{opacity:0}
+.h2-daily .cta-one{width:312px}
+.h2-daily .cta-one .btn{width:100%;transition:background .6s var(--slow), color .6s var(--slow), border-color .6s var(--slow), transform .15s}
+
+/* song row: first one is the one playing (Figma 984:7779) */
+.play2{position:relative;width:47.719px;height:47.719px;flex:none}
+.play2 img{position:absolute;left:-12.15px;top:-11.57px;width:76.64px;height:76.64px;max-width:none}
+
+/* playlist covers: 2x2 grid */
+.pq{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;background:#fff;border-radius:10px;overflow:hidden}
+.pq img{width:100%;height:100%;object-fit:cover;display:block}
+.h2-pl{width:126px;flex:none;scroll-snap-align:start;text-align:left;display:block}
+.h2-pl .pq{width:126px;height:126px}
+.h2-pl .txt{position:relative;height:65px}
+.h2-pl .txt .title{position:absolute;left:4px;top:9px;width:118px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2-by{display:flex;gap:8px;align-items:center;white-space:nowrap}
+.h2-by img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+.h2-pl .h2-by{position:absolute;left:4px;top:33px}
+
+/* Your Saves: a stacked folder of collections (Figma "Save Folder") */
+.h2-logos{display:flex;gap:4px;align-items:center;height:23px;overflow:hidden}
+.h2-logos .ig{width:28px;height:28px;overflow:hidden;position:relative;flex:none}
+.h2-logos .ig img{position:absolute;left:0;top:0;height:100%;width:200%;max-width:none}
+.h2-logos .ytm{width:25px;height:25px;object-fit:cover;flex:none}
+.h2-logos .yt{width:33px;height:33px;object-fit:cover;flex:none}
+.fold{--s:1;width:calc(126px * var(--s));flex:none;scroll-snap-align:start;text-align:left;display:block}
+.fold .stack{position:relative;height:calc(134px * var(--s));overflow:hidden}
+.fold .lay{position:absolute;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;overflow:hidden;border-radius:calc(10px * var(--s))}
+.fold .lay.l1{left:calc(8px * var(--s));top:0;width:calc(110px * var(--s));height:calc(110px * var(--s));background:#8a8a8a}
+.fold .lay.l2{left:calc(3px * var(--s));top:calc(4px * var(--s));width:calc(120px * var(--s));height:calc(120px * var(--s));background:#6b6b6b}
+.fold .lay.l3{left:0;top:calc(8px * var(--s));width:calc(126px * var(--s));height:calc(126px * var(--s));background:#fff}
+.fold .lay.l1 .c,.fold .lay.l2 .c{opacity:.2}
+.fold .c{position:relative;overflow:hidden}
+.fold .c img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.fold .c img.crop{inset:auto;object-fit:fill}
+.fold .lbl{height:calc(28px * var(--s));position:relative}
+.fold .lbl p{position:absolute;left:calc(4px * var(--s));top:calc(9px * var(--s));font-size:calc(16px * var(--s));white-space:nowrap}
+.fold.add .l1{background:var(--secondary)}
+.fold.add .l2{background:var(--navy)}
+.fold.add .l3{background:var(--secondary);display:grid;place-items:center;grid-template-columns:1fr;grid-template-rows:1fr}
+.fold.add .l3 img{width:24px;height:24px}
+
+/* Concerts Near You */
+.h2-gig{width:323px;flex:none;scroll-snap-align:start}
+.h2-gig .art{position:relative;width:323px;height:126px;border-radius:10px;overflow:hidden;color:var(--off-white)}
+.h2-gig .art > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.h2-gig .fade{position:absolute;left:0;right:0;bottom:0}
+.h2-gig.pink .fade{height:86px;background:linear-gradient(180deg, rgba(247,84,114,0), #F75472 97.4%)}
+.h2-gig.purple .fade{height:69px;background:linear-gradient(180deg, rgba(88,88,208,0), #5858D0)}
+.h2-gig .b{position:absolute;font-weight:700;font-size:20px;line-height:normal;white-space:nowrap}
+.h2-gig .d{position:absolute;font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;font-size:20px;line-height:normal;white-space:nowrap}
+.h2-gig .mon{left:12px;top:79px}
+.h2-gig .day{left:12px;top:93px}
+.h2-gig .who{left:65px;top:79px}
+.h2-gig .from{left:289.5px;top:79px;transform:translateX(-50%)}
+.h2-gig .price{left:253px;top:93px}
+.h2-gig .where{position:absolute;left:65px;top:102px;display:flex;gap:3px;align-items:center;white-space:nowrap}
+.h2-gig .where img{width:12px;height:12px}
+.h2-gig .txt{position:relative;height:48px}
+.h2-gig .txt .t-body{position:absolute;left:4px;top:9px;width:319px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2-gig .txt .t-caption{position:absolute;left:4px;top:32px;color:#bcbcbc;white-space:nowrap}
+
+/* ---------- Add a Song sheet (Figma 1001:13745 / 13761 / 13719) ---------- */
+.h2-sheet-wrap{position:absolute;inset:0;z-index:55;pointer-events:none}
+.h2-sheet-wrap .bd{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .6s var(--slow)}
+.h2-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--off-black);border-radius:24px 24px 0 0;padding:44px 20px calc(73px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:24px;transform:translateY(100%);transition:transform .6s var(--slow), min-height .6s var(--slow);min-height:282px}
+.h2-sheet.searching{min-height:428px}
+.h2-sheet .grab{position:absolute;left:50%;top:13px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--off-white)}
+.h2-sheet .hd{display:flex;justify-content:space-between;align-items:flex-start;height:24px}
+.h2-sheet .hd button,.h2-sheet .x{width:24px;height:24px;flex:none}
+.h2-sheet .hd img,.h2-sheet .x img{width:24px;height:24px}
+.h2-sheet .fld{position:relative}
+.h2-input{display:block;border:1px solid var(--secondary);border-radius:10px;padding:12px 16px}
+.h2-input input{width:100%;font-weight:300;font-size:16px;line-height:1.2;color:var(--off-white)}
+.h2-input input::placeholder{color:rgba(248,248,248,.6);opacity:1}
+.h2-input:focus-within{border-color:var(--lilac)}
+.h2-input[hidden]{display:none}
+.h2-results{position:absolute;left:0;right:0;top:calc(100% - 1px);z-index:3;display:none;flex-direction:column;gap:10px;max-height:216px;overflow-y:auto;
+  background:var(--navy);border:1px solid var(--secondary);border-radius:10px;padding:12px 16px;scrollbar-width:thin;scrollbar-color:var(--secondary) transparent}
+.h2-results.on{display:flex}
+.h2-results button{display:flex;gap:10px;align-items:center;text-align:left;color:var(--off-white)}
+.h2-results button + button{border-top:1px solid var(--secondary);padding-top:10px}
+.h2-results .none{color:rgba(248,248,248,.6)}
+.h2-song > img,.h2-song > .ph{width:50px;height:50px;border-radius:4px;object-fit:cover;flex:none;background:var(--line)}
+.h2-song .names{display:flex;flex-direction:column;gap:4px;min-width:0}
+.h2-song .names span,.h2-song .names p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2-song .names .t-caption{color:rgba(248,248,248,.6)}
+.h2-pick{display:flex;gap:8px;align-items:center}
+.h2-pick[hidden]{display:none}
+.h2-submit{border-radius:10px;padding:12px 16px;background:var(--navy);color:rgba(248,248,248,.6);transition:background .6s var(--slow), color .6s var(--slow)}
+.h2-submit:not(:disabled){background:var(--off-white);color:var(--off-black)}
+.h2-sheet-wrap.open{pointer-events:auto}
+.h2-sheet-wrap.open .bd{opacity:1}
+.h2-sheet-wrap.open .h2-sheet{transform:none}
+
+/* "Song submitted!" banner */
+.h2-toast{position:absolute;left:20px;right:20px;top:58px;z-index:70;display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:16px;
+  background:var(--navy);border:1px solid var(--secondary);box-shadow:0 14px 34px rgba(0,0,0,.45);
+  transform:translateY(calc(-100% - 70px));opacity:0;pointer-events:none;transition:transform .6s var(--slow), opacity .6s var(--slow)}
+.h2-toast.on{transform:none;opacity:1}
+.h2-toast .ok{width:32px;height:32px;border-radius:50%;background:var(--lilac);display:grid;place-items:center;flex:none}
+.h2-toast .ok i{width:18px;height:18px;background:var(--navy);-webkit-mask:url(assets/node/check.svg) center/contain no-repeat;mask:url(assets/node/check.svg) center/contain no-repeat}
+.h2-toast .tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.h2-toast .tx .t-caption{color:rgba(248,248,248,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- Daily Prompt Playlist: past days (Figma 1171:5917) ---------- */
+.picked.past{padding:16px 14px;border-color:var(--line);min-height:85px}
+.ranked .dots-btn{width:34px;height:34px;display:grid;place-items:center}
+.ranked .dots-btn img{width:26.069px;height:26.069px}
+.ranked .thumb{border:0;background:none}
+.ranked .thumb img{width:48px;height:48px;border-radius:10px}
+
+/* ---------- Playlists For You / playlist / Your Saves / folder pages ---------- */
+.h2-page .subhead{position:relative}
+.h2-tools{grid-template-columns:92.15px 257.85px}
+.h2-list{display:flex;flex-direction:column;gap:12px;padding:0 22px 128px}
+.h2-card{display:flex;gap:11px;align-items:center;padding:17px 18px;border-radius:10px;background:var(--navy);overflow:hidden;text-align:left;width:358px}
+.h2-card .pq{width:124px;height:124px;flex:none}
+.h2-card .r{display:flex;flex-direction:column;gap:29px;width:185px;min-width:0}
+.h2-card .r .top{display:flex;flex-direction:column;gap:11px}
+.h2-card .name{font-weight:700;font-size:32px;line-height:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:linear-gradient(152.94deg, var(--lilac) 18.62%, var(--pinky-pie) 106.35%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.h2-card .tags{padding:0;height:auto;flex-wrap:nowrap}
+.h2-acts{display:flex;gap:33px;align-items:center;padding:12px 10px}
+.h2-acts .round{width:47.719px;height:47.719px;position:relative;flex:none;transition:transform .15s}
+.h2-acts .round:active{transform:scale(.94)}
+.h2-acts .round img{position:absolute;left:-12.15px;top:-11.57px;width:76.64px;height:76.64px;max-width:none}
+.h2-acts .round.on{filter:drop-shadow(0 0 6px rgba(213,161,250,.55))}
+.h2-acts .btn{width:176px}
+.h2-acts .btn.on{background:var(--off-black);border-color:var(--lilac);color:var(--lilac)}
+.h2-tracks{list-style:none;width:358px}
+.h2-tracks li{display:flex;gap:8px;align-items:center;height:74px;border-bottom:1px solid var(--line)}
+.h2-tracks .th{width:48px;height:48px;border-radius:10px;border:1px solid var(--line);overflow:hidden;flex:none;background:var(--line)}
+.h2-tracks .th img{width:46px;height:46px;object-fit:cover;display:block}
+.h2-tracks .names{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.h2-tracks .names p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2-tracks .names .t-caption{color:#bcbcbc}
+.h2-tracks .dots-btn{width:34px;height:34px;display:grid;place-items:center}
+.h2-tracks .dots-btn img{width:26.069px;height:26.069px}
+.h2-pbody{display:flex;flex-direction:column;gap:12px;padding:0 22px 128px}
+
+.h2-saves{display:flex;flex-direction:column;gap:28px;padding:0 22px 128px}
+.h2-plat{display:flex;flex-direction:column;gap:11px}
+.h2-chips{display:flex;gap:6px;height:32px}
+.h2-chip{display:flex;gap:5px;align-items:center;height:32px;padding:7px 9px;border-radius:999px;border:1px solid var(--nav-line);color:var(--off-white);
+  font-weight:400;font-size:10px;line-height:normal;white-space:nowrap;transition:background .6s var(--slow), color .6s var(--slow), border-color .6s var(--slow)}
+.h2-chip.on{background:var(--lilac);border-color:var(--lilac);color:var(--navy)}
+.h2-chip.all{font-weight:300;font-size:12px;line-height:1}
+.h2-chip .lg{width:16px;height:16px;flex:none;position:relative;overflow:hidden}
+.h2-chip .lg img{width:100%;height:100%;object-fit:contain}
+.h2-chip .lg.ig img{position:absolute;left:-1px;top:-2px;width:36px;height:19px;max-width:none;object-fit:fill}
+.h2-folds{display:grid;grid-template-columns:151.2px 151.2px;justify-content:space-between;row-gap:39px;padding:0 9px}
+.h2-folds .fold{--s:1.2;transition:opacity .6s var(--slow)}
+.h2-folds .fold.dim{opacity:.35}
+
+.h2-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.h2-item{display:flex;flex-direction:column;gap:8px;text-align:left}
+.h2-item .sq{position:relative;width:100%;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--line)}
+.h2-item .sq img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.h2-item .sq img.crop{inset:auto;object-fit:fill}
+.h2-item .src{display:flex;gap:6px;align-items:center;color:rgba(248,248,248,.6)}
+.h2-item .src img{width:16px;height:16px;object-fit:contain}
+.h2-item .src .ig{width:16px;height:16px;position:relative;overflow:hidden;flex:none}
+.h2-item .src .ig img{position:absolute;left:0;top:0;width:200%;height:100%;max-width:none;object-fit:fill}
+.h2-empty{color:rgba(248,248,248,.6);padding:24px 0}
+@media (prefers-reduced-motion:reduce){.h2-sheet,.h2-toast,.h2-daily .swap{transition:none}}

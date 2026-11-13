@@ -229,29 +229,72 @@ $p('#pl-tag-in').addEventListener('keydown', e => {
   if (t && !draft.some(d => d.toLowerCase() === t.toLowerCase())){ draft.push(t.length > 18 ? t.slice(0, 18) : t); e.target.value = ''; renderTags(); }
 });
 
-/* ---------- tab bar: Discovery ⇄ Player ---------- */
+/* ---------- mini player (Figma 1003:19676) ----------
+   Shows on the four tab landing pages (we assume something is always playing), tucked just above the nav bar.
+   Tapping it slides the full player up; Back slides it down to the page it came from. */
 const tabs = app.querySelectorAll('.tabbar .tab');
-const setTab = name => tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+const LAND = new Set(['view-home', 'view-community', 'view-nodes', 'view-profile']);
+const mini = document.createElement('div');
+mini.className = 'mini-pl'; mini.setAttribute('role', 'region'); mini.setAttribute('aria-label', 'Now playing');
+mini.innerHTML = `
+  <button class="mp-open" data-open aria-label="Open the player: ${esc(SONG.title)} by ${esc(SONG.artist)}"><span class="t-header">${esc(SONG.title)}</span><span class="t-body">${esc(SONG.artist)}</span></button>
+  <button class="mp-btn" data-madd aria-label="Add to playlist"><img src="${P}mini-add.svg" alt=""></button>
+  <button class="mp-btn" data-mplay aria-label="Play"><img src="${P}mini-play.svg" alt=""></button>
+  <div class="mp-bar" aria-hidden="true"><i></i></div>`;
+app.querySelector('.tabbar').before(mini);
+function renderMini(){
+  mini.querySelector('[data-mplay] img').src = `${P}mini-${st.playing ? 'pause' : 'play'}.svg`;
+  mini.querySelector('[data-mplay]').setAttribute('aria-label', st.playing ? 'Pause' : 'Play');
+  mini.querySelector('[data-madd] img').src = `${P}mini-add${st.add ? '-on' : ''}.svg`;
+  mini.querySelector('[data-madd]').setAttribute('aria-pressed', st.add);
+  mini.querySelector('.mp-bar i').style.width = `${(st.pos * 100).toFixed(2)}%`;
+}
+mini.addEventListener('click', e => {
+  if (e.target.closest('[data-open]')) return openPlayer();
+  if (e.target.closest('[data-mplay]')){ st.playing = !st.playing; render(); renderMini(); return; }
+  if (e.target.closest('[data-madd]')){ st.add = !st.add; render(); renderMini(); }
+});
+// keep the mini player in step with the full one (its buttons share the same state)
+remote.addEventListener('click', () => requestAnimationFrame(renderMini));
+// show it only while a landing page is the current screen
+function syncMini(){
+  const on = !!current && LAND.has(current.id);
+  mini.classList.toggle('on', on);
+  app.classList.toggle('mini-on', on);
+}
+setInterval(syncMini, 120);
+// while playing, the progress line creeps along
+let lastT = performance.now();
+(function tick(now){
+  if (st.playing){ st.pos = (st.pos + (now - lastT) / 1000 / 222) % 1; mini.querySelector('.mp-bar i').style.width = `${(st.pos * 100).toFixed(2)}%`; }
+  lastT = now; requestAnimationFrame(tick);
+})(lastT);
+
+let from = null;
 function openPlayer(){
   if (current === v) return;
-  // leave any sub-screen (playlist, catalogue, drop-off) without animating Home in first
-  if (current !== home){
-    const sub = current;
-    sub.style.transition = 'none'; sub.classList.add('offright'); sub.classList.remove('on-top');
-    requestAnimationFrame(() => { sub.style.transition = ''; });
-    home.classList.remove('offleft'); current = home;
-  }
-  setTab('player'); push(v);
+  from = current;
+  v.style.transition = 'none'; v.classList.remove('offright', 'offleft'); v.classList.add('offdown', 'on-top'); v.offsetHeight; v.style.transition = '';
+  requestAnimationFrame(() => v.classList.remove('offdown'));
+  current = v; syncMini();
 }
-function closePlayer(){ setTab('discovery'); goHome(); }
-tabs.forEach(t => t.addEventListener('click', () => {
-  if (t.dataset.tab === 'player') openPlayer();
-  else if (t.dataset.tab === 'discovery' && current === v) closePlayer();
-  else if (t.dataset.tab === 'discovery' && current !== home) goHome();
-}));
+function hideNow(){
+  v.style.transition = 'none'; v.classList.remove('offdown', 'on-top'); v.classList.add('offright'); v.offsetHeight; v.style.transition = '';
+}
+function closePlayer(){
+  if (current !== v) return;
+  v.classList.add('offdown');
+  current = from || home; from = null; syncMini();
+  setTimeout(() => { if (current !== v) hideNow(); }, 600);
+}
+// switching tabs from the full player: drop it instantly and let the tab do its usual thing
+document.addEventListener('click', e => {
+  if (current !== v || !e.target.closest('.tabbar .tab')) return;
+  hideNow(); current = from || home; from = null;
+}, true);
 $p('[data-back]').addEventListener('click', closePlayer);
-document.getElementById('restart')?.addEventListener('click', () => { setTab('discovery'); ov.classList.remove('on'); });
+document.getElementById('restart')?.addEventListener('click', () => { if (current === v){ hideNow(); current = home; } ov.classList.remove('on'); });
 
-render();
-window.tonoPlayer = {open:openPlayer, get state(){ return {...st, tags:st.tags.slice()}; }};
+render(); renderMini();
+window.tonoPlayer = {open:openPlayer, close:closePlayer, get state(){ return {...st, tags:st.tags.slice()}; }};
 })();
