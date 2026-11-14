@@ -135,7 +135,7 @@
 .drop-view.msg-layer .dresults{top:var(--ry, 307px);bottom:100px}
 .dcontinue{position:absolute;left:20px;right:20px;bottom:25px;z-index:8;border-radius:10px;padding:12px 16px;background:var(--off-white);color:var(--off-black);
   transition:opacity .6s var(--slow)}
-.dcontinue:disabled{opacity:.4;cursor:default}
+.dcontinue:disabled{opacity:1;background:var(--navy);color:rgba(248,248,248,.6);cursor:default}   /* solid, so the art behind never shows through */
 
 /* the page scrolls under a solid header; Continue stays at the bottom */
 .drop-view.msg-layer .dscroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
