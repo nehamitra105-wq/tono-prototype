@@ -1,6 +1,7 @@
 /* =========================================================
    COMMUNITY — follows the Figma prototype (section 861:7443):
-   Community ─ Pit Stop → pop-up (search a song → pick → Drop Off) → map pans to Jackson Heights, song pin shows
+   Community ─ map glides in to you; red dots (songs others dropped) pop in as they come into frame;
+             tap an empty spot within 1 mi → new dot + Add a song → Pit Stop (search a song → Drop Off); farther = "too far" heads-up
              ├ map pin → song card (tap again to hide)
              ├ "People who match your vibe" card → their profile ("You both like …")
              ├ Ask a question → sheet → Post question → My Activity tab
@@ -95,20 +96,19 @@ function qaGrid(){
 // songs other listeners already left at the drop-off points out of your reach
 const S = (t, a, img) => ({t, a, img:C + img});
 const AREA = [
-  null,
+  S('Night Train', 'Milena', 'night-train.png'),
   S('Midnight City', 'M83', 'midnight-city.png'),
   S('Empire State of Mind', 'Jay-Z, Alicia Keys', 't2.png'),
   S('Late Night Lover', '三稜鏡', 'late-night-lover.png'),
   S('What’s Next', 'Drake', 't3.png'),
   S('Coney Island Baby', 'Lou Reed', 't1.png'),
   S('Sweetest Pie', 'Megan Thee Stallion, Dua Lipa', 'sweetest-pie.png'),
-  null,
+  S('Sweet Venom', 'Enhypen', 'sweet-venom.png'),
 ];
-// one per red dot: the drop-off points closest to you offer "Add a song" (then show yours);
-// every other dot already has a song someone else dropped there
+// one per red dot: each is a song someone dropped there; a spot you tapped (within your radius) offers "Add a song"
+// until you've left yours
 function locCard(i){
-  // a spot you searched for also offers "Add a song" (until you've left one there)
-  const d = st.drops[i] || (isNear(i) || st.searched === i ? null : AREA[i]), where = SPOTS[i].name;
+  const d = st.drops[i] || (SPOTS[i].mine ? null : (SPOTS[i].song || AREA[i])), where = SPOTS[i].name;
   const pos = HAS_MAP ? 'left:0;top:0' : 'left:45px;top:235px';
   const top = d ? `<div class="card">
       <div class="row">
@@ -125,7 +125,7 @@ function locCard(i){
 
 /* ---------- live map (Leaflet + Esri dark gray tiles, tinted navy in CSS) ---------- */
 const HAS_MAP = typeof L !== 'undefined';
-const HOME_VIEW = {c:[40.73, -73.955], z:11.5};
+const HOME_VIEW = {c:[40.735, -73.925], z:10.4};   // the whole city, before it glides in to you
 // every red dot is a spot a song can be dropped at; the first is where the listener is (Pit Stop button / re-center)
 const SPOTS = [
   {name:LOCATION, ll:[40.7557, -73.8831]},
@@ -136,6 +136,16 @@ const SPOTS = [
   {name:'Crown Heights, Brooklyn, NY', ll:[40.676, -73.951]},
   {name:'Harlem, Manhattan, NY', ll:[40.815, -73.943]},
   {name:'East Elmhurst, Queens, NY', ll:[40.761, -73.865]},
+  // more drops: a cluster around you, and a few across the city that pop up on the way in
+  {name:'Elmhurst, Queens, NY', ll:[40.7452, -73.8790], song:S('telepatia', 'Kali Uchis', 'telepatia.png')},
+  {name:'Corona, Queens, NY', ll:[40.7525, -73.8625], song:S('Juicy', 'Doja Cat ft. Tyga', 'juicy-doja.png')},
+  {name:'North Corona, Queens, NY', ll:[40.7672, -73.8600], song:S('Telephone Man', 'Meri Wilson', 'telephone-man.png')},
+  {name:'Travers Park, Queens, NY', ll:[40.7568, -73.8960], song:S('Late Night Lover', '三稜鏡', 'late-night-lover.png')},
+  {name:'Astoria, Queens, NY', ll:[40.7644, -73.9235], song:S('Perfect Night', 'Le Sserafim', 'perfect-night.png')},
+  {name:'Long Island City, Queens, NY', ll:[40.7447, -73.9485], song:S('vapor rub', 'thuy', 'vapor-rub.png')},
+  {name:'Flushing, Queens, NY', ll:[40.7675, -73.8331], song:S('Telephone', 'Lady Gaga ft. Beyonce', 'telephone.png')},
+  {name:'Williamsburg, Brooklyn, NY', ll:[40.7081, -73.9571], song:S('Brooklyn’s Finest', 'JAY-Z, The Notorious B.I.G.', 'brooklyns-finest.png')},
+  {name:'Upper West Side, Manhattan, NY', ll:[40.7870, -73.9754], song:S('Juicy', 'Notorious B.I.G.', 'juicy-biggie.png')},
 ];
 const JH = SPOTS[0].ll;
 const ME = [JH[0] + .0045, JH[1] + .011];          // where the listener is (the person icon)
@@ -166,6 +176,7 @@ function buildMap(){
     <div class="cm-search">${ic('magnifying-glass')}<input type="text" placeholder="Search location..." aria-label="Search location" autocomplete="off" data-find></div>
     <div class="cm-res cm-spots cm-find" role="listbox" aria-label="Locations"></div>
     <div class="cm-leaf" id="cm-leaf">${HAS_MAP ? '' : `<img class="map" src="${C}map.png" alt="">`}</div>
+    <p class="cm-toast t-caption" role="status">This area is too far to drop off a song</p>
     <div class="cm-tools">
       <button class="cm-pit" data-recenter aria-label="Re-center"><span class="cm-round">${ic('gps-fix')}</span><span class="t-caption">Re-center</span></button>
     </div>
@@ -192,7 +203,17 @@ function buildMap(){
   const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
   L.tileLayer(ESRI + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxNativeZoom:16, attribution:'Esri, HERE, Garmin, © OpenStreetMap'}).addTo(map);
   L.tileLayer(ESRI + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxNativeZoom:16, pane:'overlayPane', className:'cm-labels'}).addTo(map);
+  // your drop-off radius: a faint ring around you
+  L.circle(ME, {radius:NEAR_MI * 1609.34, interactive:false, className:'cm-radius'}).addTo(map);
   SPOTS.forEach((p, i) => { markers[i] = L.marker(p.ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); });
+  map.on('moveend', () => { syncVis(); farCheck(); });
+  // tap an empty part of the map: inside your radius a new dot drops there with "Add a song"; outside, a heads-up
+  map.on('click', e => {
+    if (openAtDown !== null || e.originalEvent.target.closest('[data-loc], .cm-search, .cm-find, .cm-tools')) return;
+    if (distMi(ME, [e.latlng.lat, e.latlng.lng]) > NEAR_MI){ toast(); return; }
+    const i = placeTemp([e.latlng.lat, e.latlng.lng]);
+    setOpen(i);
+  });
   L.marker(ME, {icon:L.divIcon({className:'cm-me-icon', html:`<i class="cm-ic" style="--i:url(${C2}person.svg)"></i>`, iconSize:[24, 24], iconAnchor:[12, 12]}), keyboard:false, interactive:false}).addTo(map);
 }
 /* ---------- search a location: suggestions as you type; pick one (or Enter) to fly to its dot ---------- */
@@ -209,17 +230,17 @@ function wireFind(){
       : `<p class="t-body cm-mut">No places match “${esc(inp.value.trim())}”</p>`;
     list.classList.add('on');
   };
+  // a place with a dot opens its song; a place near you gets a new dot to drop at; anywhere else just flies there
+  // (and the too-far heads-up shows once it lands)
   const pick = p => {
     list.classList.remove('on'); inp.value = p.name; inp.blur();
     let i = SPOTS.findIndex(o => o.name === p.name);
-    if (i < 0){ SPOTS.push({name:p.name, ll:p.ll}); i = SPOTS.length - 1; if (map) markers[i] = L.marker(p.ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); }
-    const was = st.searched; st.searched = i;
-    if (map && was != null && markers[was]) markers[was].setIcon(spotIcon(was));
-    if (map) markers[i].setIcon(spotIcon(i));
+    if (i < 0 && distMi(ME, p.ll) <= NEAR_MI) i = placeTemp(p.ll, p.name);
     setOpen(null);
     vC.scrollTo({top:0, behavior:'smooth'});
-    if (map){ map.flyTo(SPOTS[i].ll, 14, {duration:.9}); map.once('moveend', () => setOpen(i)); }
-    else setOpen(i);
+    if (!map){ if (i >= 0) setOpen(i); return; }
+    map.flyTo(i >= 0 ? SPOTS[i].ll : p.ll, 14, {duration:.9});
+    if (i >= 0) map.once('moveend', () => setOpen(i));
   };
   inp.addEventListener('input', render);
   inp.addEventListener('focus', render);
@@ -230,7 +251,7 @@ function wireFind(){
 }
 const spotIcon = i => L.divIcon({className:'cm-loc-icon', html:locCard(i), iconSize:[280, 110], iconAnchor:[140, 103]});
 function refreshPin(){
-  if (HAS_MAP) markers.forEach((m, i) => { m.setIcon(spotIcon(i)); m.setZIndexOffset(st.open === i ? 2000 : 0); });
+  if (HAS_MAP){ markers.forEach((m, i) => { m.setIcon(spotIcon(i)); m.setZIndexOffset(st.open === i ? 2000 : 0); }); syncVis(true); }
   else { vC.querySelector('[data-loc]')?.remove(); vC.querySelector('.cm-leaf').insertAdjacentHTML('beforeend', locCard(0)); }
 }
 // show one spot's prompt/card at a time, on top of the other pins
@@ -251,7 +272,63 @@ function fitCard(i){
   else if (c.right > m.right - 56) dx = c.right - m.right + 56;
   if (dx || dy) map.panBy([dx, dy], {duration:.4});
 }
-function recenter(z){ if (map) map.flyTo(JH, z ?? (st.drops[0] ? 13 : HOME_VIEW.z), {duration:.8}); }
+function recenter(){ if (map) map.flyTo(ME, ME_Z, {duration:1.2}); }
+const ME_Z = 14.2;
+// opening the map: start on the whole city, then glide in until you're in the middle
+function zoomToMe(){
+  if (!map) return;
+  map.setView(HOME_VIEW.c, HOME_VIEW.z, {animate:false});
+  markers.forEach(m => m.getElement()?.classList.remove('cm-in'));
+  setTimeout(() => {
+    if (current !== vC) return;
+    // dots pop up around the map on the way in (a few at a time, as their spots are in frame)
+    let last = 0;
+    const pop = () => { const t = performance.now(); if (t - last > 140){ last = t; syncVis(); } };
+    map.on('zoom move', pop);
+    map.flyTo(ME, ME_Z, {duration:2});
+    map.once('moveend', () => map.off('zoom move', pop));
+  }, 650);
+}
+// red dots only show once their spot is in frame: they pop in as the map settles
+function syncVis(instant){
+  if (!map) return;
+  const b = map.getBounds().pad(-.04);
+  let k = 0;
+  markers.forEach((m, i) => {
+    const el = m.getElement(); if (!el) return;
+    const inView = b.contains(m.getLatLng());
+    if (!inView){ el.classList.remove('cm-in'); el.style.transitionDelay = ''; return; }
+    if (el.classList.contains('cm-in')) return;
+    el.style.setProperty('--d', instant ? '0ms' : `${(k++) * 90}ms`);
+    el.classList.add('cm-in');
+  });
+}
+// zoomed in somewhere out of reach: a small heads-up that it's too far to drop a song
+let farWas = false, toastT = 0;
+function farCheck(){
+  const far = map.getZoom() >= 12.5 && distMi(ME, [map.getCenter().lat, map.getCenter().lng]) > NEAR_MI + .25;
+  if (far && !farWas) toast();
+  farWas = far;
+}
+function toast(){
+  const t = vC.querySelector('.cm-toast'); if (!t) return;
+  clearTimeout(toastT); t.classList.add('on');
+  toastT = setTimeout(() => t.classList.remove('on'), 2600);
+}
+function removeSpot(i){
+  markers[i]?.remove(); markers.splice(i, 1); SPOTS.splice(i, 1);
+  if (HAS_MAP) markers.forEach((m, k) => m.setIcon(spotIcon(k)));   // indices shift: re-render the cards
+  syncVis(true);
+}
+// a dot you placed (tap or search, within your radius); one waiting "Add a song" dot at a time — a new tap moves it
+function placeTemp(ll, name){
+  const near = name || [...SPOTS.filter(o => !o.mine), ...PLACES].reduce((a, o) => distMi(ll, o.ll) < distMi(ll, a.ll) ? o : a).name;
+  let i = SPOTS.findIndex(o => o.mine && !st.drops[SPOTS.indexOf(o)]);
+  if (i < 0){ SPOTS.push({name:near, ll, mine:true}); i = SPOTS.length - 1; if (map) markers[i] = L.marker(ll, {icon:spotIcon(i), keyboard:false, interactive:false}).addTo(map); }
+  else { SPOTS[i].name = near; SPOTS[i].ll = ll; if (map){ markers[i].setLatLng(ll); markers[i].setIcon(spotIcon(i)); } }
+  if (map) requestAnimationFrame(() => syncVis(true));
+  return i;
+}
 
 function renderC(){
   requestAnimationFrame(() => { placeInk(false); sizePane(); });
@@ -450,11 +527,15 @@ const ALL_OV = [oPit, oAsk, oReply, oMore];
 /* ---------- interactions ---------- */
 // tapping anywhere outside an open pin hides its song card / prompt (a map drag doesn't count as a tap)
 let downAt = null;
-vC.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; }, true);
+let openAtDown = null;
+vC.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; openAtDown = st.open; }, true);
 vC.addEventListener('click', e => {
   if (st.open === null || e.target.closest('[data-loc]')) return;
   if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
+  const was = st.open;
   setOpen(null);
+  // a dot you just placed goes away with its "Add a song" if you tap elsewhere without adding one
+  if (SPOTS[was]?.mine && !st.drops[was]) removeSpot(was);
 }, true);
 vC.addEventListener('click', e => {
   const pitBtn = e.target.closest('[data-pit]');
@@ -626,14 +707,14 @@ function openCommunity(){
   P().resetToHome(false);
   renderC(); refreshPin(); vC.scrollTop = 0;
   P().setTab('community'); P().go(vC);
-  if (map) requestAnimationFrame(() => map.invalidateSize());
+  if (map) requestAnimationFrame(() => { map.invalidateSize(); zoomToMe(); });
   // first visit: the walkthrough opens right away with the page (opening Community is what starts it)
   // first visit: a 2s beat on the page, then the walkthrough starts (only if they're still here)
   clearTimeout(obWait);
   if (!seen) obWait = setTimeout(() => { if (current === vC) obStart(); }, 2000);
 }
 
-document.getElementById('restart')?.addEventListener('click', () => { ALL_OV.forEach(close); clearTimeout(st._pinT); st = fresh(); seen = false; obEnd(); MATCHES.forEach(m => { m.following = false; }); if (map){ refreshPin(); map.setView(HOME_VIEW.c, HOME_VIEW.z); } });
+document.getElementById('restart')?.addEventListener('click', () => { ALL_OV.forEach(close); clearTimeout(st._pinT); st = fresh(); seen = false; obEnd(); MATCHES.forEach(m => { m.following = false; }); if (map){ for (let i = SPOTS.length - 1; i >= 0; i--) if (SPOTS[i].mine){ markers[i].remove(); markers.splice(i, 1); SPOTS.splice(i, 1); } refreshPin(); map.setView(HOME_VIEW.c, HOME_VIEW.z); } });
 renderC();
 window.tonoCommunity = {open:openCommunity, get state(){ return {...st}; }};
 })();

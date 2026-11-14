@@ -219,3 +219,13 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-ob .txt{font-size:16px;line-height:1.2}
 /* location search suggestions under the map's search bar */
 .cm-map .cm-find{left:20px;right:20px;top:92px;z-index:6}
+
+/* red dots pop in only once their spot is in frame */
+.cm-loc-icon .cm-loc .pin{transform:scale(0);opacity:0;transition:transform .35s var(--slow), opacity .25s}
+.cm-loc-icon.cm-in .cm-loc .pin{transform:none;opacity:1;transition-delay:var(--d, 0ms)}
+/* your drop-off radius */
+.cm-radius{stroke:var(--lilac);stroke-opacity:.35;stroke-width:1;stroke-dasharray:4 4;fill:var(--lilac);fill-opacity:.05}
+/* too far to drop a song: a small heads-up under the search bar */
+.cm-toast{position:absolute;left:50%;top:98px;transform:translate(-50%,-6px);z-index:5;padding:8px 14px;border-radius:20px;background:var(--off-black);color:var(--off-white);white-space:nowrap;
+  box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s var(--slow), transform .3s var(--slow)}
+.cm-toast.on{opacity:1;transform:translate(-50%,0)}
