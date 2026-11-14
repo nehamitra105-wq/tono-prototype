@@ -1,0 +1,38 @@
+/* ADD TO PLAYLIST sheet + pop-up (shared) */
+.apl-wrap{position:absolute;inset:0;z-index:70;pointer-events:none}
+.apl-wrap .bd{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .6s var(--slow)}
+.apl-wrap.open{pointer-events:auto}
+.apl-wrap.open .bd{opacity:1}
+.apl-sheet{position:absolute;left:0;right:0;bottom:0;top:54px;background:var(--off-black);border-radius:24px 24px 0 0;padding:24px 20px 0;   /* reaches up to just under the time */
+  display:flex;flex-direction:column;gap:20px;
+  transform:translateY(100%);transition:transform .6s var(--slow)}
+.apl-wrap.open .apl-sheet{transform:none}
+.apl-sheet .hd{position:relative;display:flex;align-items:center;justify-content:space-between;height:32px}
+.apl-sheet .x .ic{display:block;width:24px;height:24px;background:var(--off-white);-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.apl-sheet .hd .t-header{position:absolute;left:50%;transform:translateX(-50%);color:var(--off-white);white-space:nowrap}
+.apl-sheet .ok{width:32px;height:32px;border-radius:50%;background:var(--lilac);display:grid;place-items:center;transition:opacity .3s, background .3s}
+.apl-sheet .ok:disabled{background:var(--secondary);opacity:.6}
+.apl-sheet .ok .ic{width:20px;height:20px;background:var(--navy);-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.apl-sheet .ok:disabled .ic{background:var(--off-white)}
+.apl-sheet .song{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:var(--navy)}
+.apl-sheet .song[hidden]{display:none}
+.apl-sheet .song img{width:44px;height:44px;border-radius:6px;object-fit:cover;flex:none}
+.apl-sheet .tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.apl-sheet .tx > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.apl-sheet .t-body{color:var(--off-white)}
+.apl-sheet .t-caption{color:rgba(248,248,248,.6)}
+.apl-sheet .list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px 40px;display:flex;flex-direction:column;gap:16px}
+.apl-sheet .list::-webkit-scrollbar{display:none}
+.apl-sheet .row{display:flex;gap:12px;align-items:center;width:100%;text-align:left}
+.apl-sheet .row .grid{width:56px;height:56px;border-radius:6px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;flex:none}
+.apl-sheet .row .grid img{width:28px;height:28px;object-fit:cover;display:block}
+.apl-sheet .row .tx{flex:1}
+.apl-sheet .row .box{width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(248,248,248,.6);flex:none;position:relative;transition:background .25s var(--slow), border-color .25s var(--slow)}
+.apl-sheet .row.on .box{background:var(--lilac);border-color:var(--lilac)}
+.apl-sheet .row .box::after{content:"";position:absolute;inset:3px;background:var(--navy);-webkit-mask:url(assets/deep/ph-check.svg) center/contain no-repeat;mask:url(assets/deep/ph-check.svg) center/contain no-repeat;opacity:0;transition:opacity .2s}
+.apl-sheet .row.on .box::after{opacity:1}
+.apl-toast{position:absolute;left:50%;bottom:172px;z-index:71;transform:translate(-50%,10px);padding:12px 18px;border-radius:999px;background:var(--off-white);color:var(--off-black);white-space:nowrap;max-width:362px;display:flex;gap:10px;align-items:center;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .35s var(--slow), transform .35s var(--slow)}
+.apl-toast.on{opacity:1;transform:translate(-50%,0)}
+.apl-toast img{width:22px;height:22px;object-fit:cover;object-position:left center;flex:none}   /* just the round mark from the Spotify logo */
+.apl-toast span{overflow:hidden;text-overflow:ellipsis}

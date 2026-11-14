@@ -46,7 +46,7 @@ const genres = c => `<div class="pf-genres"><p class="hd">Top genres</p><div cla
 const tops = (title, hl, rows) => `<div class="pf-tops">
   <div class="hd"><p class="t-body">${title}</p><p class="t-caption mut">This month</p></div>
   <div class="hl"><img src="${hl.img}" alt=""><div class="tx">${hl.lines.join('')}</div></div>
-  <ol class="t-caption">${rows.map((r, i) => `<li><span><span class="mut">#${i + 2}</span>${esc(r[0])}</span><span class="mut">${r[1]}</span></li>`).join('')}</ol></div>`;
+  <ol class="t-body">${rows.map((r, i) => `<li><span><span class="mut">#${i + 2}</span><span class="nm">${esc(r[0])}</span></span><span class="mut">${r[1]}</span></li>`).join('')}</ol></div>`;
 
 const ARROWS = `<button class="cb" aria-label="Previous"><img src="assets/arrow-left-cal.svg" alt=""></button>`;
 function hours(mode){
@@ -116,7 +116,7 @@ function renderMe(){
       ${stats()}
       <div class="pf-cards">${card('You helped 356 people discover this song', 'Lowlife by That Poppy', '', 264)}${card('You’re in the top 5% of', 'Ethel Cain')}</div>
       ${genres(['#AA43F4', '#F75472', '#5858D0', '#B66EE9', '#E13F5D'])}
-      ${tops('Top artists', {img:PF + 'sleep-token.png', lines:['<p class="t-caption">Sleep Token</p>', '<p class="t-caption2 dim">456 plays</p>']}, [['Justice', 94], ['NewJeans', 88], ['Magdalena Bay', 75], ['The Maria’s', 61]])}
+      ${tops('Top artists', {img:PF + 'sleep-token.png', lines:['<p class="t-body">Sleep Token</p>', '<p class="t-caption dim">456 plays</p>']}, [['Justice', 94], ['NewJeans', 88], ['Magdalena Bay', 75], ['The Maria’s', 61]])}
       ${hours(meHours)}
     </div></div>`;
 }
@@ -145,7 +145,7 @@ function renderThem(){
       ${stats()}
       <div class="pf-cards">${card('You both like', 'Malcolm Todd', 'Chest Pain (I Love) is a midnight favorite for you two.', 246)}${card('They’ve recently been listening to...', 'Summer-daze Afrobeats')}</div>
       ${genres(['#F75472', '#BD2FA9', '#812FD1', '#5858D0', '#C62F9D'])}
-      ${tops('Top songs', {img:PF + 'starboy.png', lines:['<p class="t-caption2 dim">The Weeknd</p>', '<p class="t-caption">Starboy</p>', '<p class="t-caption2 dim">326 plays</p>']}, [['See You Again by Tyler, The Creator', 94], ['Change in the House of Flies by Deftones', 88], ['Killshot by Magdalena Bay', 75], ['Sienna by the Marias', 61]])}
+      ${tops('Top songs', {img:PF + 'starboy.png', lines:['<p class="t-caption dim">The Weeknd</p>', '<p class="t-body">Starboy</p>', '<p class="t-caption dim">326 plays</p>']}, [['See You Again by Tyler, The Creator', 94], ['Change in the House of Flies by Deftones', 88], ['Killshot by Magdalena Bay', 75], ['Sienna by the Marias', 61]])}
       ${hours(themHours)}
     </div></div>`;
 }

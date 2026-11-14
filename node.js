@@ -1203,7 +1203,7 @@ menu.addEventListener('click', e => {
   if (ctx.out != null){
     const o = ctx.out === 'now' ? board.now : board.outputs[ctx.out];
     if (act === 'restore'){ board.now = {...o, fresh:true}; linkOutput(board.now); renderProj(); proj.scrollTo({top:0, behavior:'smooth'}); note(`Restored “${o.title}”`, `${D}ph-arrow-counter-clockwise.svg`); }
-    if (act === 'playlist') note(`Added “${o.title}” to a playlist`, `${D}ph-plus.svg`);
+    if (act === 'playlist') window.tonoAddToPlaylist?.({t:o.title, a:o.artist, img:o.img});
     if (act === 'save') note(`Saved “${o.title}” to your collection`, `${D}ph-heart.svg`);
     if (act === 'node'){
       const ids = addNodes([{type:'song', title:o.title, sub:o.artist, img:o.img, cd:false}]);

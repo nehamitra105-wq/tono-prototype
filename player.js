@@ -180,9 +180,14 @@ v.addEventListener('pointerdown', e => { if (e.pointerType !== 'touch' && !e.but
 v.addEventListener('pointerup', e => { if (e.pointerType !== 'touch') swEnd(e.clientX, e.clientY); });
 v.addEventListener('dragstart', e => { if (e.target.closest('.pl-stage, .pl-head')) e.preventDefault(); });
 
+// + opens the Add to playlist sheet for what's playing; it fills in once the song is in a playlist
+function addToPl(){
+  window.tonoAddToPlaylist?.({t:SONG.title, a:SONG.artist, img:`${P}cover.png`}, () => { st.add = true; render(); renderMini(); });
+}
 /* remote buttons toggle to their "on" variant */
 remote.addEventListener('click', e => {
   const b = e.target.closest('[data-btn]');
+  if (b && b.dataset.btn === 'add'){ addToPl(); return; }
   if (b){ st[b.dataset.btn] = !st[b.dataset.btn]; render(); return; }
   if (e.target.closest('[data-tag-open]')) openTags();
 });
@@ -266,7 +271,7 @@ function renderMini(){
 mini.addEventListener('click', e => {
   if (e.target.closest('[data-open]')) return openPlayer();
   if (e.target.closest('[data-mplay]')){ st.playing = !st.playing; render(); renderMini(); return; }
-  if (e.target.closest('[data-madd]')){ st.add = !st.add; render(); renderMini(); }
+  if (e.target.closest('[data-madd]')){ addToPl(); }
 });
 // keep the mini player in step with the full one (its buttons share the same state)
 remote.addEventListener('click', () => requestAnimationFrame(renderMini));
@@ -291,6 +296,7 @@ let lastT = performance.now();
 function nextSong(){
   qi = (qi + 1) % QUEUE.length;
   Object.assign(SONG, QUEUE[qi]);
+  st.add = false; render(); renderMini();
   const open = mini.querySelector('[data-open]');
   open.classList.add('swap');
   setTimeout(() => {
