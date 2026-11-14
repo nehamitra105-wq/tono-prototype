@@ -98,11 +98,13 @@ const vPage = makeView('view-settings-page', 'Settings page');
 let meHours = 'week', themHours = 'month', person = null, themBack = false, followTab = 'followers', followQuery = '';
 const toggles = {private:true, sync:true, saveLiked:true, suggest:false, nf_followers:false, nf_recs:true, nf_comm:false, nf_daily:true, nf_mile:true, nf_weekly:true, nf_quiet:true};
 
+// whoever signed up in onboarding (onboarding.js) — falls back to the demo profile
+const U = () => window.tonoUser || {};
 function renderMe(){
   vMe.innerHTML = `<div class="pf-body">
     <div class="pf-head">
       <div class="pf-top">
-        <div class="pf-id"><img class="ava" src="${PF}me.png" alt=""><div class="who"><p class="t-header">Sandra</p><p class="t-body">@mushqueen</p></div></div>
+        <div class="pf-id"><img class="ava" src="${U().photo || PF + 'me.png'}" alt=""><div class="who"><p class="t-header">${esc(U().name || 'Sandra')}</p><p class="t-body">${esc(U().handle || '@mushqueen')}</p></div></div>
         <button class="pf-gear" data-go="settings" aria-label="Settings"><img src="${PF}ph-gear.svg" alt=""></button>
       </div>
       <div class="pf-row2">
