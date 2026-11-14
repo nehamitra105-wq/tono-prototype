@@ -58,10 +58,14 @@
 @keyframes mc-dot{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
 
 /* composer */
-.mc-bar{position:absolute;left:20px;right:20px;bottom:35px;display:flex;gap:8px;align-items:flex-end;z-index:4}
+.mc-bar{position:absolute;left:20px;right:20px;bottom:35px;display:flex;gap:16px;align-items:flex-end;z-index:4}
 .mc-plus{width:24px;height:44px;display:grid;place-items:center;flex:none;transition:transform .6s var(--slow)}
 .mc-plus img{width:24px;height:24px}
 .mc-bar.menu .mc-plus{transform:rotate(45deg)}
+.mc-disc{width:24px;height:44px;display:grid;place-items:center;flex:none}
+.mc-disc img{width:24px;height:24px;transition:filter .6s var(--slow)}
+/* lilac while the message is a mixtape request */
+.mc-bar.letter .mc-disc img{filter:brightness(0) saturate(100%) invert(77%) sepia(28%) saturate(1013%) hue-rotate(212deg) brightness(101%) contrast(97%)}
 .mc-box{flex:1;min-width:0;border:1px solid var(--off-white);border-radius:20px;padding:11px 16px;display:flex;flex-direction:column;gap:12px}
 .mc-box .att{position:relative;width:120px;height:120px;display:none}
 .mc-box .att img{width:120px;height:120px;border-radius:10px;display:block}

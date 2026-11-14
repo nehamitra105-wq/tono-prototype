@@ -104,12 +104,13 @@ vChat.innerHTML = `
     <button role="menuitem" data-att="camera"><img src="${M}camera.svg" alt=""><span class="t-body">Camera</span></button>
     <button role="menuitem" data-att="photos"><img src="${M}image.svg" alt=""><span class="t-body">Photos</span></button>
     <button role="menuitem" data-att="stickers"><img src="${M}smiley-sticker.svg" alt=""><span class="t-body">Stickers</span></button>
-    <button role="menuitem" data-att="mixtape"><img src="${M}disc.svg" alt=""><span class="t-body">Request mixtape</span></button>
   </div>
   <div class="mc-bar">
     <button class="mc-plus" data-plus aria-label="Attach"><img src="${M}plus.svg" alt=""></button>
+    <!-- requesting a mixtape lives right in the bar now (Figma 1204:10968) -->
+    <button class="mc-disc" data-req aria-label="Request a mixtape" aria-pressed="false"><img src="${M}disc.svg" alt=""></button>
     <div class="mc-box">
-      <div class="att"><img src="${M}letter.png" alt="Mixtape request"><button data-unatt aria-label="Remove request"><img src="${M}x.svg" alt=""></button></div>
+      <div class="att"><img src="${M}letter.png" alt="Mixtape request"></div>
       <div class="mc-line"><textarea rows="1" placeholder="Message..." aria-label="Message"></textarea>
         <button class="mc-send" data-send aria-label="Send"><img src="${M}paper-plane.svg" alt=""></button></div>
     </div>
@@ -133,6 +134,7 @@ function renderChat(animateLast){
 }
 function setComposer(mode){
   bar.classList.toggle('letter', mode === 'letter');
+  bar.querySelector('[data-req]').setAttribute('aria-pressed', mode === 'letter');
   ta.placeholder = mode === 'letter' ? 'What songs are you looking for?' : P[who].asked ? 'What do you want song recs for?' : 'Message...';
   syncSend();
 }
@@ -170,6 +172,8 @@ function send(){
 vChat.addEventListener('click', e => {
   if (e.target.closest('[data-mback]')){ toggleMenu(false); return back(); }
   if (e.target.closest('[data-plus]')){ toggleMenu(!menu.classList.contains('on')); return; }
+  // the disc in the bar turns the message into a mixtape request (tap again to go back to a normal message)
+  if (e.target.closest('[data-req]')){ toggleMenu(false); const on = !bar.classList.contains('letter'); setComposer(on ? 'letter' : 'text'); if (on) ta.focus({preventScroll:true}); return; }
   const a = e.target.closest('[data-att]');
   if (a){ toggleMenu(false); if (a.dataset.att === 'mixtape'){ setComposer('letter'); ta.focus({preventScroll:true}); } return; }
   if (e.target.closest('[data-unatt]')){ setComposer('text'); return; }
