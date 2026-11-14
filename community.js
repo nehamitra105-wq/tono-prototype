@@ -58,7 +58,7 @@ const QS = {
 };
 const LIKED = [
   {u:'chaewon4eva', ava:C + 'u-chaewon.png', big:true, songs:[{t:'Perfect Night', a:'Le Sserafim', img:C + 'perfect-night.png'}], note:'I feel like this is the perf song for a late night drive that won’t make you sleepy!', likes:'2.2k'},
-  {u:'eve._.alp', ava:C + 'u-eve.png', songs:[{t:'Night Train', a:'Milena', img:C + 'night-train.png'}, {t:'Midnight City', a:'M83', img:C + 'midnight-city.png'}], note:'I think this fits the vibe! hope u like ittt', likes:'1.2k'},
+  {u:'eve._.alp', ava:C + 'u-eve.png', songs:[{t:'Night Train', a:'Milena', img:C + 'night-train.png'}], note:'I think this fits the vibe! hope u like ittt', likes:'1.2k'},
   {u:'han2han', ava:C + 'u-han.png', songs:[{t:'Late Night Lover', a:'三稜鏡', img:C + 'late-night-lover.png'}], note:'The vibes and vocals on this is emmaculate', likes:'976'},
 ];
 const NEWEST = [
@@ -426,7 +426,8 @@ const oReply = overlay('cm-sheet form', `
   <div class="cm-anon"><p class="t-body">Post anonymously</p><button class="pf-toggle" role="switch" aria-checked="false" data-anon aria-label="Post anonymously"></button></div>
   <button class="cm-btn t-body" data-submit disabled>Submit Response</button>`);
 const replyPicked = [];
-const reply = songSearch(oReply, REPLY_SONGS, replyPicked, 3, () => { oReply.querySelector('[data-submit]').disabled = !replyPicked.length; });
+const reply = songSearch(oReply, REPLY_SONGS, replyPicked, 1,   // one song per answer: the field hides once it's picked
+  () => { oReply.querySelector('[data-submit]').disabled = !replyPicked.length; });
 oReply.addEventListener('click', e => {
   if (e.target.closest('[data-close]')) return close(oReply);
   const a = e.target.closest('[data-anon]'); if (a){ a.classList.toggle('on'); a.setAttribute('aria-checked', a.classList.contains('on')); return; }

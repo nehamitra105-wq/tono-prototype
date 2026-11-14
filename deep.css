@@ -302,3 +302,69 @@
 
 /* save-draft prompt when leaving a new project */
 .dp-save{z-index:47}
+
+/* ---------- Deep Search hero (Figma 1353:18346): full-width, one board the camera pans across ---------- */
+.ds-hero{position:relative;margin-top:-62px;height:433px;border-radius:0 0 20px 20px;overflow:hidden;background:#121A25;touch-action:pan-y;
+  transition:height .6s var(--slow), opacity .6s var(--slow), margin .6s var(--slow)}
+.ds-hero.gone{opacity:0;margin-bottom:-46px}
+.ds-world{position:absolute;left:0;top:0;width:2400px;height:1100px;transform-origin:0 0;transition:transform 1s var(--slow);will-change:transform}
+.ds-world .dots{position:absolute;inset:0;opacity:.13;pointer-events:none;
+  background:radial-gradient(circle, var(--off-white) 1.4px, transparent 1.9px) 0 0/46px 46px, radial-gradient(circle, var(--off-white) 1.4px, transparent 1.9px) 23px 23px/46px 46px}
+.ds-area{position:absolute;width:402px;height:433px;overflow:visible}
+.ds-area > .art{position:absolute;left:47px;top:36px;width:362px;height:383px}
+/* teaser 2: the card sits centred on the screen */
+.ds-area.s2 .s2-card{left:0;top:96px}
+.ds-area.s2 .blob.b1{left:-20px}
+/* teaser 3: smaller project cards that fade at the edges instead of getting cut off */
+.ds-area .s3-casc{-webkit-mask-image:none;mask-image:none}
+/* the glow, fades and words stay put while the board moves under them */
+.ds-hero .glowb{position:absolute;left:-40px;right:-40px;bottom:-200px;height:440px;border-radius:50%;background:radial-gradient(closest-side, rgba(110,92,230,.75), rgba(88,88,208,.35) 55%, rgba(88,88,208,0));pointer-events:none}
+.ds-hero .fadeb{position:absolute;left:0;right:0;bottom:0;height:278px;background:linear-gradient(to bottom, rgba(18,26,37,0), rgba(18,26,37,.45) 45%, rgba(56,52,130,.25));pointer-events:none}
+.ds-hero .topfade{position:absolute;left:0;right:0;top:0;height:112px;background:linear-gradient(to bottom, var(--off-black) 30%, rgba(13,18,24,0));pointer-events:none}
+.ds-ttls{position:absolute;left:37px;top:301px;width:290px;height:48px}
+/* old title fades out where it is; the new one waits a beat, then fades in rising from below */
+.ds-ttl{position:absolute;left:0;top:0;color:#fff;line-height:1.2;opacity:0;transform:translateY(18px);transition:opacity .4s var(--slow), transform 0s .4s}
+.ds-ttl.on{opacity:1;transform:none;transition:opacity .6s var(--slow) .35s, transform .6s var(--slow) .35s}
+.ds-go{position:absolute;left:20px;right:20px;top:365px;height:48px;border-radius:10px;background:var(--off-white);color:var(--off-black);display:flex;align-items:center;justify-content:center;gap:8px;z-index:2}
+.ds-go .sym{width:24px;height:24px;background:var(--off-black)}
+.ds-go:active{transform:scale(.98)}
+.ds-hero .ds-x{top:72px;right:20px;width:24px;height:24px;background:none;z-index:3}
+.ds-hero .ds-x .sym{width:24px;height:24px}
+.ds-hero + .ds-sec{margin-top:46px}
+/* per-teaser glow: crossfades along with the pan */
+.ds-glow{position:absolute;left:0;bottom:0;width:402px;height:309px;pointer-events:none;opacity:0;transition:opacity 1s var(--slow)}
+.ds-glow.on{opacity:1}
+
+/* teaser 3: da beach in front; the other two fan out from behind it, then land on top like a stack of cards */
+/* the cards sit centred at 268px wide; the other two swing fully clear of da beach before landing on it */
+.ds-area .s3-case{position:absolute;left:60px;top:70px;width:298px;transform-origin:0 0;transform:translate(-40px, -36px) scale(.9);opacity:1}
+.ds-area .s3-case.c1{z-index:3}
+.ds-area .s3-case.c0{z-index:1}
+.ds-area .s3-case.c2{z-index:2}
+/* one continuous arc: out from behind da beach and straight back on top — no hold in the middle */
+.ds-area .s3-casc.go .c0{animation:s3-c0 1.2s forwards}
+.ds-area .s3-casc.go .c2{animation:s3-c2 1.2s forwards}
+/* da beach stays put at full size; the other two swing out (cropped by the screen edges) and land on it at the same size */
+@keyframes s3-c0{
+  0%{transform:translate(-40px, -36px) scale(.9);z-index:1;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+  48%{transform:translate(-300px, -20px) scale(.8);z-index:1;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+  52%{z-index:4}
+  100%{transform:translate(-34px, -42px) rotate(-4deg) scale(.9);z-index:4}}
+@keyframes s3-c2{
+  0%{transform:translate(-40px, -36px) scale(.9);z-index:2;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+  48%{transform:translate(240px, 30px) scale(.8);z-index:2;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+  52%{z-index:5}
+  100%{transform:translate(-40px, -36px) rotate(3deg) scale(.9);z-index:5}}
+.ds-area .s3-case .ds-pc{border-radius:10px;background:#121A25}
+/* the noodle to the next teaser draws itself once the stack has landed */
+.ds-link{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.ds-link path{fill:none;stroke:#fff;stroke-width:1.2;stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset 0s}
+.ds-hero.linked .ds-link path{stroke-dashoffset:0;transition:stroke-dashoffset 1s var(--slow)}
+/* the fade under the time + dynamic island so the board runs seamlessly into the status bar (Figma "fade" 402×112);
+   the close X sits above it */
+.ds-hero .topfade{z-index:2;height:112px;background:linear-gradient(to bottom, var(--off-black) 54.911%, rgba(13,18,24,0))}
+.ds-hero .ds-x{z-index:4}
+.ds-ttls,.ds-go{z-index:3}
+/* teaser 3: the dotted board fades out for the card sequence and comes back once the noodle is drawn */
+.ds-world .dots{transition:opacity .6s var(--slow)}
+.ds-hero.nobg .ds-world .dots{opacity:0}

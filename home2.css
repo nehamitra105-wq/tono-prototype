@@ -102,7 +102,7 @@
 .h2-gig .b{position:absolute;font-weight:700;font-size:20px;line-height:normal;white-space:nowrap}
 .h2-gig .d{position:absolute;font-family:"Druk Wide","Mundial",sans-serif;font-weight:700;font-size:20px;line-height:normal;white-space:nowrap}
 .h2-gig .mon{left:12px;top:79px}
-.h2-gig .day{left:12px;top:93px}
+.h2-gig .day{left:12px;top:93px;background:none;border-radius:0;display:block}   /* not the date-picker .day chip */
 .h2-gig .who{left:65px;top:79px}
 .h2-gig .from{left:289.5px;top:79px;transform:translateX(-50%)}
 .h2-gig .price{left:253px;top:93px}

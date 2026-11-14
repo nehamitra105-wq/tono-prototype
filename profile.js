@@ -323,11 +323,11 @@ tabbar.addEventListener('click', e => {
   requestAnimationFrame(() => requestAnimationFrame(() => { tabbar._instantT = setTimeout(() => app.classList.remove('instant'), 50); }));
   const inProfile = stack.length && stack.includes(current);
   if (t.dataset.tab === 'profile'){ e.stopImmediatePropagation(); openProfile(); }
-  else if (t.dataset.tab === 'discovery' && inProfile){ e.stopImmediatePropagation(); resetToHome(true); setTab('discovery'); }
+  // Discovery always lands on Home, from anywhere in the app (Messages, a playlist, a profile…); already there → back to the top
+  else if (t.dataset.tab === 'discovery'){ e.stopImmediatePropagation(); if (current === home) home.scrollTo({top:0, behavior:'smooth'}); else resetToHome(false); setTab('discovery'); }
   else if (t.dataset.tab === 'player' && inProfile){ resetToHome(false); }
   else if (t.dataset.tab === 'community'){ e.stopImmediatePropagation(); window.tonoCommunity?.open(); }
   else if (t.dataset.tab === 'deep'){ e.stopImmediatePropagation(); if (inProfile) resetToHome(false); window.tonoNode?.openTab(); }
-  else if (t.dataset.tab === 'discovery') setTab('discovery');
 }, true);
 
 /* ---------- interactions ---------- */

@@ -8,7 +8,16 @@
    ========================================================= */
 (() => {
 const P = 'assets/player/';
-const SONG = {title:'Please Don’t Stop The Music', artist:'Rhianna', context:'Movin’'};
+// the listening queue: the mini player runs through it on its own (~3 minutes a song; after three more songs it loops back to the first)
+const QUEUE = [
+  {title:'Please Don’t Stop The Music', artist:'Rhianna'},
+  {title:'Levitating', artist:'Dua Lipa'},
+  {title:'Dancing On My Own', artist:'Robyn'},
+  {title:'Blinding Lights', artist:'The Weeknd'},
+];
+const SONG_SECS = 180;
+let qi = 0;
+const SONG = {...QUEUE[0], context:'Movin’'};
 const VIEWS = ['tt', 'cv', 'vd'];
 // the player is a sheet below the status bar (Figma 1003:20034): its controls sit 552px down the screen
 const REMOTE_TOP = {tt:500.5, cv:500.5, vd:507.5};
@@ -18,7 +27,7 @@ const DY = () => Math.min(0, (parseFloat(getComputedStyle(document.documentEleme
 const REC_POOL = ['2010s', 'Happy', 'Electric', 'Club', 'R&B', 'Throwback', 'Pop', 'Dance', 'Late Night'];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-const st = {view:'tt', collapsed:false, playing:false, add:false, like:false, repeat:false, shuffle:false, tags:['Pop', 'Dance'], pos:.42};
+const st = {view:'tt', collapsed:false, playing:true, add:false, like:false, repeat:false, shuffle:false, tags:['Pop', 'Dance'], pos:.42};
 
 const app = document.getElementById('app');
 const v = document.createElement('section');
@@ -271,9 +280,27 @@ setInterval(syncMini, 120);
 // while playing, the progress line creeps along
 let lastT = performance.now();
 (function tick(now){
-  if (st.playing){ st.pos = (st.pos + (now - lastT) / 1000 / 222) % 1; mini.querySelector('.mp-bar i').style.width = `${(st.pos * 100).toFixed(2)}%`; }
+  if (st.playing){
+    st.pos += Math.min(now - lastT, 100) / 1000 / SONG_SECS;   // clamp so a backgrounded tab doesn't skip songs
+    if (st.pos >= 1){ st.pos = 0; nextSong(); }
+    mini.querySelector('.mp-bar i').style.width = `${(st.pos * 100).toFixed(2)}%`;
+  }
   lastT = now; requestAnimationFrame(tick);
 })(lastT);
+// when a song ends the next one in the queue starts: the mini player's words fade out and back in, the full player's titles swap
+function nextSong(){
+  qi = (qi + 1) % QUEUE.length;
+  Object.assign(SONG, QUEUE[qi]);
+  const open = mini.querySelector('[data-open]');
+  open.classList.add('swap');
+  setTimeout(() => {
+    open.querySelector('.t-header').textContent = SONG.title;
+    open.querySelector('.t-body').textContent = SONG.artist;
+    open.setAttribute('aria-label', `Open the player: ${SONG.title} by ${SONG.artist}`);
+    open.classList.remove('swap');
+  }, 250);
+  v.querySelectorAll('.pl-title').forEach(t => { t.querySelector('.t-header').textContent = SONG.title; t.querySelector('.t-body').textContent = SONG.artist; });
+}
 
 let from = null;
 function openPlayer(){

@@ -1353,9 +1353,9 @@ const S1_DRAW = 'M158.3 208.4C221 208.4 217 127 279 127';
 const s2Card = st => st === 'gen'
   ? `<div class="dp-out finding"><div class="cov"><span class="glow"></span><img class="disc" src="${D}extracting-disc.svg" alt=""><span class="sq"></span></div><p class="t-body">Extracting...</p><img class="dots" src="assets/dots-three.svg" alt=""></div>`
   : (o => `<div class="dp-out${st === 'b' ? ' fresh' : ''}"><div class="cov"><span class="glow"></span><img class="disc" src="${D}vinyl.svg" alt=""><img class="art" src="${o.img}" alt=""></div>
-      <div class="nm"><p class="t-body">${esc(o.title)}</p><p class="t-caption">${esc(o.artist)}</p></div><img class="dots" src="assets/dots-three.svg" alt=""></div>`)(OUT_POOL[st === 'b' ? 1 : 0]);
+      <div class="nm"><p class="t-body">${esc(o.title)}</p><p class="t-caption">${esc(o.artist)}</p></div><img class="dots" src="assets/dots-three.svg" alt=""></div>`)(OUT_POOL[0]);
 // slide 3: the popular project cards, stepped down the diagonal as in the wireframe (Figma 1298:13494), drifting along it
-const CASES = [...POPULAR, ...POPULAR];
+const CASES = POPULAR;   // nostalgia · da beach · spring
 const SLIDES = [
   {title:'Extract sounds from photos, videos, text or audio', art:`
     <svg class="s1-lines" viewBox="0 0 362 383" aria-hidden="true">
@@ -1367,12 +1367,12 @@ const SLIDES = [
     <div class="s1-song"><div class="cd"><img src="${D}cd.png" alt=""></div><p>Heartbeat</p><p class="s">Childish Gambino</p></div>`},
   {title:'Shuffle song outputs to find the right sound', art:`
     <span class="blob b1"></span><span class="blob b2"></span>
-    <div class="s2-card"><div class="s2-slot">${s2Card('a')}</div>
+    <div class="s2-card"><div class="s2-slot">${s2Card('gen')}</div>
       <span class="s2-shuffle"><img src="${D}shuffle.svg" alt=""></span></div>`},
   {title:'View what others have discovered', art:`
-    <div class="s3-casc">${CASES.map((p, i) => `<div class="s3-case" data-c="${i}">${popCard(p)}</div>`).join('')}</div>`},
+    <div class="s3-casc">${CASES.map((p, i) => `<div class="s3-case c${i}">${popCard(p)}</div>`).join('')}</div>`},
 ];
-let showcase = true, featAt = 0, popAt = 1, featLoop = null, popLoop = null;
+let showcase = true, heroAt = 0, popAt = 1, popLoop = null;
 
 const THUMB = {
   nightdrive:`<svg class="nd-art" viewBox="0 0 174 156" aria-hidden="true"><path d="M66 46C76.36 46 87.33 82 105 82" stroke="#BD2FA9" stroke-opacity=".9" fill="none"/><path d="M66 45.93C87.31 47.84 81.73 9 100 9" stroke="#8B4BE6" stroke-opacity=".9" fill="none"/>
@@ -1380,12 +1380,16 @@ const THUMB = {
 };
 const copies = (list, fn) => [0, 1, 2].map(c => list.map((x, k) => fn(x, k, c)).join('')).join('');
 function renderLanding(){
-  featLoop?.stop(); popLoop?.stop();
+  clearTimeout(heroT); clearTimeout(heroFix); popLoop?.stop();
+  // the feature teasers are spots on one big board; the camera pans from one to the next (Figma 1353:18346)
+  const area = (k, at) => `<div class="ds-slide ds-area s${k + 1}" data-k="${k}" style="left:${at.x + HERO_PAD}px;top:${at.y + HERO_PAD}px"${at.copy ? ' aria-hidden="true"' : ''}><div class="art">${SLIDES[k].art}</div></div>`;
   landing.innerHTML = `
-    ${showcase ? `<div class="ds-show" role="region" aria-roledescription="carousel" aria-label="What Deep Search does">
-      <div class="ds-track">${copies(SLIDES, (s, k, c) => `<div class="ds-slide s${k + 1}" data-k="${k}" role="group" aria-roledescription="slide" aria-label="${k + 1} of 3"${c === 1 ? '' : ' aria-hidden="true"'}><span class="nd-dots"></span><span class="glowb"></span>
-        <div class="art">${s.art}</div><span class="fadeb"></span><p class="t-header ttl">${s.title}</p></div>`)}</div>
-      <div class="ds-ind">${SLIDES.map((_, i) => `<button data-slide="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>
+    ${showcase ? `<div class="ds-hero" role="region" aria-label="What Deep Search does">
+      <div class="ds-world"><span class="dots"></span>${HERO_AT.map((at, i) => area(i % 3, at)).join('')}
+        <svg class="ds-link" width="2400" height="1100" aria-hidden="true"><path pathLength="1" d="${HERO_LINK}"/></svg></div>
+      ${HERO_GLOW.map((c, k) => `<svg class="ds-glow" data-g="${k}" viewBox="0 0 362 278" preserveAspectRatio="none" aria-hidden="true"><defs><radialGradient id="dsg${k}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="10" gradientTransform="${c.m}"><stop offset=".37652" stop-color="${c.c}"/><stop offset=".89974" stop-color="${c.c}" stop-opacity="0"/></radialGradient></defs><rect width="362" height="278" fill="url(#dsg${k})"/></svg>`).join('')}<span class="topfade"></span>
+      <div class="ds-ttls" aria-live="polite">${SLIDES.map((sl, k) => `<p class="t-header ds-ttl" data-t="${k}">${sl.title}</p>`).join('')}</div>
+      <button class="ds-go t-body" data-start>${sym(`${D}ph-music-notes-plus.svg`)}Get started</button>
       <button class="ds-x" data-dismiss aria-label="Dismiss feature tour">${sym(`${D}ph-x.svg`)}</button>
     </div>` : ''}
     <section class="ds-sec ds-draftsec"><p class="t-header">Your projects</p>
@@ -1396,9 +1400,8 @@ function renderLanding(){
       </div></section>
     <section class="ds-sec ds-popsec"><p class="t-header">Popular projects</p>
       <div class="ds-pop" role="region" aria-roledescription="carousel" aria-label="Popular projects"><div class="ds-poptrack">${copies(POPULAR, (p, k) => popCard(p).replace('class="ds-pc"', `class="ds-pc" data-k="${k}"`))}</div></div></section>`;
-  if (showcase) featLoop = Loop(landing.querySelector('.ds-show'), landing.querySelector('.ds-track'), 3, 362, 0, featAt, k => { featAt = k; playSlide(k); });
+  if (showcase){ heroGo(heroAt, true); wireHero(); }
   popLoop = Loop(landing.querySelector('.ds-pop'), landing.querySelector('.ds-poptrack'), 3, 314, 52, popAt, k => { popAt = k; });
-  layoutCases();
 }
 // a draft's card art: its blocks, small
 function miniThumb(id){
@@ -1463,56 +1466,117 @@ function Loop(root, track, n, step, base, start, onShow){
   return L;
 }
 
+/* Hero board: rests 5s on a teaser, then pans (1s, one way) to the next; after the third it reaches a copy of the
+   first and quietly jumps back. Titles cross-fade: the old one fades out, the new one fades in rising from below. */
+const HERO_PAD = 300;
+// noodle from the top project card (teaser 3, right side) to the text node of the next teaser, in board coordinates
+const HERO_LINK = 'M1552 394 C1612 394, 1588 421.6, 1648 421.6';   // right edge of the top card → next teaser's text node
+// each teaser has its own glow, an off-centre radial low on the left (Figma 1353:19755 fades)
+const HERO_GLOW = [
+  {c:'#5858D0', m:'matrix(6.3967 -36.77 38.911 6.7429 120.31 455.79)'},
+  {c:'#F75472', m:'matrix(6.3967 -36.506 38.911 6.6944 120.31 452.51)'},
+  {c:'#BD2FA9', m:'matrix(6.3967 -37.299 38.911 6.8399 120.31 462.35)'},
+];
+const HERO_AT = [{x:0, y:0}, {x:460, y:92}, {x:920, y:-46}, {x:1380, y:0, copy:true}];   // multiples of the 46px dot grid
+let heroT = 0, heroFix = 0;
+function heroPlace(k, instant){
+  const a = HERO_AT[k];
+  heroCam(-(a.x + HERO_PAD), -(a.y + HERO_PAD), 1, instant ? 0 : 1000);
+}
+// the camera over the board: translate + zoom (origin top-left), eased on the slow curve
+function heroCam(tx, ty, s, ms){
+  const w = landing.querySelector('.ds-world'); if (!w) return;
+  w.style.transition = ms ? `transform ${ms}ms var(--slow)` : 'none';
+  w.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+  if (!ms){ w.offsetHeight; }
+}
+// zoom so board point (px, py) sits at screen point (sx, sy)
+const heroZoom = (px, py, sx, sy, s, ms) => heroCam(sx - s * px, sy - s * py, s, ms);
+function heroGo(k, instant){
+  if (!landing.querySelector('.ds-hero')) return;
+  clearTimeout(heroFix);
+  heroAt = k; heroPlace(k, instant);
+  const real = k % 3;
+  landing.querySelectorAll('.ds-ttl').forEach(t => t.classList.toggle('on', +t.dataset.t === real));
+  landing.querySelectorAll('.ds-glow').forEach(g => g.classList.toggle('on', +g.dataset.g === real));
+  playSlide(real, instant ? 0 : 1000);   // each teaser's motion starts once the pan has landed
+  // reached the copy of the first teaser: hop back to the real one once the pan has landed
+  if (k === 3) heroFix = setTimeout(() => { heroAt = 0; heroPlace(0, true); }, 1050);
+  heroQueue();
+}
+function heroQueue(){
+  clearTimeout(heroT);
+  if (!showcase) return;
+  if (heroAt % 3 === 2) return;   // teaser 3's own sequence pans on when it finishes
+  heroT = setTimeout(() => { if (landingShown() && !heroDrag) heroGo((heroAt % 3) + 1); else heroQueue(); }, 3000 + 1000);   // 3s on each teaser
+}
+let heroDrag = null;
+function wireHero(){
+  const h = landing.querySelector('.ds-hero');
+  h.addEventListener('pointerdown', e => { if (!e.target.closest('button')) heroDrag = {x:e.clientX}; });
+  const up = e => {
+    if (!heroDrag) return; const dx = e.clientX - heroDrag.x; heroDrag = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) heroGo((heroAt % 3) + 1);
+    else { const cur = heroAt % 3; if (cur === 0){ heroPlace(3, true); heroGo(2); } else heroGo(cur - 1); }
+  };
+  h.addEventListener('pointerup', up); h.addEventListener('pointercancel', () => { heroDrag = null; });
+}
+function newProject(){
+  let n = 1; const name = k => k === 1 ? 'New project' : `New project ${k}`;
+  while (boards.some(x => x.name === name(n))) n++;
+  const nb = {id:`b${Date.now().toString(36)}`, name:name(n), saved:false};   // asks to be saved on the way out
+  boards.push(nb); saveList(); openProject(nb.id);
+}
+
 // each feature slide plays its little motion whenever it comes into view (on every copy, so the loop's jump is invisible)
 let s2T = [];
-function playSlide(k){
+function playSlide(k, wait = 0){
   landing.querySelectorAll('.ds-slide').forEach(el => el.classList.remove('play'));
   s2T.forEach(clearTimeout); s2T = [];
+  const hero = landing.querySelector('.ds-hero');
+  if (k !== 2 && hero){ s2T.push(setTimeout(() => hero.classList.remove('linked'), 1100)); hero.classList.remove('nobg'); }   // keep the noodle through the pan
+  if (k === 2){
+    // the other two swing out from behind da beach and land on top as a stack (1.2s), the camera zooms in and slides
+    // left in one move while the noodle draws, and the board pans on — 3s in all
+    const casc = landing.querySelector('.ds-slide[data-k="2"] .s3-casc');
+    hero?.classList.remove('linked');
+    hero?.classList.add('nobg');   // the dotted board fades out on the way in…
+    if (casc){
+      casc.classList.remove('go'); void casc.offsetWidth;
+      s2T.push(
+        setTimeout(() => casc.classList.add('go'), Math.max(0, wait - 400)),   // starts as the pan settles, so there's no beat of stillness
+        // the stack has landed: one camera move zooms into the top card's right edge (the stack slides off the left)
+        // while the noodle draws; then, 3s into the teaser, the board pans on to the next one
+        setTimeout(() => { hero?.classList.add('linked'); heroZoom(1552, 394, 16, 175, 1.6, 1000); }, wait + 800),   // zoom + slide left together: the stack ends off the left edge
+        setTimeout(() => { if (heroAt % 3 !== 2) return; if (landingShown()) heroGo(3); else { const again = () => landingShown() ? heroGo(3) : setTimeout(again, 400); again(); } }, wait + 2000));   // 3s from the pan in to the pan out
+    }
+  }
   const els = [...landing.querySelectorAll(`.ds-slide[data-k="${k}"]`)];
   void landing.offsetWidth;
   els.forEach(el => el.classList.add('play'));
   if (k === 1){
     const set = st => els.forEach(el => { el.querySelector('.s2-slot').innerHTML = s2Card(st); el.classList.toggle('shuffling', st === 'gen'); });
-    set('a');
-    s2T.push(setTimeout(() => set('gen'), 1500), setTimeout(() => set('b'), 3500));
+    // it opens mid-search ("Extracting…") and then the song it found lands
+    set('gen');
+    s2T.push(setTimeout(() => set('b'), wait + 1500));   // searches for 1.5s once the pan has landed
   }
 }
-// slide 3's cards drift by themselves, forever, one way, keeping the wireframe's angle
-const CC = {x:49.2, y:55.9}, CS = {x:172.5, y:61.4};
-let cf = 0, cLast = 0;
-function layoutCases(){
-  const n = CASES.length;
-  landing.querySelectorAll('.s3-case').forEach(el => {
-    const i = +el.dataset.c, k = ((i - cf) % n + n * 1.5) % n - n / 2;
-    el.style.transform = `translate(${(CC.x + k * CS.x).toFixed(1)}px, ${(CC.y + k * CS.y).toFixed(1)}px) scale(.877)`;
-    el.style.zIndex = 50 + Math.round(k * 10);
-  });
-}
-function drift(now){
-  const dt = Math.min(64, now - (cLast || now)); cLast = now;
-  if (landingShown() && landing.querySelector('.s3-casc')){ cf += dt / 1000 * .2; layoutCases(); }
-  requestAnimationFrame(drift);
-}
-requestAnimationFrame(drift);
+// slide 3 (no drifting any more): see playSlide — the cards fan out from behind "da beach", stack on top, then a noodle
+// runs from the top card to the text node of the next teaser on the board
 
 landing.addEventListener('click', e => {
-  const dot = e.target.closest('[data-slide]');
-  if (dot) return featLoop?.to(+dot.dataset.slide);
+  if (e.target.closest('[data-start]')) return newProject();   // Get started → a fresh draft
   if (e.target.closest('[data-dismiss]')){
-    const box = landing.querySelector('.ds-show');
+    const box = landing.querySelector('.ds-hero');
     box.style.height = `${box.offsetHeight}px`; box.offsetHeight;
     box.classList.add('gone'); box.style.height = '0px';
-    showcase = false; featLoop?.stop(); s2T.forEach(clearTimeout);
+    showcase = false; clearTimeout(heroT); clearTimeout(heroFix); s2T.forEach(clearTimeout);
     setTimeout(() => box.remove(), 600);
     return;
   }
   const b = e.target.closest('[data-board]'); if (b) return openProject(b.dataset.board);
-  if (e.target.closest('[data-new]')){
-    let n = 1; const name = k => k === 1 ? 'New project' : `New project ${k}`;
-    while (boards.some(x => x.name === name(n))) n++;
-    const nb = {id:`b${Date.now().toString(36)}`, name:name(n), saved:false};   // asks to be saved on the way out
-    boards.push(nb); saveList(); openProject(nb.id);
-  }
+  if (e.target.closest('[data-new]')) newProject();
 });
 
 function openDrafts(){
@@ -1611,6 +1675,12 @@ obEl.addEventListener('click', e => {
 [landing, proj].forEach(v => v.addEventListener('scroll', () => { if (obi >= 0 && obEl.classList.contains('on')) obLayout(); }, {passive:true}));
 addEventListener('resize', () => { if (obi >= 0) obLayout(); });
 document.addEventListener('click', e => { if (obi >= 0 && e.target.closest('.tabbar')) obEnd(); }, true);
+// any tab tap puts the full board, pickers, menus and the save prompt away first, so the tab's landing page shows
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tabbar .tab')) return;
+  if (!view.classList.contains('offright')) close(true);
+  closePicker(); closeMenu(); saveDlg.classList.remove('on'); stopProjAudio();
+}, true);
 // Deep Search tab (global nav): the landing is a tab root, so whatever was showing is dropped first (tab switches are instant)
 function openTab(){
   landing.classList.add('tab-root');
@@ -1634,7 +1704,7 @@ function openTab(){
 const tile = document.querySelector('.more .tile');
 if (tile) tile.addEventListener('click', openDrafts);
 // restart flow: back to the lock screen with a fresh tour
-document.getElementById('restart')?.addEventListener('click', () => { close(true); closePicker(); closeMenu(); showcase = true; featAt = 0; popAt = 1; obSeen = false; obEnd(); });
+document.getElementById('restart')?.addEventListener('click', () => { close(true); closePicker(); closeMenu(); showcase = true; heroAt = 0; popAt = 1; obSeen = false; obEnd(); });
 document.fonts && document.fonts.ready.then(() => { if (!view.classList.contains('offright')) render(); });
 renderLanding();
 

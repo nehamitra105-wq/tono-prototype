@@ -176,7 +176,8 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
 .tab{width:72px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--off-white)}
 .tab .sym{width:24px;height:24px;background:currentColor}
 .tab.active{color:var(--lilac)}
-.tab[data-tab="discovery"].active .sym{--i:url(assets/home2/nav-compass.svg) !important}   /* filled compass when on Discovery */
+.tab.active .sym{-webkit-mask-image:var(--on);mask-image:var(--on)}   /* the selected tab's icon is the filled version */
+.tab .sym.nav-node{-webkit-mask-size:23px auto;mask-size:23px auto}
 
 /* ---------- Home ---------- */
 .home-header{padding:24px 22px;background:var(--off-black);backdrop-filter:blur(22px)}
@@ -511,10 +512,11 @@ html.full .restart.show{opacity:1;transform:translate(-50%,0);pointer-events:aut
           <section class="view cat-view offright" id="view-catalogue"></section>
 
           <nav class="tabbar" aria-label="Global navigation">
-            <button class="tab active" data-tab="discovery"><i class="sym" style="--i:url(assets/nav-compass.svg)"></i><span class="t-nav">Discovery</span></button>
-            <button class="tab" data-tab="community"><i class="sym" style="--i:url(assets/nav-users.svg)"></i><span class="t-nav">Community</span></button>
-            <button class="tab" data-tab="deep"><i class="sym" style="--i:url(assets/home2/nav-node.svg)"></i><span class="t-nav">Deep Search</span></button>
-            <button class="tab" data-tab="profile"><i class="sym" style="--i:url(assets/nav-user.svg)"></i><span class="t-nav">Profile</span></button>
+            <!-- Global Navigation (Figma 697:10865): outline icons, filled + lilac on the tab you're on -->
+            <button class="tab active" data-tab="discovery"><i class="sym" style="--i:url(assets/nav/compass.svg);--on:url(assets/nav/compass-fill.svg)"></i><span class="t-nav">Discovery</span></button>
+            <button class="tab" data-tab="community"><i class="sym" style="--i:url(assets/nav/users.svg);--on:url(assets/nav/users-fill.svg)"></i><span class="t-nav">Community</span></button>
+            <button class="tab" data-tab="deep"><i class="sym nav-node" style="--i:url(assets/nav/node.svg);--on:url(assets/nav/node-fill.svg)"></i><span class="t-nav">Deep Search</span></button>
+            <button class="tab" data-tab="profile"><i class="sym" style="--i:url(assets/nav/user.svg);--on:url(assets/nav/user-fill.svg)"></i><span class="t-nav">Profile</span></button>
           </nav>
 
           <!-- MORE ACTIONS SHEET -->

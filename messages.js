@@ -2,7 +2,7 @@
    MESSAGES (Figma section 1174:8959) — the message icon on Home opens these.
    Flow 1, ask (top row):  Messages → Maya → + → Request mixtape → write what you want → send
                            → your letter + View Question → Maya replies with a mixtape.
-   Flow 2, answer (bottom row): Requests → Sandra → her letter → View Question
+   Flow 2, answer (bottom row): Requests → Emilie → her letter → View Question
                            → Curate a mixtape (drop.js) → decorate the CD → Send → back in the chat.
    ========================================================= */
 (() => {
@@ -22,7 +22,7 @@ const fresh = () => ({
   elias:{name:'Elias', handle:'@neon_drifter', ava:M + 'ava-elias.png', pfp:M + 'ava-elias.png', thread:[{me:false, t:'that playlist you made was so good'}]},
   sofia:{name:'Sofia', handle:'@PixelFox88', ava:M + 'ava-sofia.png', pfp:M + 'ava-sofia.png', thread:[{me:true, t:'see u at the show friday!'}]},
   theo:{name:'Theo', handle:'@cosmic.pancake', ava:M + 'ava-theo.png', pfp:M + 'ava-theo.png', thread:[{me:false, t:'ok this song is stuck in my head now'}]},
-  sandra:{name:'Sandra', handle:'@supanova', ava:M + 'pfp-sandra.png', pfp:M + 'pfp-sandra.png', request:true,   // her own face, so she doesn't read as Maya
+  sandra:{name:'Emilie', handle:'@supanova', ava:M + 'pfp-sandra.png', pfp:M + 'pfp-sandra.png', request:true,   // her own face, so she doesn't read as Maya
     thread:[{me:true, t:'hey! saw your post in Community'}, {me:false, t:'omg hi!! sending u a question'}, {me:false, letter:true, q:SANDRA_Q}]},
 });
 let P = fresh(), who = null, tab = 'all', answered = false;
@@ -188,7 +188,8 @@ vChat.addEventListener('click', e => {
   if (mx){
     const m = P[who].thread[+mx.closest('[data-m]').dataset.m];
     showSheet('Mixtape', `<div class="mx-list">${m.t ? `<p class="t-body">${esc(m.t)}</p>` : ''}${m.mix.map(s => `<div class="mx-row">${s.img ? `<img src="${s.img}" alt="">` : '<span class="ph"></span>'}
-      <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption">${esc(s.a)}</p></div></div>`).join('')}</div>`);
+      <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption">${esc(s.a)}</p></div>
+      <button class="mx-more" data-mx-more aria-label="More for ${esc(s.t)}"><i class="cm-ic" style="--i:url(assets/community/ph/dots-three.svg)"></i></button></div>`).join('')}</div>`);
     return;
   }
   if (menu.classList.contains('on') && !e.target.closest('.mc-menu')) toggleMenu(false);
@@ -201,7 +202,17 @@ sw.innerHTML = `<div class="bd" data-sclose></div><div class="mc-sheet" role="di
   <div class="hd"><p class="t-header"></p><button data-sclose aria-label="Close"><img src="${M}x.svg" alt=""></button></div><div class="body"></div></div>`;
 app.appendChild(sw);
 function showSheet(title, html){ sw.querySelector('.t-header').textContent = title; sw.querySelector('.body').innerHTML = html; sw.classList.add('open'); }
-sw.addEventListener('click', e => { if (e.target.closest('[data-sclose]')) sw.classList.remove('open'); });
+sw.addEventListener('click', e => {
+  if (e.target.closest('[data-sclose]')) sw.classList.remove('open');
+  if (e.target.closest('[data-mx-more]')){ mxActs.offsetHeight; mxActs.classList.add('open'); }
+});
+/* the ⋯ on a mixtape song: the same song-actions sheet as Community's, over the mixtape */
+const mxActs = document.createElement('div');
+mxActs.className = 'cm-ov mx-acts';
+mxActs.innerHTML = `<div class="bd" data-close></div><div class="cm-sheet acts">${[['heart', 'Add to liked songs'], ['plus', 'Add to playlist'], ['music-notes-plus', 'Add to queue'], ['share', 'Share']]
+  .map(([i, l]) => `<button class="cm-act t-body" data-close><i class="cm-ic" style="--i:url(assets/community/ph/${i}.svg)"></i>${l}</button>`).join('')}</div>`;
+app.appendChild(mxActs);
+mxActs.addEventListener('click', e => { if (e.target.closest('[data-close]')) mxActs.classList.remove('open'); });
 
 /* ---------- after Curate a mixtape → Send (called by drop.js) ---------- */
 function mixtapeSent({picks, color, note}){

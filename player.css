@@ -132,6 +132,8 @@
 .mp-btn:active{transform:scale(.94)}
 .mp-bar{position:absolute;left:0;right:0;top:70px;height:3px;background:#4C4C4C}
 .mp-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--off-white)}
+.mini-pl .mp-open > span{transition:opacity .25s var(--slow)}
+.mini-pl .mp-open.swap > span{opacity:0}
 /* landing pages leave room at the bottom so nothing hides behind it */
 .app.mini-on #view-home::after,.app.mini-on #view-nodes::after,.app.mini-on #view-profile::after,.app.mini-on #view-community::after{content:"";display:block;height:86px}
 
