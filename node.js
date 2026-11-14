@@ -1388,14 +1388,14 @@ function renderLanding(){
       <div class="ds-ind">${SLIDES.map((_, i) => `<button data-slide="${i}" aria-label="Slide ${i + 1}"></button>`).join('')}</div>
       <button class="ds-x" data-dismiss aria-label="Dismiss feature tour">${sym(`${D}ph-x.svg`)}</button>
     </div>` : ''}
-    <section class="ds-sec ds-popsec"><p class="t-header">Popular projects</p>
-      <div class="ds-pop" role="region" aria-roledescription="carousel" aria-label="Popular projects"><div class="ds-poptrack">${copies(POPULAR, (p, k) => popCard(p).replace('class="ds-pc"', `class="ds-pc" data-k="${k}"`))}</div></div></section>
-    <section class="ds-sec ds-draftsec"><p class="t-header">Drafts</p>
+    <section class="ds-sec ds-draftsec"><p class="t-header">Your projects</p>
       <div class="nd-grid">
         ${boards.map(b => `<button class="nd-card${b.id === 'nightdrive' ? ' ds-tplcard' : ''}" data-board="${b.id}"><span class="nd-dots"></span>${THUMB[b.id] || miniThumb(b.id)}
           <span class="nd-txt"><span class="t-body-db">${esc(b.name)}</span><img src="assets/arrow-right-15.svg" alt=""></span>${b.id === 'nightdrive' ? '<span class="ds-tpl t-caption">Template</span>' : ''}</button>`).join('')}
         <button class="nd-card nd-new" data-new><span class="nd-dots"></span><span class="nd-txt"><i class="sym" style="--i:url(assets/community/ph/plus.svg)"></i><span class="t-body">New project</span></span></button>
-      </div></section>`;
+      </div></section>
+    <section class="ds-sec ds-popsec"><p class="t-header">Popular projects</p>
+      <div class="ds-pop" role="region" aria-roledescription="carousel" aria-label="Popular projects"><div class="ds-poptrack">${copies(POPULAR, (p, k) => popCard(p).replace('class="ds-pc"', `class="ds-pc" data-k="${k}"`))}</div></div></section>`;
   if (showcase) featLoop = Loop(landing.querySelector('.ds-show'), landing.querySelector('.ds-track'), 3, 362, 0, featAt, k => { featAt = k; playSlide(k); });
   popLoop = Loop(landing.querySelector('.ds-pop'), landing.querySelector('.ds-poptrack'), 3, 314, 52, popAt, k => { popAt = k; });
   layoutCases();
@@ -1526,20 +1526,20 @@ function openDrafts(){
    Same look as Community's: the landing's Popular projects and Drafts first, then the template project's
    five steps (Figma 1289:6629), then back to the landing. */
 const OBS = [
-  {page:'landing', el:'.ds-popsec', text:'View projects made by other users to get inspiration!', side:'below'},
-  {page:'landing', el:'.ds-draftsec', text:'All of your projects and drafts are saved here!', side:'above'},
+  {page:'landing', el:'.ds-popsec', text:'View projects made by other users to get inspiration!', side:'above'},
+  {page:'landing', el:'.ds-draftsec', text:'All of your projects and drafts are saved here!', side:'below'},
   {page:'proj', el:'.dp-mini', text:'Your draft board', side:'below'},
-  {page:'proj', el:'.dp-outsec', text:'Your sound output will be here. You can then like, save, or add it to your playlist', side:'below'},
+  {page:'proj', el:'.dp-outsec', text:'Your sound output will be here. You can then like, save, or add it to your playlist', side:'above'},
   {page:'proj', el:'.dp-shuffle', text:'Option for you to discover different song outputs', side:'below'},
-  {page:'proj', el:'.dp-adds', text:'Add the song’s input (images, videos, text, and audio)', side:'below'},
+  {page:'proj', el:'.dp-adds', text:'Add the song’s input (images, videos, text, and audio)', side:'above'},
   {page:'proj', el:'.dp-hist', text:'You can review your past output here', side:'above'},
 ];
 let obSeen = false, obi = -1;
+const BW = 240;   // bubble width (16px text, Skip + Next inside — Figma 1289:6629)
 const obEl = document.createElement('div');
 obEl.className = 'cm-ob ds-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Deep Search walkthrough');
 obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
-  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>
-  <button class="ob-skip t-body" data-ob-skip>Skip</button>`;
+  <div class="bub"><span class="tip"></span><p class="t-body txt"></p><div class="ft"><p class="t-caption n"></p><span class="acts"><button class="t-caption ob-skip" data-ob-skip>Skip</button><button class="t-caption go" data-ob-next>Next</button></span></div></div>`;
 app.append(obEl);
 const obPage = st => st.page === 'proj' ? proj : landing;
 function obLayout(){
@@ -1557,7 +1557,7 @@ function obLayout(){
   const bub = obEl.querySelector('.bub'), bh = bub.offsetHeight || 118;
   bub.style.top = `${st.side === 'above' ? y - 21 - bh : y + h + 21}px`;
   // small targets (shuffle) get the bubble tucked under them on the right; wide ones start near their left edge
-  bub.style.left = `${Math.min(W - 201 - 20, Math.max(20, w < 80 ? x + w - 201 + 6 : x + (st.side === 'above' ? w - 201 - 18 : 4)))}px`;
+  bub.style.left = `${Math.min(W - BW - 20, Math.max(20, w < 80 ? x + w - BW + 6 : x + (st.side === 'above' ? w - BW - 18 : 4)))}px`;
   bub.classList.toggle('up', st.side !== 'above');
   bub.classList.toggle('left', w >= 80 && st.side !== 'above');
 }
@@ -1582,6 +1582,7 @@ function obShow(i){
     obEl.querySelector('.txt').textContent = st.text;
     obEl.querySelector('.n').innerHTML = `<b>${i + 1}</b>/<span>${OBS.length}</span>`;
     obEl.querySelector('.go').textContent = i === OBS.length - 1 ? 'OK' : 'Next';
+    obEl.querySelector('.ob-skip').hidden = i === OBS.length - 1;   // the last step is just OK
     const opening = st.page === 'proj' && current !== proj;
     if (opening) openProject('nightdrive');
     setTimeout(() => {

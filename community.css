@@ -197,7 +197,7 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-ob.shown .dim{opacity:1}
 .cm-ob.on .dim .cover{opacity:0}
 .cm-ob.on .dim .ring{opacity:1}
-.cm-ob .bub{position:absolute;width:201px;min-height:118px;padding:13px;border-radius:10px;background:var(--lilac);color:var(--off-black);display:flex;flex-direction:column;justify-content:space-between;gap:24px;
+.cm-ob .bub{position:absolute;width:240px;min-height:118px;padding:13px;border-radius:10px;background:var(--lilac);color:var(--off-black);display:flex;flex-direction:column;justify-content:space-between;gap:24px;
   opacity:0;transform:translateY(6px);transition:opacity .6s var(--slow), transform .6s var(--slow)}
 .cm-ob.on .bub{opacity:1}
 .cm-ob.on .bub{transform:none}
@@ -212,7 +212,10 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
   padding:12px 16px;border-radius:10px;background:var(--off-white);color:var(--off-black);opacity:0;pointer-events:none;transition:opacity .6s var(--slow), transform .6s var(--slow)}
 .cm-loc.open .ask-drop{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 /* Skip: top right for the whole walkthrough (Community + Deep Search) */
-.cm-ob .ob-skip{position:absolute;right:20px;top:72px;z-index:3;padding:6px 2px;color:var(--off-white);opacity:0;transition:opacity .6s var(--slow)}
-.cm-ob.shown .ob-skip{opacity:1}
+/* Skip sits in the bubble, left of Next (Figma 1289:6629) */
+.cm-ob .acts{display:flex;align-items:center;gap:14px}
+.cm-ob .ob-skip{color:var(--off-black);padding:3px 0}
+.cm-ob .ob-skip[hidden]{display:none}
+.cm-ob .txt{font-size:16px;line-height:1.2}
 /* location search suggestions under the map's search bar */
 .cm-map .cm-find{left:20px;right:20px;top:92px;z-index:6}

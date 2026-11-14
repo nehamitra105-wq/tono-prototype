@@ -8,7 +8,7 @@ const D = 'assets/drop/';
 const MAX_PICKS = 5;
 const M = 'assets/msg/';
 // the question being answered (set by Messages → View Question)
-let REQUEST = {user:'supanova', pfp:M + 'pfp-supanova.png', q:'Hi! I saw that your into kpop, I just wanted to ask what are the best house-esq songs in 3rd to 5th gen kpop?'};
+let REQUEST = {user:'supanova', pfp:M + 'pfp-sandra.png', q:'Hi! I saw that your into kpop, I just wanted to ask what are the best house-esq songs in 3rd to 5th gen kpop?'};
 const KPOP = [{t:'404 (New Era)', a:'KiiiKiii', art:M + 's-404.png'}, {t:'Hypnotize', a:'XG', art:M + 's-hypnotize.png'}, {t:'Whiplash', a:'aespa', art:M + 's-whiplash.png'}];
 const COLORS = ['#FFFFFF', '#E84545', '#EF8655', '#FFE030', '#77DA3A', '#3ADAB7', '#4D86E9', '#8257EE', '#EF64CF'];
 
@@ -63,18 +63,19 @@ drop.innerHTML = `
       <div class="who"><img id="drop-pfp" src="${REQUEST.pfp}" alt=""><span class="t-caption" id="drop-user">${esc(REQUEST.user)}</span></div>
       <p class="t-body" id="drop-qtext">${esc(REQUEST.q)}</p>
     </div>
-    <div class="ddots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="dfind">
+      <label class="dsearch"><img src="assets/magnifier.svg" alt="">
+        <input type="text" id="drop-q" placeholder="Add a song" autocomplete="off" aria-label="Add a song">
+        <button class="clear" data-clear aria-label="Clear search"><img src="assets/node/x.svg" alt=""></button>
+      </label>
+      <div class="dsugg" id="drop-sugg" role="listbox" aria-label="Songs"></div>
+    </div>
     <div class="dpicks" id="drop-picks"></div>
     <p class="dcount t-caption" id="drop-pcount"></p>
-    <label class="dsearch"><img src="assets/magnifier.svg" alt="">
-      <input type="text" id="drop-q" placeholder="Add a song" autocomplete="off">
-      <button class="clear" data-clear aria-label="Close search"><img src="assets/node/x.svg" alt=""></button>
-    </label>
   </div>
   <div class="sugg-title"><p class="t-header">Suggested Answers</p><p class="t-caption grey" id="drop-count" hidden></p></div>
   <div class="now" id="drop-now"></div>
   <div class="cascade" id="drop-cascade" aria-label="Drag to shuffle suggestions"></div>
-  <div class="dresults" id="drop-results"><div class="ranked"><ul></ul></div></div>
   </div>
   <button class="dcontinue t-body" data-next disabled>Continue</button>`;
 
@@ -284,40 +285,46 @@ nowEl.addEventListener('click', e => {
   else if (e.target.closest('[data-snip]')){ const i = idx(); playing === i ? stopSnippet() : startSnippet(i); }
 });
 
-/* ================= SEARCH ================= */
+/* ================= SEARCH =================
+   Like the app's other search bars: nothing until you type, then matching songs drop down under the bar.
+   Picking one adds it (its art joins the graphic, in front) and the list closes. */
+const sugg = $d('#drop-sugg');
+let found = [];
 function renderResults(){
   const q = qIn.value.trim().toLowerCase();
-  const list = q ? LIBRARY.filter(s => (s.t + ' ' + s.a).toLowerCase().includes(q)) : LIBRARY.slice(0, 10);
-  const ul = $d('#drop-results ul');
-  ul.innerHTML = list.length ? list.map((s, i) => `
-    <li>
-      <p class="t-caption grey">${String(i + 1).padStart(2, '0')}</p>
-      <div class="thumb">${thumbOf(s) ? `<img src="${thumbOf(s)}" alt="">` : ''}</div>
-      <div class="names"><p class="t-body">${esc(s.t)}</p><p class="t-caption grey">${esc(s.a)}</p></div>
-      <div class="right">${s.likes ? `<span class="likes t-caption"><img src="assets/heart.svg" alt="">${s.likes}</span>` : ''}
-        <button class="plus ${isPicked(s) ? 'on' : ''}" data-add="${LIBRARY.indexOf(s)}" aria-label="${isPicked(s) ? 'Remove' : 'Add'} ${esc(s.t)}">
-          <img src="${isPicked(s) ? 'assets/node/check.svg' : 'assets/plus-circle.svg'}" alt=""></button></div>
-    </li>`).join('') : `<p class="empty t-body">No songs match “${esc(qIn.value)}”</p>`;
+  drop.classList.toggle('typing', !!q);
+  if (!q){ sugg.classList.remove('on'); found = []; return; }
+  found = LIBRARY.filter(s => (s.t + ' ' + s.a).toLowerCase().includes(q)).slice(0, 6);
+  sugg.innerHTML = found.length ? found.map((s, k) => `
+    <button role="option" data-sug="${k}">
+      <span class="thumb">${thumbOf(s) ? `<img src="${thumbOf(s)}" alt="">` : ''}</span>
+      <span class="names"><span class="t-body">${esc(s.t)}</span><span class="t-caption grey">${esc(s.a)}</span></span>
+      <span class="plus ${isPicked(s) ? 'on' : ''}"><img src="${isPicked(s) ? 'assets/node/check.svg' : 'assets/plus-circle.svg'}" alt=""></span>
+    </button>`).join('') : `<p class="t-body grey">No songs match “${esc(qIn.value.trim())}”</p>`;
+  sugg.classList.add('on');
 }
-function openSearch(){ stopSnippet(); drop.classList.add('searching'); $d('.dscroll').scrollTop = 0; renderResults(); }
-function closeSearch(){ drop.classList.remove('searching'); qIn.value = ''; qIn.blur(); layout(); renderNow(true); }
-qIn.addEventListener('focus', openSearch);
-qIn.addEventListener('input', renderResults);
-$d('[data-clear]').addEventListener('click', e => { e.preventDefault(); closeSearch(); });
-$d('#drop-results').addEventListener('click', e => {
-  const b = e.target.closest('[data-add]'); if (!b) return;
-  const s = LIBRARY[+b.dataset.add];
+function closeSearch(){ qIn.value = ''; drop.classList.remove('typing'); sugg.classList.remove('on'); found = []; }
+function addFound(s){
   const adding = !isPicked(s);
   if (!togglePick(s)) return;
   if (adding){
-    // the searched song's art joins the graphic, in front
     let i = deck.findIndex(d => key(d) === key(s));
     if (i < 0){ i = idx() + 1; deck.splice(i, 0, {t:s.t, a:s.a, art:s.art, c:s.c}); if (i <= idx()) f += 1; buildCases(); }
     f = i; layout(); renderNow(true);
     toast(`Added ${s.t}`, 'assets/node/check.svg');
   }
-  renderResults();
+  closeSearch(); qIn.blur();
+}
+qIn.addEventListener('input', renderResults);
+qIn.addEventListener('focus', () => { stopSnippet(); renderResults(); });
+qIn.addEventListener('keydown', e => {
+  if (e.key === 'Enter'){ e.preventDefault(); if (!found.length) renderResults(); if (found[0]) addFound(found[0]); }
+  if (e.key === 'Escape'){ closeSearch(); qIn.blur(); }
 });
+$d('[data-clear]').addEventListener('click', e => { e.preventDefault(); closeSearch(); qIn.focus(); });
+// choose on pointerdown so the field's blur doesn't close the list first
+sugg.addEventListener('pointerdown', e => { const b = e.target.closest('[data-sug]'); if (b){ e.preventDefault(); addFound(found[+b.dataset.sug]); } });
+qIn.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== qIn) sugg.classList.remove('on'); }, 150));
 
 /* ================= NAV: open, review, send ================= */
 function openFor(req){
@@ -331,7 +338,7 @@ function open(){
   requestAnimationFrame(place);
 }
 function back(){
-  if (drop.classList.contains('searching')) return closeSearch();
+  if (sugg.classList.contains('on')){ closeSearch(); qIn.blur(); return; }
   stopSnippet();
   window.tonoMsgs ? window.tonoMsgs.back() : goHome();
 }

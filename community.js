@@ -554,11 +554,11 @@ const OB = [
   {el:'.cm-qa', text:'View and respond to questions other users have asked in the community', side:'above'},
 ];
 let seen = false, ob = -1, obWait = 0;
+const BW = 240;   // bubble width (16px text, Skip + Next inside — Figma 1289:6629)
 const obEl = document.createElement('div');
 obEl.className = 'cm-ob'; obEl.setAttribute('role', 'dialog'); obEl.setAttribute('aria-label', 'Community walkthrough');
 obEl.innerHTML = `<svg class="dim" aria-hidden="true"><path fill-rule="evenodd"></path><rect class="cover" rx="10" ry="10"></rect><rect class="ring" rx="10" ry="10"></rect></svg>
-  <div class="bub"><span class="tip"></span><p class="t-caption txt"></p><div class="ft"><p class="t-caption n"></p><button class="t-caption go" data-ob-next>Next</button></div></div>
-  <button class="ob-skip t-body" data-ob-skip>Skip</button>`;
+  <div class="bub"><span class="tip"></span><p class="t-body txt"></p><div class="ft"><p class="t-caption n"></p><span class="acts"><button class="t-caption ob-skip" data-ob-skip>Skip</button><button class="t-caption go" data-ob-next>Next</button></span></div></div>`;
 app.appendChild(obEl);
 function obLayout(){
   if (ob < 0) return;
@@ -575,7 +575,7 @@ function obLayout(){
   let top = step.side === 'above' ? y - 21 - bh : step.side === 'below' ? y + h + 21 : y + h - bh + 40;
   if (step.side === 'over') top = Math.min(top, y + h - 60);
   bub.style.top = `${top}px`;
-  bub.style.left = `${Math.min(W - 201 - 20, Math.max(20, x + w - 201 - (step.side === 'over' ? 80 : 18)))}px`;
+  bub.style.left = `${Math.min(W - BW - 20, Math.max(20, x + w - BW - (step.side === 'over' ? 80 : 18)))}px`;
   bub.classList.toggle('up', step.side !== 'above');
 }
 // wait until a smooth scroll has come to rest (or there was nothing to scroll)
@@ -600,6 +600,7 @@ function obShow(i){
     obEl.querySelector('.txt').textContent = step.text;
     obEl.querySelector('.n').innerHTML = `<b>${i + 1}</b>/<span>${OB.length}</span>`;
     obEl.querySelector('.go').textContent = i === OB.length - 1 ? 'OK' : 'Next';
+    obEl.querySelector('.ob-skip').hidden = i === OB.length - 1;   // the last step is just OK
     // bring the step's spot into view, leaving room for the bubble
     const vr = vC.getBoundingClientRect(), tr = t.getBoundingClientRect(), k = vr.width / 402;
     const want = step.side === 'above' ? (tr.top - vr.top) / k + vC.scrollTop - 330 : (tr.top - vr.top) / k + vC.scrollTop - 140;   // leaves the top clear for Skip

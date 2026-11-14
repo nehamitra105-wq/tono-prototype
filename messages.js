@@ -22,7 +22,7 @@ const fresh = () => ({
   elias:{name:'Elias', handle:'@neon_drifter', ava:M + 'ava-elias.png', pfp:M + 'ava-elias.png', thread:[{me:false, t:'that playlist you made was so good'}]},
   sofia:{name:'Sofia', handle:'@PixelFox88', ava:M + 'ava-sofia.png', pfp:M + 'ava-sofia.png', thread:[{me:true, t:'see u at the show friday!'}]},
   theo:{name:'Theo', handle:'@cosmic.pancake', ava:M + 'ava-theo.png', pfp:M + 'ava-theo.png', thread:[{me:false, t:'ok this song is stuck in my head now'}]},
-  sandra:{name:'Sandra', handle:'@supanova', ava:M + 'pfp-supanova.png', pfp:M + 'pfp-supanova.png', request:true,
+  sandra:{name:'Sandra', handle:'@supanova', ava:M + 'pfp-sandra.png', pfp:M + 'pfp-sandra.png', request:true,   // her own face, so she doesn't read as Maya
     thread:[{me:true, t:'hey! saw your post in Community'}, {me:false, t:'omg hi!! sending u a question'}, {me:false, letter:true, q:SANDRA_Q}]},
 });
 let P = fresh(), who = null, tab = 'all', answered = false;
