@@ -117,7 +117,7 @@ function locCard(i){
       </div>
       <span class="cm-dots">${ic('dots-three')}</span>
     </div>` : `<button class="ask-drop t-body" data-pit>${ic('music-notes-plus')}Add a song</button>`;
-  return `<div class="cm-loc ${st.open === i ? 'open' : ''} ${i === 0 ? 'me' : ''}" style="${pos}" data-loc data-spot="${i}">
+  return `<div class="cm-loc ${st.open === i ? 'open' : ''} ${i === 0 ? 'me' : ''} ${st.drops[i] || SPOTS[i].mine ? 'mine' : ''}" style="${pos}" data-loc data-spot="${i}">
     ${top}
     <button class="pin" data-pin aria-label="${d ? `Song at ${esc(where)}` : `Add a song at ${esc(where)}`}"><img src="${C}marker-on.png" alt=""></button>
   </div>`;

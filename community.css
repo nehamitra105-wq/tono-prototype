@@ -229,3 +229,8 @@ input.cm-field.sm{height:38px;padding-top:0;padding-bottom:0}
 .cm-toast{position:absolute;left:50%;top:98px;transform:translate(-50%,-6px);z-index:5;padding:8px 14px;border-radius:20px;background:var(--off-black);color:var(--off-white);white-space:nowrap;
   box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s var(--slow), transform .3s var(--slow)}
 .cm-toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* your dots are lilac — the one you just tapped (Add a song) and the ones you dropped a song at; others stay pink */
+.cm-loc.mine .pin{background:var(--lilac);transition:box-shadow .2s}
+.cm-loc.mine .pin img{display:none}
+.cm-loc.mine.open .pin{box-shadow:0 0 0 4px #fff}
