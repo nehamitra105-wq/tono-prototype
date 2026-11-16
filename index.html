@@ -951,13 +951,7 @@ function openSheet(i){
 function closeSheet(){ sheetWrap.classList.remove('open'); sheetWrap.setAttribute('aria-hidden','true'); sheet.style.transform = ''; }
 $('#sheet-backdrop').addEventListener('click', closeSheet);
 sheet.addEventListener('click', e => { if (e.target.closest('.item')) closeSheet(); });
-(() => { // drag the sheet down to dismiss
-  let y0 = null;
-  sheet.addEventListener('pointerdown', e => { y0 = e.clientY; sheet.style.transition = 'none'; });
-  sheet.addEventListener('pointermove', e => { if (y0 !== null) sheet.style.transform = `translateY(${Math.max(0, e.clientY - y0)}px)`; });
-  const end = e => { if (y0 === null) return; const dy = e.clientY - y0; y0 = null; sheet.style.transition = ''; sheet.style.transform = ''; if (dy > 70) closeSheet(); };
-  sheet.addEventListener('pointerup', end); sheet.addEventListener('pointercancel', end);
-})();
+// dragging up/down to dismiss lives in sheetdrag.js (shared by every sheet)
 
 </script>
 <script src="node.js"></script>
@@ -968,6 +962,7 @@ sheet.addEventListener('click', e => { if (e.target.closest('.item')) closeSheet
 <script src="community.js"></script>
 <script src="addpl.js"></script>
 <script src="onboarding.js"></script>
+<script src="sheetdrag.js"></script>
 <script src="hscroll.js"></script>
 <script src="home2.js"></script>
 <script src="messages.js"></script>

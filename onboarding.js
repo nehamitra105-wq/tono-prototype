@@ -262,7 +262,7 @@ SCREENS.songs = () => `
     <label class="ob-search"><img src="${A}ic-search.svg" alt=""><input class="t-body" type="text" placeholder="Search songs..." data-ssearch autocomplete="off"></label>
     <div data-slists></div>
   </div>
-  <div class="ob-foot"><button class="ob-btn" data-go="sub" data-scont>Continue</button><p class="ob-fine" data-scount></p></div>${hi}`;
+  <div class="ob-foot"><button class="ob-btn" data-go="sub" data-scont>Continue</button><button class="ob-btn ghost" data-go="sub">Skip for now</button><p class="ob-fine" data-scount></p></div>${hi}`;
 
 SCREENS.sub = () => `
   <div class="ob-body">${top(3)}<div class="ob-hd"><h1>Subscription</h1><p class="t-body sub">Make your experience more seamless with subscription</p></div>
@@ -422,7 +422,7 @@ function drawSongs(){
     <p class="t-body ob-lbl">${q ? 'Results' : 'Suggested'}</p>${pool.length ? pool.map(i => row(i, 'Add')).join('') : `<p class="ob-fine left">No songs match “${esc(q)}”</p>`}`;
   const n = st.songs.length;
   $o('[data-scont]').disabled = !n;
-  $o('[data-scount]').textContent = n ? `${n} song${n === 1 ? '' : 's'} added` : 'Add at least one song';
+  $o('[data-scount]').textContent = n ? `${n} song${n === 1 ? '' : 's'} added` : 'Add a song, or skip for now';
 }
 
 // card details come up as a sheet over Checkout

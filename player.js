@@ -293,18 +293,19 @@ let lastT = performance.now();
   lastT = now; requestAnimationFrame(tick);
 })(lastT);
 // when a song ends the next one in the queue starts: the mini player's words fade out and back in, the full player's titles swap
-function nextSong(){
-  qi = (qi + 1) % QUEUE.length;
+function nextSong(){ setSong((qi + 1) % QUEUE.length); }
+function setSong(i, instant){
+  qi = i;
   Object.assign(SONG, QUEUE[qi]);
   st.add = false; render(); renderMini();
   const open = mini.querySelector('[data-open]');
-  open.classList.add('swap');
-  setTimeout(() => {
+  const apply = () => {
     open.querySelector('.t-header').textContent = SONG.title;
     open.querySelector('.t-body').textContent = SONG.artist;
     open.setAttribute('aria-label', `Open the player: ${SONG.title} by ${SONG.artist}`);
     open.classList.remove('swap');
-  }, 250);
+  };
+  if (instant) apply(); else { open.classList.add('swap'); setTimeout(apply, 250); }
   v.querySelectorAll('.pl-title').forEach(t => { t.querySelector('.t-header').textContent = SONG.title; t.querySelector('.t-body').textContent = SONG.artist; });
 }
 
@@ -334,7 +335,11 @@ $p('[data-back]').addEventListener('click', closePlayer);
 $p('[data-grip]').addEventListener('click', closePlayer);
 // full screen: the artwork takes over and the controls tuck away; tap again to bring them back
 $p('[data-full]').addEventListener('click', () => { st.collapsed = !st.collapsed; render(); });
-document.getElementById('restart')?.addEventListener('click', () => { if (current === v){ hideNow(); current = home; } ov.classList.remove('on'); });
+document.getElementById('restart')?.addEventListener('click', () => {
+  if (current === v){ hideNow(); current = home; } ov.classList.remove('on');
+  // a fresh run always starts on "Please Don't Stop The Music", playing, where it first picks up
+  st.playing = true; st.pos = .42; setSong(0, true);
+});
 
 render(); renderMini();
 window.tonoPlayer = {open:openPlayer, close:closePlayer, get state(){ return {...st, tags:st.tags.slice()}; }};
