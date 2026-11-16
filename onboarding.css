@@ -325,9 +325,6 @@ html.full .ob-intro .bar{top:auto;bottom:66px}
 .ob-orb .more span{font-size:10px}
 .ob-orb.done .more{opacity:1;transform:none}
 
-/* Figma sets these in Manrope (Tono/Body Strong, Caption Strong, Eyebrow) */
-.ob-step p,.ob-in .lbl,.ob-link,.ob-tl button,.onb .eyebrow,.ob-btn.ghost,.ob-row .tx b,.ob-row .act.out,.ob-sheet .perm,.ob-artist,
-.ob-sum p b,.ob-sum p.due span,.ob-toggle-row b,.ob-photo b,.ob-photo .ob-pchip,.ob-orb .node b,.ob-orb .node i{font-family:"Manrope","Mundial",sans-serif}
 
 /* card details sheet (over Checkout) */
 .ob-sheet.card{align-items:stretch;gap:20px;padding:20px 20px 42px}

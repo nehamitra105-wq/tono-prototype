@@ -167,7 +167,7 @@ SCREENS.intro = () => `
 
 SCREENS.signin = () => `
   <div class="ob-body">${top(0)}<h1>Sign in</h1>
-    <div class="ob-form">${field('Email', 'email', 'you@example.com', {type:'email', val:st.email, mode:'email', auto:'email'})}
+    <div class="ob-form">${field('Email or username', 'login', 'you@example.com or @username', {val:st.email, mode:'email', auto:'username'})}
       ${field('Password', 'pw', '••••••••', {type:'password', auto:'current-password'})}
       <button class="ob-link right" data-forgot>Forgot password?</button></div>
     <button class="ob-btn" data-signin>Continue</button>
@@ -478,12 +478,16 @@ root.addEventListener('click', e => {
   if (g && !g.disabled){ return go(g.dataset.go, {replace:g.hasAttribute('data-swap')}); }
   if (t.closest('[data-next]')) return st.slide < SLIDES.length - 1 ? slideTo(st.slide + 1) : go('create');
   // sign in
-  if (t.closest('[data-forgot]')){ const em = val('email'); if (!okEmail(em)) return setErr('email', 'Enter your email first'); return toast(`Reset link sent to ${em}`); }
+  // sign in takes an email or a username (with or without the @)
+  const okLogin = v => okEmail(v) || /^@?[a-z0-9._]{3,}$/i.test(v);
+  if (t.closest('[data-forgot]')){ const id = val('login'); if (!okLogin(id)) return setErr('login', 'Enter your email or username first');
+    return toast(okEmail(id) ? `Reset link sent to ${id}` : `Reset link sent to the email for @${id.replace(/^@/, '')}`); }
   if (t.closest('[data-signin]')){
-    const em = val('email'), pw = val('pw');
-    setErr('email', okEmail(em) ? '' : 'Enter a valid email'); setErr('pw', pw ? '' : 'Enter your password');
-    if (!okEmail(em) || !pw) return;
-    st.email = em; return busy(t.closest('button'), 'Signing in…', 900, () => finish(true));
+    const id = val('login'), pw = val('pw');
+    setErr('login', okLogin(id) ? '' : 'Enter a valid email or username'); setErr('pw', pw ? '' : 'Enter your password');
+    if (!okLogin(id) || !pw) return;
+    if (okEmail(id)) st.email = id; else st.handle = '@' + id.replace(/^@/, '').toLowerCase();
+    return busy(t.closest('button'), 'Signing in…', 900, () => finish(true));
   }
   const so = t.closest('[data-social]'); if (so) return busy(so, `Continuing with ${so.dataset.social}…`, 900, () => finish(true));
   // create account
@@ -557,7 +561,7 @@ root.addEventListener('input', e => { const f = e.target.closest('.ob-in'); if (
 
 /* ---------- done: hand over to the app ---------- */
 function finish(signedIn){
-  window.tonoUser = signedIn ? {email:st.email} : {name:st.name, handle:st.handle, photo:st.photo, email:st.email,
+  window.tonoUser = signedIn ? {email:st.email, handle:st.handle || undefined} : {name:st.name, handle:st.handle, photo:st.photo, email:st.email,
     plan:st.pay ? st.plan : null, privacy:st.privacy, apps:Object.keys(st.apps), artists:st.artists, songs:st.songs.map(i => SONGS[i])};
   root.classList.add('leaving');
   setTimeout(() => { root.classList.add('gone'); root.classList.remove('leaving'); }, 650);
