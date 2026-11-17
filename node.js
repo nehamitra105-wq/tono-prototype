@@ -985,9 +985,9 @@ function outCard(o){
    are big and keep their titles + "…"; as more are added every tile shrinks, titles drop away once a tile is small,
    and tapping any tile opens its Edit / Delete menu. */
 const ASPECT = {photo:1, video:1, song:1, audio:4.1, text:3.6};
-const GRID_W = 362, CAP_MIN = 130;   // tiles shorter than this lose their titles
+const GRID_W = 362, CAP_MIN = 130, CAP_H = 23;   // CAP_H: a title under a tile (8px gap + 15px line)   // tiles shorter than this lose their titles
 function gridRows(ins){
-  const n = ins.length, gap = n > 3 ? 4 : 16;
+  const n = ins.length, gap = 16;   // always 16px between inputs, across and down, however many there are
   // past three inputs, audio clips pair up into a stack of two pills that shares one cell (Figma 1301:31675)
   const cells = [];
   ins.forEach(m => {
@@ -1033,13 +1033,12 @@ function gridRows(ins){
   const rows = L.rows.map(([i, j], r) => cells.slice(i, j).map((c, k) => {
     const h = L.hs[r], w = h * asp[i + k];
     return c.stack && c.items.length === 2
-      ? {stack:true, w, h, tiles:c.items.map(m => ({n:m, w, h:(h - gap) / 2}))}
+      ? {stack:true, w, h, tiles:c.items.map(m => ({n:m, w, h:(h - CAP_H - gap) / 2}))}   // the two titled pills together are as tall as their neighbour
       : {n:c.items[0], w, h};
   }));
   // titles go once the tiles get small — for the whole grid, so it reads as one mosaic
   const all = rows.flat().flatMap(c => c.stack ? c.tiles : [c]);
-  const caps = all.every(t => t.h >= CAP_MIN);
-  all.forEach(t => { t.caps = caps; });
+  all.forEach(t => { t.caps = true; });   // final format (Figma 1352:14704): every input keeps its title underneath
   return {gap, rows};
 }
 function inputsHTML(ins){
@@ -1051,10 +1050,10 @@ const audioBars = w => Math.max(10, Math.floor((w - 24) / 4));
 function tileHTML({n, w, h, caps}){
   const size = `style="width:${w.toFixed(1)}px"`, box = `style="height:${h.toFixed(1)}px"`;
   const name = n.type === 'text' ? 'text snippet' : n.title + (EXT[n.type] || '');
-  const cap = caps ? `<div class="cap"><p class="t-caption" data-name="${n.id}">${esc(name)}</p><button class="more" data-imenu="${n.id}" aria-label="More options"><img src="assets/dots-three.svg" alt=""></button></div>` : '';
+  const cap = caps ? `<div class="cap"><p class="t-caption" data-name="${n.id}">${esc(name)}</p></div>` : '';
   const small = h < 90 ? ' sm' : '';
   let inner;
-  if (n.type === 'photo' || n.type === 'video') inner = `<div class="ph${small}" ${box}><img src="${n.img}" alt=""><span class="fade ${n.type}"></span>${n.type === 'video' ? `${sym(`${D}ph-play.svg`, 'vplay')}${h >= 90 ? `<span class="t-caption dur">${fmt(n.dur || 72)}</span>` : ''}` : ''}</div>`;
+  if (n.type === 'photo' || n.type === 'video') inner = `<div class="ph${small}" ${box}><img src="${n.img}" alt="">${n.type === 'video' ? `${sym(`${D}ph-play.svg`, 'vplay')}${h >= 90 ? `<span class="t-caption dur">${fmt(n.dur || 72)}</span>` : ''}` : ''}</div>`;
   else if (n.type === 'audio'){
     const bars = audioBars(w), playing = pp && pp.id === n.id;
     inner = `<div class="aud${h < 80 ? ' pill' : ''}" ${box} data-bars="${bars}">${waveWide(n.pos || 0, bars)}<div class="row"><button class="aplay" data-aplay="${n.id}" aria-label="Play ${esc(n.title)}">${sym(`${D}ph-${playing ? 'pause' : 'play'}.svg`)}</button><span class="t-caption">${fmt(playing ? (n.pos || 0) * n.dur : n.dur)}</span></div></div>`;
@@ -1074,13 +1073,12 @@ function renderProj(force){
   if (!force && proj.classList.contains('offright') && current !== proj) return;
   const ins = inputsOf(), o = board.now;
   const top = proj.scrollTop;
-  // Night Drive follows its own frame (1298:18952): "- draft" title, add photo / video / audio under the inputs
+  // Night Drive follows its own frame (1352:14704): "- draft" title, the add buttons under the inputs
   const nd = cur.id === 'nightdrive';
-  const adds = nd ? `<div class="dp-adds below">
-      <button class="dp-add a-media" data-add="photo"><span class="t-body">+ add photo</span></button>
-      <button class="dp-add a-text" data-add="video"><span class="t-body">+ add video</span></button>
-      <button class="dp-add a-audio" data-add="audio"><span class="t-body">+ add audio</span></button></div>`
-    : `<div class="dp-adds">
+  // every project (Night Drive included) offers the same three: media, text, audio — 16px from the inputs either way
+  // in the walkthrough the buttons sit on top of the inputs (its step points at them from above); in Night Drive itself they're underneath
+  const addsBelow = nd && obi < 0;
+  const adds = `<div class="dp-adds${addsBelow ? ' below' : ''}">
       <button class="dp-add a-media" data-add="media"><span class="t-body">+ add media</span></button>
       <button class="dp-add a-text" data-add="text"><span class="t-body">+ add text</span></button>
       <button class="dp-add a-audio" data-add="audio"><span class="t-body">+ add audio</span></button></div>`;
@@ -1093,9 +1091,9 @@ function renderProj(force){
     : `<button class="dp-discover" data-discover ${ins.length ? '' : 'disabled'}><img src="${D}music-notes-${ins.length ? 'on' : 'off'}.svg" alt=""><span class="t-body">Discover a song</span></button>`}
   <section class="dp-sec">
     <div class="dp-sh"><p class="t-header">Inputs</p><p class="t-body">${ins.length}/${MAX_NODES} used</p></div>
-    ${nd ? '' : adds}
+    ${addsBelow ? '' : adds}
     ${ins.length ? inputsHTML(ins) : ''}
-    ${nd ? adds : ''}
+    ${addsBelow ? adds : ''}
   </section>
   <section class="dp-sec dp-hist">
     <div class="dp-sh"><p class="t-header">Output history</p></div>
