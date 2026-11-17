@@ -107,8 +107,11 @@
 .qa-song .cd{display:flex;gap:8px;align-items:center}
 .qa-song .cd > img{width:50px;height:50px;border-radius:4px;object-fit:cover}
 .qa-song .tx{display:flex;flex-direction:column;gap:4px;white-space:nowrap}
+/* the featured cover is three layers (Figma 1352:16806 Group 6): a soft pink glow, the black disc, the cover on top */
 .qa-song .big{position:relative;width:150px;height:101px;flex:none;margin-right:4px}
-.qa-song .big img{position:absolute;left:-20px;top:-20px;width:190px;height:140px;max-width:none}
+.qa-song .big .glow{position:absolute;left:0;top:0;width:150px;height:100px;background:rgba(221,72,176,.5);filter:blur(10px);border-radius:0 100px 100px 0}
+.qa-song .big .disc{position:absolute;left:50px;top:1px;width:100px;height:100px;max-width:none}
+.qa-song .big .cov{position:absolute;left:0;top:1px;width:100px;height:100px;border-radius:4px;object-fit:cover;max-width:none}
 .qa-song .side{display:flex;gap:12px;align-items:center}
 .qa-note{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .qa-like{display:flex;flex-direction:column;gap:8px;align-items:center;flex:none;color:var(--off-white)}

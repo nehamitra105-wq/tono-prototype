@@ -58,7 +58,7 @@ const QS = {
   ],
 };
 const LIKED = [
-  {u:'chaewon4eva', ava:C + 'u-chaewon.png', big:true, songs:[{t:'Perfect Night', a:'Le Sserafim', img:C + 'perfect-night.png'}], note:'I feel like this is the perf song for a late night drive that won’t make you sleepy!', likes:'2.2k'},
+  {u:'chaewon4eva', ava:C + 'u-chaewon.png', big:true, songs:[{t:'Perfect Night', a:'Le Sserafim', img:C + 'pn-cover.png'}], note:'I feel like this is the perf song for a late night drive that won’t make you sleepy!', likes:'2.2k'},
   {u:'eve._.alp', ava:C + 'u-eve.png', songs:[{t:'Night Train', a:'Milena', img:C + 'night-train.png'}], note:'I think this fits the vibe! hope u like ittt', likes:'1.2k'},
   {u:'han2han', ava:C + 'u-han.png', songs:[{t:'Late Night Lover', a:'三稜鏡', img:C + 'late-night-lover.png'}], note:'The vibes and vocals on this is emmaculate', likes:'976'},
 ];
@@ -141,7 +141,7 @@ const SPOTS = [
   {name:'Corona, Queens, NY', ll:[40.7525, -73.8625], song:S('Juicy', 'Doja Cat ft. Tyga', 'juicy-doja.png')},
   {name:'North Corona, Queens, NY', ll:[40.7672, -73.8600], song:S('Telephone Man', 'Meri Wilson', 'telephone-man.png')},
   {name:'Travers Park, Queens, NY', ll:[40.7568, -73.8960], song:S('Late Night Lover', '三稜鏡', 'late-night-lover.png')},
-  {name:'Astoria, Queens, NY', ll:[40.7644, -73.9235], song:S('Perfect Night', 'Le Sserafim', 'perfect-night.png')},
+  {name:'Astoria, Queens, NY', ll:[40.7644, -73.9235], song:S('Perfect Night', 'Le Sserafim', 'pn-cover.png')},
   {name:'Long Island City, Queens, NY', ll:[40.7447, -73.9485], song:S('vapor rub', 'thuy', 'vapor-rub.png')},
   {name:'Flushing, Queens, NY', ll:[40.7675, -73.8331], song:S('Telephone', 'Lady Gaga ft. Beyonce', 'telephone.png')},
   {name:'Williamsburg, Brooklyn, NY', ll:[40.7081, -73.9571], song:S('Brooklyn’s Finest', 'JAY-Z, The Notorious B.I.G.', 'brooklyns-finest.png')},
@@ -355,7 +355,7 @@ function renderC(){
 }
 
 /* ---------- Q&A thread ---------- */
-const songRow = (s, big, side = '') => `<div class="qa-song"><div class="cd">${big ? `<span class="big"><img src="${s.img}" alt=""></span>` : `<img src="${s.img}" alt="">`}
+const songRow = (s, big, side = '') => `<div class="qa-song"><div class="cd">${big ? `<span class="big"><i class="glow"></i><img class="disc" src="${C}pn-disc.svg" alt=""><img class="cov" src="${s.img}" alt=""></span>` : `<img src="${s.img}" alt="">`}
   <div class="tx"><p class="t-body">${esc(s.t)}</p><p class="t-caption cm-mut">${esc(s.a)}</p></div></div>${side || ic('dots-three')}</div>`;
 const like = n => `<div class="qa-like"><i class="cm-ic" style="--i:url(${PH}thumbs-up.svg)"></i><p class="t-caption">${esc(n)}</p></div>`;
 function item(r){

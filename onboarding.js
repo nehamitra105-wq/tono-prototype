@@ -31,7 +31,7 @@ const SONGS = [
   {t:'Wonderwall', a:'Oasis', img:'assets/art-wonderwall.png', why:'Clairo'},
   {t:'Riptide', a:'Vance Joy', img:'assets/art-riptide.png', why:'Faye Webster'},
   {t:'Babydoll', a:'Dominic Fike', img:'assets/art-babydoll.png', why:'Steve Lacy'},
-  {t:'Perfect Night', a:'Le Sserafim', img:C + 'perfect-night.png', why:'NewJeans'},
+  {t:'Perfect Night', a:'Le Sserafim', img:C + 'pn-cover.png', why:'NewJeans'},
   {t:'Midnight City', a:'M83', img:C + 'midnight-city.png', why:'Magdalena Bay'},
   {t:'Late Night Lover', a:'三稜鏡', img:C + 'late-night-lover.png', why:'Mitski'},
   {t:'Sweet Venom', a:'Enhypen', img:C + 'sweet-venom.png', why:'NewJeans'},
